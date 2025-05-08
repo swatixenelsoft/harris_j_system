@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:harris_j_system/screens/bom/bom_dashboard_screen.dart';
 import 'package:harris_j_system/screens/shared/login_screen.dart';
 import 'package:harris_j_system/screens/navigation/constant.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
@@ -50,14 +51,6 @@ final List<Map<String, dynamic>> tableData = [
     'statusColor': const Color(0xffFFC107),
     'statusBackground': const Color.fromRGBO(255, 193, 7, 0.1),
   },
-  {
-    'claimForm': '#2986',
-    'amount': '\$80.00',
-    'submitDate': '7th Aug, 2024',
-    'status': 'Pending',
-    'statusColor': const Color(0xffFF1901),
-    'statusBackground': const Color.fromRGBO(255, 25, 1, 0.1),
-  },
 ];
 
 // final List<String> heading =['Claim Form','Amount','Submit Date','Status'];
@@ -67,18 +60,18 @@ final List<Map<String, String>> heading = [
   {'label': 'Submit Date', 'key': 'submit_date'},
   {'label': 'Status', 'key': 'status'},
 ];
-class ConsultancyDashboardScreen extends StatefulWidget {
-  const ConsultancyDashboardScreen({super.key});
+class ConsultantDashboardScreen extends StatefulWidget {
+  const ConsultantDashboardScreen({super.key});
 
   @override
-  State<ConsultancyDashboardScreen> createState() => _ConsultancyDashboardScreenState();
+  State<ConsultantDashboardScreen> createState() => _ConsultantDashboardScreenState();
 }
 
 
 
 
 
-class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen> {
+class _ConsultantDashboardScreenState extends State<ConsultantDashboardScreen> {
   bool showInfoSections = true;
   @override
   void initState() {
@@ -334,19 +327,18 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SizedBox(
-                    height: 750,
+                    height: MediaQuery.sizeOf(context).height * 0.8,
                     child: MasonryGridView.builder(
-                      itemCount: 4,
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      gridDelegate:
-                          const SliverSimpleGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                      ),
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
+                        itemCount: 4,
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        gridDelegate:
+                        const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                        ),
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
                         itemBuilder: (context, index) {
-
                           Widget card;
                           switch (index) {
                             case 0:
@@ -354,11 +346,12 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
                                 onTap: () {
                                   context.push(Constant.timeSheet);
                                 },
-                                child: const BottomCard(
+                                child: BottomCard(
                                   title: "Timesheet",
-                                  bgColor: Color(0xff263238),
+                                  bgColor: const Color(0xff263238),
                                   textColor: Colors.white,
                                   image: 'assets/images/gridView1.png',
+                                  index: index,
                                 ),
                               );
                               break;
@@ -367,31 +360,35 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
                                 onTap: () {
                                   context.push(Constant.claimScreen);
                                 },
-                                child: const BottomCard(
+                                child: BottomCard(
                                   title: "Claims",
                                   lightRed: true,
-                                  bgColor: Color.fromRGBO(255, 25, 1, 0.09),
-                                  textColor: Color(0xff5A5A5A),
+                                  bgColor:
+                                  const Color.fromRGBO(255, 25, 1, 0.09),
+                                  textColor: const Color(0xff5A5A5A),
                                   image: 'assets/images/gridView2.png',
+                                  index: index,
                                 ),
                               );
                               break;
                             case 2:
-                              card = const BottomCard(
+                              card = BottomCard(
                                 title: "Leave Log",
                                 white: true,
-                                bgColor: Color.fromRGBO(0, 0, 0, 0.1),
-                                textColor: Color(0xff5A5A5A),
+                                bgColor: const Color.fromRGBO(0, 0, 0, 0.1),
+                                textColor: const Color(0xff5A5A5A),
                                 image: 'assets/images/gridView3.png',
+                                index: index,
                               );
                               break;
                             case 3:
-                              card = const BottomCard(
+                              card = BottomCard(
                                 title: "Work Log",
                                 orange: true,
-                                bgColor: Color(0xffFFEDDA),
-                                textColor: Color(0xff5A5A5A),
+                                bgColor: const Color(0xffFFEDDA),
+                                textColor: const Color(0xff5A5A5A),
                                 image: 'assets/images/gridView4.png',
+                                index: index,
                               );
                               break;
                             default:
@@ -399,36 +396,18 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
                           }
 
                           // Apply margin only for index 1 and 3
-                          if (index == 1 ) {
+                          if (index == 1) {
                             return Container(
-                              margin: const EdgeInsets.only(top: 30),
+                              margin: const EdgeInsets.only(top: 20),
                               child: card,
                             );
                           } else {
                             return card;
                           }
-                        }
+                        })),
 
-                    )),
-                // child: GridView.count(
-                //   crossAxisCount: 2,
-                //   shrinkWrap: true,
-                //   physics: const NeverScrollableScrollPhysics(),
-                //   mainAxisSpacing: 12,
-                //   crossAxisSpacing: 12,
-                //   childAspectRatio: 0.8,
-                //   children: [
-                //     GestureDetector(
-                //         onTap: () {
-                //           context.push(Constant.timeSheet);
-                //         },
-                //         child: const BottomCard(title: "Timesheet")),
-                //     const BottomCard(title: "Claims", lightRed: true),
-                //     const BottomCard(title: "Leave Log", white: true),
-                //     const BottomCard(title: "Work Log", orange: true),
-                //   ],
-                // ),
-              )
+              ),
+
             ],
             // MasonryGridView
           ),
@@ -487,56 +466,4 @@ class LegendDot extends StatelessWidget {
   }
 }
 
-class BottomCard extends StatelessWidget {
-  final String title;
-  final bool lightRed;
-  final bool white;
-  final bool orange;
-  final Color bgColor;
-  final Color textColor;
-  final String image;
 
-  const BottomCard({
-    super.key,
-    required this.title,
-    this.lightRed = false,
-    this.white = false,
-    this.orange = false,
-    required this.bgColor,
-    required this.textColor,
-    required this.image,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 351,
-      padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 5),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: TextStyle(
-                  fontWeight: FontWeight.w600, fontSize: 16, color: textColor)),
-          const SizedBox(height: 5),
-          Text(
-              "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore ",
-              style: TextStyle(
-                  fontWeight: FontWeight.w300, fontSize: 12, color: textColor)),
-          const SizedBox(height: 60),
-          Image(
-            image: AssetImage(image),
-            height: 150,
-            width: 187,
-            fit: BoxFit.fill,
-          ),
-        ],
-      ),
-    );
-  }
-}
