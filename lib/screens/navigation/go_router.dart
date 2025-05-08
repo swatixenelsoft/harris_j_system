@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:harris_j_system/layout/bom_scaffold.dart';
 import 'package:harris_j_system/layout/consultancy_scaffold.dart';
+import 'package:harris_j_system/layout/consultant_scaffold.dart';
 import 'package:harris_j_system/screens/auth/basic_info_screen.dart';
 import 'package:harris_j_system/screens/bom/bom_add_address_screen.dart';
 import 'package:harris_j_system/screens/bom/bom_add_consultancy_screen.dart';
@@ -8,9 +9,10 @@ import 'package:harris_j_system/screens/bom/bom_consultancy_screen.dart';
 import 'package:harris_j_system/screens/bom/bom_dashboard_screen.dart';
 import 'package:harris_j_system/screens/bom/bom_finance_screen.dart';
 import 'package:harris_j_system/screens/bom/bom_report_screen.dart';
-import 'package:harris_j_system/screens/consultancy/claim_screen.dart';
-import 'package:harris_j_system/screens/consultancy/consultant_dashboard.dart';
-import 'package:harris_j_system/screens/consultancy/timesheet_screen.dart';
+import 'package:harris_j_system/screens/consultancy/consultancy_dashboard_screen.dart';
+import 'package:harris_j_system/screens/consultant/consultant_claim_screen.dart';
+import 'package:harris_j_system/screens/consultant/consultant_dashboard_screen.dart';
+import 'package:harris_j_system/screens/consultant/consultant_timesheet_screen.dart';
 import 'package:harris_j_system/screens/navigation/constant.dart';
 import 'package:harris_j_system/screens/shared/login_screen.dart';
 import 'package:harris_j_system/screens/shared/on_board_screen.dart';
@@ -29,15 +31,15 @@ final GoRouter goRouter = GoRouter(
 
     /// CONSULTANCY FLOW
     ShellRoute(
-      builder: (context, state, child) => ConsultancyScaffold(child: child),
+      builder: (context, state, child) => ConsultantScaffold(child: child),
       routes: [
         GoRoute(
           path: Constant.basicInfo,
           builder: (context, state) => const BasicInformationScreen(),
         ),
         GoRoute(
-          path: Constant.consultancyDashBoardScreen,
-          builder: (context, state) => const ConsultancyDashboardScreen(),
+          path: Constant.consultantDashBoardScreen,
+          builder: (context, state) => const ConsultantDashboardScreen(),
         ),
         GoRoute(
           path: Constant.timeSheet,
@@ -83,5 +85,16 @@ final GoRouter goRouter = GoRouter(
       ],
     ),
 
+    /// CONSULTANCY FLOW
+    ShellRoute(
+      builder: (context, state, child) => ConsultancyScaffold(child: child),
+      routes: [
+        GoRoute(
+          path: Constant.consultancyDashBoardScreen,
+          builder: (context, state) => const ConsultancyDashboardScreen(),
+        ),
+
+      ],
+    ),
   ],
 );

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class ConsultancyScaffold extends StatelessWidget {
+class ConsultantScaffold extends StatelessWidget {
   final Widget child;
 
-  const ConsultancyScaffold({super.key, required this.child});
+  const ConsultantScaffold({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

@@ -10,6 +10,7 @@ import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_table.dart';
 import 'package:pie_chart/pie_chart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final List<Map<String, dynamic>> tableData = [
   {
@@ -88,8 +89,14 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(
-          showBackButton: false, image: 'assets/images/bom/bom_logo.png'),
+      appBar:  CustomAppBar(
+          showBackButton: false,showProfileIcon : true, image: 'assets/images/bom/bom_logo.png',onProfilePressed: ()  async{
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+        context.pushReplacement(Constant.login);
+      },
+     ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -554,7 +561,7 @@ class BottomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 280,
+      // height: 280,
       padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 5),
       decoration: BoxDecoration(
         color: bgColor,
@@ -576,6 +583,7 @@ class BottomCard extends StatelessWidget {
           Image(
             image: AssetImage(image),
             fit: BoxFit.fill,
+
           ),
         ],
       ),

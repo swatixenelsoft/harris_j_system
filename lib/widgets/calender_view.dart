@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:harris_j_system/screens/consultancy/timesheet_screen.dart';
+import 'package:harris_j_system/screens/consultant/consultant_timesheet_screen.dart';
 import 'package:harris_j_system/ulits/common_function.dart';
 import 'package:harris_j_system/widgets/bottom_sheet_content.dart';
 import 'package:intl/intl.dart';

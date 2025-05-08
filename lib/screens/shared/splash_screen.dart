@@ -75,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     if (isLoggedIn) {
-      context.go(Constant.bomDashBoardScreen); // Navigate to home
+      context.go(Constant.consultantDashBoardScreen); // Navigate to home
     } else {
       context.go(Constant.onBoard); // Navigate to onboarding
     }

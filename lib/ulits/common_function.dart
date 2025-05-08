@@ -203,13 +203,6 @@ class CommonFunction{
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', userId??0);
     await prefs.setBool('isLoggedIn', true);
-    // await prefs.setInt('accountVerified', accountVerified??0);
-    // await prefs.setString('token', token??"");
-    // await prefs.setString('name', name??"");
-    // await prefs.setString('userName', userName??"");
-    // await prefs.setString('email', email??"");
-    // await prefs.setString('image', image??"");
-    // await prefs.setString('mobile', mobile??"");
   }
 
 

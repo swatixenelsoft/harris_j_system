@@ -16,7 +16,7 @@ class ApiService {
       final response = await _dio.post(
         ApiConstant.login,
         data: {
-          "email": "rohit@example.com",
+          "email": email,
           "password": "password"
         },
       );

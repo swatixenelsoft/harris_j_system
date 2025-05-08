@@ -92,9 +92,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (dashboardName == "BOM Dashboard" && roleId == 6) {
           print('Navigating to BOM Dashboard');
           context.push(Constant.bomDashBoardScreen);
-        } else {
-          print('Navigating to Consultancy Dashboard');
-          context.push(Constant.consultancyDashBoardScreen);
+        } else if(dashboardName == "Consultant Dashboard" && roleId == 11){
+          print('Navigating to Consultant Dashboard');
+          context.push(Constant.consultantDashBoardScreen);
+        }
+        else{
+          print('error');
         }
       } else {
         //  Show error toast

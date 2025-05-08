@@ -44,9 +44,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             //   onPressed: onNotificationPressed ?? () {},
             // ),
           if (showProfileIcon)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: SvgPicture.asset('assets/icons/profile_icon.svg',height: 32,width: 32,),
+            GestureDetector(
+              onTap: onProfilePressed ,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: SvgPicture.asset('assets/icons/profile_icon.svg',height: 32,width: 32,),
+              ),
             ),
             // IconButton(
             //   icon: const Icon(Icons.account_circle, color: Colors.black),

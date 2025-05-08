@@ -52,6 +52,7 @@ class _CustomTableViewState extends State<CustomTableView> {
           cells: widget.heading.map((item) {
             final key = item['key']!;
             final value = row[key];
+            print("tablevalue $value,$key");
 
             if (value is Map &&
                 value.containsKey('label') &&
