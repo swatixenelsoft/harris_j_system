@@ -392,14 +392,19 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
                               );
                               break;
                             case 3:
-                              card = BottomCard(
-                                title: "Static Settings",
-                                orange: true,
-                                bgColor: const Color(0xffFFEDDA),
-                                textColor: const Color(0xff5A5A5A),
-                                image:
-                                    'assets/images/bom/bom_static_settings.png',
-                                index: index,
+                              card = GestureDetector(
+                                onTap: () {
+                                  context.push(Constant.bomStaticScreenScreen);
+                                },
+                                child: BottomCard(
+                                  title: "Static Settings",
+                                  orange: true,
+                                  bgColor: const Color(0xffFFEDDA),
+                                  textColor: const Color(0xff5A5A5A),
+                                  image:
+                                      'assets/images/bom/bom_static_settings.png',
+                                  index: index,
+                                ),
                               );
                               break;
                             default:
@@ -572,12 +577,12 @@ class BottomCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: TextStyle(
-                  fontWeight: FontWeight.w600, fontSize: 16, color: textColor)),
+              style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.w500, fontSize: 16, color: textColor)),
           const SizedBox(height: 5),
           Text(
               "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore ",
-              style: TextStyle(
+              style: GoogleFonts.montserrat(
                   fontWeight: FontWeight.w300, fontSize: 12, color: textColor)),
           SizedBox(height: (index == 1 || index == 2) ? 50 : 15),
           Image(

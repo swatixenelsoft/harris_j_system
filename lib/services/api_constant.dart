@@ -8,4 +8,5 @@ class ApiConstant{
   static const String addConsultancy = "add-consultancy";
   static const String deleteConsultancy = "delete-consultancy";
   static const String updateConsultancy = "update-consultancy";
+  static const String updateBasicInfo = "update-basic";
 }

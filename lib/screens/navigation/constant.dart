@@ -12,5 +12,10 @@ class Constant {
   static const String bomAddAddressScreen = '/bom/bomAddAddressScreen';
   static const String bomFinanceScreen = '/bom/bomFinanceScreen';
   static const String bomReportScreen = '/bom/bomReportScreen';
+  static const String bomStaticScreenScreen = '/bom/bomStaticScreenScreen';
   static const String consultancyDashBoardScreen = '/consultancy/consultancyDashBoardScreen';
+  static const String consultancyUserListScreen = '/consultancy/consultancyUserListScreen';
+  static const String consultancyAddUserScreen = '/consultancy/consultancyAddUserScreen';
+  static const String consultancyClientListScreen = '/consultancy/consultancyClientListScreen';
+  static const String consultancyReportScreen = '/consultancy/consultancyReportScreen';
 }

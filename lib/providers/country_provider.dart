@@ -38,11 +38,11 @@ class GetCountryNotifier extends StateNotifier<GetCountryState> {
 
   GetCountryNotifier(this.apiService) : super(GetCountryState());
 
-  Future<void> fetchCountries() async {
+  Future<void> fetchCountries(String token) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final response = await apiService.fetchCountry();
+      final response = await apiService.fetchCountry(token);
 
       final bool status = response['status'] ?? false;
       if (status) {
@@ -62,12 +62,12 @@ class GetCountryNotifier extends StateNotifier<GetCountryState> {
     }
   }
 
-  Future<void> fetchStates(String country) async {
+  Future<void> fetchStates(String country,String token) async {
     print('countrssy $country');
     // state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final response = await apiService.fetchState(country);
+      final response = await apiService.fetchState(country,token);
       print('responsestate $response');
       final bool status = response['status'] ?? false;
       if (status) {

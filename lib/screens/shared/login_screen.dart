@@ -78,12 +78,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final String dashboardName = response['dashboard_name'] ?? '';
       final int roleId = response['user']?['role_id'] ?? 0;
       final int userId = response['user']?['id'] ?? 0;
+      final String token = response['token'] ?? "";
 
 
       if (status) {
         await CommonFunction().storeCustomerData(
           userId: userId,
-
+          token:token
         );
 
         //  Show success toast
@@ -94,7 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           context.push(Constant.bomDashBoardScreen);
         } else if(dashboardName == "Consultant Dashboard" && roleId == 11){
           print('Navigating to Consultant Dashboard');
-          context.push(Constant.consultantDashBoardScreen);
+          context.push(Constant.basicInfo);
         }
         else{
           print('error');

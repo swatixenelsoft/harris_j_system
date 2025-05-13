@@ -26,54 +26,60 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class BomAddConsultancyScreen extends ConsumerStatefulWidget {
-  const BomAddConsultancyScreen({super.key, this.consultancy});
+class ConsultancyAddUserScreen extends ConsumerStatefulWidget {
+  const ConsultancyAddUserScreen({super.key, this.consultancy});
 
   final Map<String, dynamic>? consultancy;
 
   @override
-  ConsumerState<BomAddConsultancyScreen> createState() =>
+  ConsumerState<ConsultancyAddUserScreen> createState() =>
       _BomAddConsultancyScreenState();
 }
 
 class _BomAddConsultancyScreenState
-    extends ConsumerState<BomAddConsultancyScreen> {
+    extends ConsumerState<ConsultancyAddUserScreen> {
   String _primaryCountryCode = '+65'; // Default country code
   String _secondaryCountryCode = '+91'; // Default country code
-  final TextEditingController _consultancyName = TextEditingController();
-  final TextEditingController _consultancyId = TextEditingController();
+  final TextEditingController _employeeName = TextEditingController();
+  final TextEditingController _employeeCode = TextEditingController();
   final TextEditingController _uenNumber = TextEditingController();
   final TextEditingController _primaryContactPerson = TextEditingController();
-  final TextEditingController _primaryMobileNumber = TextEditingController();
-  final TextEditingController _primaryEmailAddress = TextEditingController();
+  final TextEditingController _mobileNumber = TextEditingController();
+  final TextEditingController _emailAddress = TextEditingController();
   final TextEditingController _secondaryContactPerson = TextEditingController();
   final TextEditingController _secondaryMobileNumber = TextEditingController();
   final TextEditingController _secondaryEmailAddress = TextEditingController();
-  final TextEditingController _startDateController = TextEditingController();
-  final TextEditingController _endDateController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _contractPeriodController = TextEditingController();
+  final TextEditingController _joiningDateController = TextEditingController();
+  final TextEditingController _lastWorkingDateController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
   final TextEditingController _licenseNumber = TextEditingController();
-  final TextEditingController _adminCredential = TextEditingController();
-  String? _selectedConsultancyType = 'Not Selected';
-  String? _selectedConsultancyStatus = 'Not Selected';
+  final TextEditingController _userCredential = TextEditingController();
+  final TextEditingController _passwordCredential = TextEditingController();
+  String? _selectedClient = 'Not Selected';
+  String? _selectedEmployeeStatus = 'Not Selected';
+  String? _selectedDesignation = 'Not Selected';
+  String? selectedGender = 'Male';
   String? _selectedFeeStructure = 'Not Selected';
   String? _selectedLastPaidStatus = 'Not Selected';
   String? _lastPaidDate = '';
   String? _paymentMode = '';
   bool reset_password_value = false;
   dynamic _selectedImage;
-  final List<String> _consultancyType = [
+  final List<String> _clientList = [
     'Not Selected',
     'Primary Consultancy',
     'Silver Consultancy'
   ];
-  final List<String> _consultancyStatus = [
+  final List<String> _employeeStatus = [
     'Not Selected',
     'Active',
     'Disabled',
     'Block',
     'Deleted'
   ];
-  final List<String> _feeStructure = [
+  final List<String> _designation = [
     'Not Selected',
     'Structure1',
     'Structure2'
@@ -87,16 +93,16 @@ class _BomAddConsultancyScreenState
   void initState() {
     print('editcons ${widget.consultancy},$_selectedImage');
     if (isEdit) {
-      _consultancyName.text = widget.consultancy!['consultancy_name'] ?? '';
-      _consultancyId.text = widget.consultancy!['consultancy_id'] ?? '';
+      _employeeName.text = widget.consultancy!['consultancy_name'] ?? '';
+      _employeeCode.text = widget.consultancy!['consultancy_id'] ?? '';
 
       _confirmedAddress = widget.consultancy!['show_address_input'] ?? '';
       _uenNumber.text = widget.consultancy!['uen_number'] ?? '';
       _primaryContactPerson.text = widget.consultancy!['primary_contact'] ?? '';
       _primaryCountryCode =
           widget.consultancy!['primary_mobile_country_code'] ?? '';
-      _primaryMobileNumber.text = widget.consultancy!['primary_mobile'] ?? '';
-      _primaryEmailAddress.text = widget.consultancy!['primary_email'] ?? '';
+      _mobileNumber.text = widget.consultancy!['primary_mobile'] ?? '';
+      _emailAddress.text = widget.consultancy!['primary_email'] ?? '';
       _secondaryContactPerson.text =
           widget.consultancy!['secondary_contact'] ?? '';
       _secondaryEmailAddress.text =
@@ -105,19 +111,17 @@ class _BomAddConsultancyScreenState
           widget.consultancy!['secondary_mobile_country_code'] ?? '';
       _secondaryMobileNumber.text =
           widget.consultancy!['secondary_mobile'] ?? '';
-      _selectedConsultancyStatus =
+      _selectedEmployeeStatus =
           widget.consultancy!['consultancy_status'] ?? '';
-      _selectedConsultancyType = widget.consultancy!['consultancy_type'] ?? '';
-      _startDateController.text = DateFormat('dd/MM/yyyy').format(
+      _selectedClient = widget.consultancy!['consultancy_type'] ?? '';
+      _dobController.text = DateFormat('dd/MM/yyyy').format(
               DateTime.parse(widget.consultancy!['license_start_date'])) ??
           '';
-      _endDateController.text = DateFormat('dd/MM/yyyy').format(
-              DateTime.parse(widget.consultancy!['license_end_date'])) ??
-          '';
+
       _licenseNumber.text = widget.consultancy!['license_number'] ?? '';
       _selectedLastPaidStatus = widget.consultancy!['last_paid_status'] ?? '';
       _selectedFeeStructure = widget.consultancy!['fees_structure'] ?? '';
-      _adminCredential.text = widget.consultancy!['admin_email'] ?? '';
+      _userCredential.text = widget.consultancy!['admin_email'] ?? '';
       _lastPaidDate = widget.consultancy!['last_paid_date'] ?? '';
       _paymentMode = widget.consultancy!['payment_mode'] ?? '';
       _licenseNumber.text = widget.consultancy!['license_number'] ?? '';
@@ -147,14 +151,13 @@ class _BomAddConsultancyScreenState
 
   @override
   void dispose() {
-    _startDateController.dispose();
-    _endDateController.dispose();
+    _dobController.dispose();
     super.dispose();
   }
 
   Widget _buildSectionTitle(String title, Color color, FontWeight fontWeight) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 5),
       child: Text(
         title,
         style: GoogleFonts.montserrat(
@@ -167,8 +170,6 @@ class _BomAddConsultancyScreenState
   }
 
   void showAddAddressBottomSheet(BuildContext context, address) async {
-
-
     Map<String, dynamic>? confirmedData =
         await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
@@ -187,9 +188,9 @@ class _BomAddConsultancyScreenState
     }
   }
 
-  String? validateConsultancyName(String? value) {
+  String? validateEmployeeName(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter consultancy name';
+      return 'Please enter employee name';
     }
 
     final validNameRegex = RegExp(r"^[a-zA-Z0-9 .'-]+$");
@@ -200,14 +201,14 @@ class _BomAddConsultancyScreenState
     return null;
   }
 
-  String? validateConsultancyId(String? value) {
+  String? validateEmployeeCode(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter consultancy ID';
+      return 'Please enter employee code';
     }
 
     final validIdRegex = RegExp(r'^[a-zA-Z0-9_-]{4,20}$');
     if (!validIdRegex.hasMatch(value.trim())) {
-      return 'Consultancy ID must be 4–20 characters and can contain letters, numbers, - or _';
+      return 'Employee code must be 4–20 characters and can contain letters, numbers, - or _';
     }
 
     return null;
@@ -291,7 +292,7 @@ class _BomAddConsultancyScreenState
     return null;
   }
 
-  String? validateLicenseStartDate(String? value) {
+  String? validateDOBDate(String? value) {
     if (value == null || value.trim().isEmpty) {
       return null; // Optional field
     }
@@ -309,7 +310,7 @@ class _BomAddConsultancyScreenState
   }
 
   String? validateLicenseEndDate(String? value) {
-    final startValue = _startDateController.text.trim();
+    final startValue = _dobController.text.trim();
 
     if (value == null || value.trim().isEmpty) {
       return null; // Optional field
@@ -358,141 +359,13 @@ class _BomAddConsultancyScreenState
     print('_selectImage $_selectedImage');
   }
 
-  void _submitForm() async {
-    final prefs = await SharedPreferences.getInstance();
-    int userId = prefs.getInt('userId')!;
-    final token = prefs.getString('token');
-    FocusScope.of(context).unfocus();
-
-    if (!_formKey.currentState!.validate()) return;
-
-    final consultancyName = _consultancyName.text.trim();
-    final consultancyId = _consultancyId.text.trim();
-    final uenNumber = _uenNumber.text.trim();
-    final fullAddress = isEdit
-        ? widget.consultancy!['full_address']
-        : "streetName: ${_confirmedAddress!['apartmentName']},city: ${_confirmedAddress!['state']},country: ${_confirmedAddress!['country']},postalCode: ${_confirmedAddress!['postalCode']}";
-    final showInputAddress = isEdit
-        ? _confirmedAddress
-        : "${_confirmedAddress!['apartmentName']},${_confirmedAddress!['state']},${_confirmedAddress!['country']}";
-    final primaryContactPerson = _primaryContactPerson.text.trim();
-    final primaryMobileNumber = _primaryMobileNumber.text.trim();
-    final primaryEmailAddress = _primaryEmailAddress.text.trim();
-    final secondaryContactPerson = _secondaryContactPerson.text.trim();
-    final secondaryMobileNumber = _secondaryMobileNumber.text.trim();
-    final secondaryEmailAddress = _secondaryEmailAddress.text.trim();
-    final selectedConsultancyType = _selectedConsultancyType;
-    final selectedConsultancyStatus = _selectedConsultancyStatus;
-    final inputFormat = DateFormat(
-        'dd/MM/yyyy'); // or 'MM/dd/yyyy' depending on your actual format
-    final outputFormat = DateFormat('yyyy-MM-dd');
-
-    final licenseStartDate =
-        outputFormat.format(inputFormat.parse(_startDateController.text));
-    final licenseEndDate =
-        outputFormat.format(inputFormat.parse(_endDateController.text));
-
-    final licenseNumber = _licenseNumber.text.trim();
-    final selectedFeeStructure = _selectedFeeStructure;
-    final selectedLastPaidStatus = _selectedLastPaidStatus;
-    final adminCredential = _adminCredential.text.trim();
-    final primaryCountryCode = _primaryCountryCode.trim();
-    final secondaryCountryCode = _secondaryCountryCode.trim();
-    final resetPassword = reset_password_value;
-
-
-    // final
-    print('isEdit $isEdit');
-    try {
-      print('isEdit $isEdit');
-      final response = isEdit
-          ? await ref.read(consultancyProvider.notifier).editConsultancy(
-              widget.consultancy!['id'],
-              consultancyName,
-              consultancyId,
-              uenNumber,
-              fullAddress,
-              showInputAddress,
-              primaryContactPerson,
-              primaryMobileNumber,
-              primaryEmailAddress,
-              secondaryContactPerson,
-              secondaryMobileNumber,
-              secondaryEmailAddress,
-              selectedConsultancyType!,
-              selectedConsultancyStatus!,
-              licenseStartDate.toString(),
-              licenseEndDate.toString(),
-              licenseNumber,
-              selectedFeeStructure!,
-              selectedLastPaidStatus!,
-              adminCredential,
-              primaryCountryCode,
-              secondaryCountryCode,
-              resetPassword,
-              userId,
-              _selectedImage!,token!)
-          : await ref.read(consultancyProvider.notifier).addConsultancy(
-              consultancyName,
-              consultancyId,
-              uenNumber,
-              fullAddress,
-              showInputAddress,
-              primaryContactPerson,
-              primaryMobileNumber,
-              primaryEmailAddress,
-              secondaryContactPerson,
-              secondaryMobileNumber,
-              secondaryEmailAddress,
-              selectedConsultancyType!,
-              selectedConsultancyStatus!,
-              licenseStartDate.toString(),
-              licenseEndDate.toString(),
-              licenseNumber,
-              selectedFeeStructure!,
-              selectedLastPaidStatus!,
-              adminCredential,
-              primaryCountryCode,
-              secondaryCountryCode,
-              resetPassword,
-              userId,
-              _selectedImage!,token!);
-
-      if (!mounted) return;
-
-      final dynamic status = response['status'];
-
-      print('status $status');
-
-      if (status == "success") {
-        context.pop(true);
-
-        //  Show success toast
-        ToastHelper.showSuccess(context,
-            response['message'] ?? 'Consultancy created successfully!');
-      }
-      else if (status == true) {
-        context.pop(true);
-
-        //  Show success toast
-        ToastHelper.showSuccess(context,
-            response['message'] ?? 'Consultancy update successfully!');
-      }
-    } catch (e) {
-      if (!mounted) return;
-      print('Login error: $e');
-      //  Show exception toast
-      ToastHelper.showError(context, 'Something went wrong. Please try again.');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(consultancyProvider).isLoading;
     return Scaffold(
       appBar: const CustomAppBar(
         showBackButton: false,
-        image: 'assets/images/bom/bom_logo.png',
+        image: 'assets/icons/cons_logo.png',
       ),
       body: Stack(
         children: [
@@ -508,7 +381,7 @@ class _BomAddConsultancyScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 5),
                           _buildSectionTitle('General & Contact Information',
                               const Color(0xffFF1901), FontWeight.w700),
                           const SizedBox(height: 12),
@@ -516,34 +389,125 @@ class _BomAddConsultancyScreenState
                             keyboardType: TextInputType.name,
                             padding: 0,
                             borderRadius: 8,
-                            label: 'Consultancy Name *',
-                            hintText: 'Consultancy Name *',
-                            controller: _consultancyName,
-                            validator: validateConsultancyName,
+                            label: ' Employee Name *',
+                            hintText: ' Employee Name *',
+                            controller: _employeeName,
+                            validator: validateEmployeeName,
                             textCapitalization: TextCapitalization.words,
                           ),
                           const SizedBox(height: 12),
                           CustomTextField(
                             padding: 0,
                             borderRadius: 8,
-                            label: 'Consultancy ID *',
-                            hintText: 'Consultancy ID *',
-                            controller: _consultancyId,
-                            validator: validateConsultancyId,
+                            label: 'Employee Code *',
+                            hintText: 'Employee Code *',
+                            controller: _employeeCode,
+                            validator: validateEmployeeCode,
                             textCapitalization: TextCapitalization.none,
                           ),
                           const SizedBox(height: 12),
-                          CustomTextField(
-                              padding: 0,
-                              borderRadius: 8,
-                              label: 'UEN Number *',
-                              hintText: 'UEN Number *',
-                              controller: _uenNumber,
-                              validator: validateUEN,
-                              keyboardType: TextInputType.text,
-                              textCapitalization:
-                                  TextCapitalization.characters),
+                          Text('Sex :'  ,style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xff828282),
+                          ),),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              genderOption(label: 'Male',value: 'Male',icon:  Icons.male),
+                              genderOption(label: 'Female',value:  'Female',icon:  Icons.female),
+                              genderOption(label: 'Others',value:   'Others'),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDateField(
+                              'Date of Birth', _dobController, validateDOBDate),
                           const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Age :',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xff828282),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              SizedBox(
+                                width: 230,
+                                child: CustomTextField(
+                                  borderRadius: 8,
+                                  label: 'Enter Age',
+                                  hintText: 'Enter Age',
+                                  controller: _ageController,
+                                  // validator: validator,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          CountryCodePhoneField(
+                            controller: _mobileNumber,
+                            onCountryCodeChanged: (code) {
+                              print("Selected country code: $code");
+                            },
+                            validator: validatePhoneNumber,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Email Address *',
+                            hintText: 'Email Address *',
+                            controller: _emailAddress,
+                            validator: validateEmail,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 12),
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: Container(
+                              height: 45,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15),
+                              decoration: BoxDecoration(
+                                border:
+                                    Border.all(color: const Color(0xFFEDEDED)),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  SvgPicture.asset(
+                                    'assets/icons/upload.svg',
+                                    height: 20,
+                                    width: 20,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  const SizedBox(width: 15),
+                                  Text(
+                                    'Upload profile picture',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xff828282),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '*Recommended Minimum Resolution 512 x 512 px. (Max.file size: 1MB)',
+                            style: GoogleFonts.montserrat(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xff798AA3)),
+                          ),
+                          const SizedBox(height: 13),
                           _confirmedAddress != null
                               ? Container(
                                   margin:
@@ -689,217 +653,171 @@ class _BomAddConsultancyScreenState
                                   strokeWidth: 1.5,
                                   child: Container(
                                     width: double.infinity,
-                                    padding: const EdgeInsets.all(12),
-                                    child: const Text(''),
-                                  ),
-                                ),
-                          const SizedBox(height: 15),
-                          const Divider(color: Color(0xffA6A9B5)),
-                          const SizedBox(height: 15),
-                          CustomTextField(
-                            padding: 0,
-                            borderRadius: 8,
-                            label: 'Primary Contact Person',
-                            hintText: 'Primary Contact Person',
-                            controller: _primaryContactPerson,
-                            validator: validateContactPerson,
-                            keyboardType: TextInputType.name,
-                            textCapitalization: TextCapitalization.words,
-                          ),
-                          const SizedBox(height: 12),
-                          CountryCodePhoneField(
-                            controller: _primaryMobileNumber,
-                            onCountryCodeChanged: (code) {
-                              print("Selected country code: $code");
-                            },
-                            validator: validatePhoneNumber,
-                          ),
-                          const SizedBox(height: 12),
-                          CustomTextField(
-                            padding: 0,
-                            borderRadius: 8,
-                            label: 'Primary Email Address *',
-                            hintText: 'Primary Email Address *',
-                            controller: _primaryEmailAddress,
-                            validator: validateEmail,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          const SizedBox(height: 15),
-                          const Divider(color: Color(0xffA6A9B5)),
-                          const SizedBox(height: 15),
-                          CustomTextField(
-                            padding: 0,
-                            borderRadius: 8,
-                            label: 'Secondary Contact Person',
-                            hintText: 'Secondary Contact Person',
-                            controller: _secondaryContactPerson,
-                            validator: validateContactPerson,
-                            keyboardType: TextInputType.name,
-                            textCapitalization: TextCapitalization.words,
-                          ),
-                          const SizedBox(height: 12),
-                          CustomTextField(
-                            padding: 0,
-                            borderRadius: 8,
-                            label: 'Secondary Email Address',
-                            hintText: 'Secondary Email Address',
-                            controller: _secondaryEmailAddress,
-                            validator: validateEmail,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          const SizedBox(height: 12),
-                          CountryCodePhoneField(
-                            controller: _secondaryMobileNumber,
-                            onCountryCodeChanged: (code) {
-                              print("Selected country code: $code");
-                            },
-                            validator: validatePhoneNumber,
-                          ),
-                          const SizedBox(height: 15),
-                          const Divider(color: Color(0xffA6A9B5)),
-                          const SizedBox(height: 15),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Consultancy Type",
-                            items: _consultancyType,
-                            value: _selectedConsultancyType,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedConsultancyType = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Consultancy Status",
-                            items: _consultancyStatus,
-                            value: _selectedConsultancyStatus,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedConsultancyStatus = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                flex: _selectedImage != null ? 8 : 10,
-                                child: GestureDetector(
-                                  onTap: _pickImage,
-                                  child: Container(
-                                    height: 45,
+                                    alignment: Alignment.center,
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 10),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                          color: const Color(0xFFEDEDED)),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        SvgPicture.asset(
-                                          'assets/icons/upload_icons.svg',
-                                          height: 20,
-                                          width: 20,
-                                          fit: BoxFit.contain,
-                                        ),
-                                        const SizedBox(width: 5),
-                                        Text(
-                                          'Upload Consultancy Logo',
-                                          style: GoogleFonts.montserrat(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                            color: const Color(0xff828282),
-                                          ),
-                                        ),
-                                      ],
+                                        vertical: 10),
+                                    child: Text(
+                                      'Profile Picture Preview',
+                                      style: GoogleFonts.montserrat(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xffA8B9CA)),
                                     ),
                                   ),
                                 ),
-                              ),
-                              if (_selectedImage != null) ...[
-                                const SizedBox(width: 10),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Image.file(
-                                    _selectedImage!,
-                                    height: 45,
-                                    width: 45,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ],
-                            ],
+                          const SizedBox(height: 2),
+                          Text(
+                            '*rxmed.png  size : 512kb',
+                            style: GoogleFonts.montserrat(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xff798AA3)),
                           ),
-                          const SizedBox(height: 25),
-                          _buildSectionTitle('Subscription Information',
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              child: SvgPicture.asset(
+                                'assets/icons/month_calendar_icon.svg',
+                                height: 10,
+                                width: 10,
+                              ),
+                            ),
+                            borderRadius: 8,
+                            label: 'Add Contract Period',
+                            hintText: 'Add Contract Period',
+                            controller: _contractPeriodController,
+                            // validator: validator,
+                            readOnly: true,
+                            enableInteractiveSelection: false,
+                            onTap: () async {
+                              FocusScope.of(context).unfocus();
+                              final selected =
+                              await CommonFunction().selectDate(context, _contractPeriodController);
+                              if (selected != null) {
+                                setState(() {
+                                  _contractPeriodController.text = selected;
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              child: SvgPicture.asset(
+                                'assets/icons/month_calendar_icon.svg',
+                                height: 10,
+                                width: 10,
+                              ),
+                            ),
+                            borderRadius: 8,
+                            label: 'Start Date / Joining Date',
+                            hintText: 'Start Date / Joining Date',
+                            controller: _joiningDateController,
+                            // validator: validator,
+                            readOnly: true,
+                            enableInteractiveSelection: false,
+                            onTap: () async {
+                              FocusScope.of(context).unfocus();
+                              final selected =
+                              await CommonFunction().selectDate(context, _joiningDateController);
+                              if (selected != null) {
+                                setState(() {
+                                  _joiningDateController.text = selected;
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              child: SvgPicture.asset(
+                                'assets/icons/month_calendar_icon.svg',
+                                height: 10,
+                                width: 10,
+                              ),
+                            ),
+                            borderRadius: 8,
+                            label: 'Select Expire / Last working date',
+                            hintText: 'Select Expire / Last working date',
+                            controller: _lastWorkingDateController,
+                            // validator: validator,
+                            readOnly: true,
+                            enableInteractiveSelection: false,
+                            onTap: () async {
+                              FocusScope.of(context).unfocus();
+                              final selected =
+                              await CommonFunction().selectDate(context, _lastWorkingDateController);
+                              if (selected != null) {
+                                setState(() {
+                                  _lastWorkingDateController.text = selected;
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomDropdownField(
+                            borderRadius: 8,
+                            label: "Select Client",
+                            items: _clientList,
+                            value: _selectedClient,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedClient = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomDropdownField(
+                            borderRadius: 8,
+                            label: "Select Employment Status",
+                            items: _employeeStatus,
+                            value: _selectedEmployeeStatus,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedEmployeeStatus = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+
+                          _buildSectionTitle('Designation',
                               const Color(0xffFF1901), FontWeight.w700),
                           const SizedBox(height: 10),
-                          _buildDateField('License Start Date',
-                              _startDateController, validateLicenseStartDate),
-                          const SizedBox(height: 12),
-                          _buildDateField('License End Date',
-                              _endDateController, validateLicenseEndDate),
-                          const SizedBox(height: 12),
-                          CustomTextField(
-                            padding: 0,
-                            borderRadius: 8,
-                            label: 'License Number',
-                            hintText: 'License Number',
-                            controller: _licenseNumber,
-                            // validator: validateEmail,
-                            validator: validateLicenseNumber,
-                          ),
-                          const SizedBox(height: 12),
                           CustomDropdownField(
                             borderRadius: 8,
-                            label: "Fees Structure",
-                            items: _feeStructure,
-                            value: _selectedFeeStructure,
+                            label: "Designation *",
+                            items: _designation,
+                            value: _selectedDesignation,
                             onChanged: (value) {
                               setState(() {
-                                _selectedFeeStructure = value;
+                                _selectedDesignation = value;
                               });
                             },
                           ),
                           const SizedBox(height: 12),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Last Paid Status",
-                            items: _lastPaidStatus,
-                            value: _selectedLastPaidStatus,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedLastPaidStatus = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            // mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildSectionTitle(
-                                'Last Paid Date / Payment mode :   --',
-                                const Color(0xff828282),
-                                FontWeight.w500,
-                              ),
-                              SvgPicture.asset('assets/icons/info_icon.svg'),
-                            ],
-                          ),
-                          const SizedBox(height: 25),
-                          _buildSectionTitle('Admin Credentials',
+
+                          _buildSectionTitle('User Credentials',
                               const Color(0xffFF1901), FontWeight.w700),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           CustomTextField(
                             padding: 0,
                             borderRadius: 8,
                             label: 'User Id / Email *',
                             hintText: 'User Id / Email *',
-                            controller: _adminCredential,
+                            controller: _userCredential,
+                            // validator: validateEmail,
+                            validator: validateUserIdOrEmail,
+                          ),
+                          const SizedBox(height: 10),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Type Default Password *',
+                            hintText: 'Type Default Password *',
+                            controller: _passwordCredential,
                             // validator: validateEmail,
                             validator: validateUserIdOrEmail,
                           ),
@@ -909,7 +827,7 @@ class _BomAddConsultancyScreenState
                             containerIcon: reset_password_value,
                             width: 200,
                             height: 46,
-                            text: 'Reset Password',
+                            text: 'Send Password',
                             onPressed: () {
                               setState(() {
                                 reset_password_value = !reset_password_value;
@@ -917,6 +835,37 @@ class _BomAddConsultancyScreenState
                             },
                           ),
                           const SizedBox(height: 30),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+
+                                CustomButton(
+                                  leftPadding: 2,
+                                  text: isEdit ? 'Update' : 'Submit',
+                                  width: 160,
+                                  height: 36,
+                                  borderRadius: 6,
+                                  onPressed: () {
+                                  },
+                                  isOutlined: true,
+                                  svgAsset: 'assets/icons/save.svg',
+                                ),
+                                CustomButton(
+                                  leftPadding: 2,
+                                  text: 'Cancel',
+                                  width: 160,
+                                  height: 36,
+                                  borderRadius: 6,
+                                  onPressed: () {},
+                                  isOutlined: true,
+                                  svgAsset: 'assets/icons/clear_icon.svg',
+                                ),
+
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -967,7 +916,6 @@ class _BomAddConsultancyScreenState
                 width: 10,
               ),
             ),
-            padding: 10,
             borderRadius: 8,
             label: 'DD / MM / YYYY',
             hintText: 'DD / MM / YYYY',
@@ -984,8 +932,6 @@ class _BomAddConsultancyScreenState
                   controller.text = selected;
                 });
               }
-              print(
-                  'Start date: ${_startDateController.text} ${_endDateController.text}');
             },
           ),
         ),
@@ -1014,7 +960,7 @@ class _BomAddConsultancyScreenState
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 GestureDetector(
                     onTap: () {
@@ -1022,46 +968,49 @@ class _BomAddConsultancyScreenState
                     },
                     child:
                         SvgPicture.asset('assets/icons/back.svg', height: 15)),
-                const SizedBox(width: 35),
-                CustomButton(
-                  leftPadding: 2,
-                  text: isEdit ? 'Update' : 'Save',
-                  width: 75,
-                  height: 36,
-                  borderRadius: 6,
-                  onPressed: () {
-                    _submitForm();
-                  },
-                  isOutlined: true,
-                  svgAsset: 'assets/icons/save.svg',
-                ),
-                CustomButton(
-                  leftPadding: 2,
-                  text: 'Clear',
-                  width: 75,
-                  height: 36,
-                  borderRadius: 6,
-                  onPressed: () {},
-                  isOutlined: true,
-                  svgAsset: 'assets/icons/clear_icon.svg',
-                ),
-                CustomButton(
-                  leftPadding: 2,
-                  text: 'Add Address',
-                  width: 100,
-                  height: 36,
-                  borderRadius: 6,
-                  onPressed: () {
-                    showAddAddressBottomSheet(
-                      context,
-                      widget.consultancy?['full_address'] ?? '',
-                    );
-                  },
-                  svgAsset: 'assets/icons/home_icon.svg',
-                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Add User',
+                  style: GoogleFonts.montserrat(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xffFF1901)),
+                )
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget genderOption({
+    required String label,
+    required String value,
+    IconData? icon,
+  }) {
+    bool isSelected = selectedGender == value;
+    return GestureDetector(
+      onTap: () => setState(() => selectedGender = value),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Checkbox(
+            value: isSelected,
+            onChanged: (val) => setState(() => selectedGender = value),
+            activeColor: Color(0xff007BFF),
+            side: const BorderSide(color: Color(0xff828282)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              color: const Color(0xff1D212D),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Icon(icon, color: isSelected ? Colors.blue : Colors.black54),
         ],
       ),
     );

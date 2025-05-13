@@ -5,11 +5,11 @@ import 'package:harris_j_system/ulits/custom_icon_container.dart';
 import 'package:intl/intl.dart';
 
 
-class ConsultancyPopup extends StatelessWidget {
+class ConsultancyDetailPopup extends StatelessWidget {
   final Map<String,dynamic> consultancy;
   final VoidCallback onDelete; // Callback to notify parent of deletion
 
-  const ConsultancyPopup({super.key, required this.consultancy, required this.onDelete});
+  const ConsultancyDetailPopup({super.key, required this.consultancy, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {

@@ -199,10 +199,11 @@ class CommonFunction{
     return null;
   }
 
-  Future<void> storeCustomerData({int? userId}) async {
+  Future<void> storeCustomerData({int? userId,String? token}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', userId??0);
     await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('token', token??'');
   }
 
 

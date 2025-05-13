@@ -9,7 +9,12 @@ import 'package:harris_j_system/screens/bom/bom_consultancy_screen.dart';
 import 'package:harris_j_system/screens/bom/bom_dashboard_screen.dart';
 import 'package:harris_j_system/screens/bom/bom_finance_screen.dart';
 import 'package:harris_j_system/screens/bom/bom_report_screen.dart';
+import 'package:harris_j_system/screens/bom/bom_static_setting_screen.dart';
+import 'package:harris_j_system/screens/consultancy/consultancy_add_user_screen.dart';
+import 'package:harris_j_system/screens/consultancy/consultancy_client_list_screen.dart';
 import 'package:harris_j_system/screens/consultancy/consultancy_dashboard_screen.dart';
+import 'package:harris_j_system/screens/consultancy/consultancy_report_screen.dart';
+import 'package:harris_j_system/screens/consultancy/consultancy_user_list_screen.dart';
 import 'package:harris_j_system/screens/consultant/consultant_claim_screen.dart';
 import 'package:harris_j_system/screens/consultant/consultant_dashboard_screen.dart';
 import 'package:harris_j_system/screens/consultant/consultant_timesheet_screen.dart';
@@ -21,13 +26,15 @@ import 'package:harris_j_system/screens/shared/splash_screen.dart';
 final GoRouter goRouter = GoRouter(
   initialLocation: Constant.splash,
   routes: [
-
     /// SHARED
-    GoRoute(path: Constant.splash, builder: (context, state) => const SplashScreen()),
-    GoRoute(path: Constant.onBoard, builder: (context, state) => const OnBoardScreen()),
-    GoRoute(path: Constant.login, builder: (context, state) => const LoginScreen()),
-
-
+    GoRoute(
+        path: Constant.splash,
+        builder: (context, state) => const SplashScreen()),
+    GoRoute(
+        path: Constant.onBoard,
+        builder: (context, state) => const OnBoardScreen()),
+    GoRoute(
+        path: Constant.login, builder: (context, state) => const LoginScreen()),
 
     /// CONSULTANCY FLOW
     ShellRoute(
@@ -67,7 +74,8 @@ final GoRouter goRouter = GoRouter(
         GoRoute(
           path: Constant.bomAddConsultancyScreen,
           builder: (context, state) {
-            final consultancy = state.extra as Map<String, dynamic>?; // or a model
+            final consultancy =
+                state.extra as Map<String, dynamic>?; // or a model
             return BomAddConsultancyScreen(consultancy: consultancy);
           },
         ),
@@ -78,9 +86,25 @@ final GoRouter goRouter = GoRouter(
         GoRoute(
           path: Constant.bomFinanceScreen,
           builder: (context, state) => const BomFinanceScreen(),
-        ),  GoRoute(
+        ),
+        GoRoute(
           path: Constant.bomReportScreen,
           builder: (context, state) => const BomReportScreen(),
+        ),
+        GoRoute(
+          path: Constant.bomStaticScreenScreen,
+          builder: (context, state) => const BomStaticSettingsScreen(),
+        ),
+        GoRoute(
+          path: Constant.consultancyReportScreen,
+          builder: (context, state) => const ConsultancyReportScreen(),
+        ),
+        GoRoute(
+          path: Constant.consultancyClientListScreen,
+          builder: (context, state) => const ConsultancyClientListScreen(),
+        ),GoRoute(
+          path: Constant.consultancyUserListScreen,
+          builder: (context, state) => const ConsultancyUserListScreen(),
         ),
       ],
     ),
@@ -93,7 +117,10 @@ final GoRouter goRouter = GoRouter(
           path: Constant.consultancyDashBoardScreen,
           builder: (context, state) => const ConsultancyDashboardScreen(),
         ),
-
+        GoRoute(
+          path: Constant.consultancyAddUserScreen,
+          builder: (context, state) => const ConsultancyAddUserScreen(),
+        ),
       ],
     ),
   ],

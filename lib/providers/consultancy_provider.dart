@@ -37,11 +37,12 @@ class GetConsultancyNotifier extends StateNotifier<GetConsultancyState> {
 
   GetConsultancyNotifier(this.apiService) : super(GetConsultancyState());
 
-  Future<void> fetchConsultancy() async {
+  Future<void> fetchConsultancy(String token) async {
     state = state.copyWith(isLoading: true, error: null);
     print('vghgj');
+
     try {
-      final response = await apiService.getConsultancy();
+      final response = await apiService.getConsultancy(token);
 
       final bool status = response['status'] ?? false;
       if (status) {
@@ -86,7 +87,9 @@ class GetConsultancyNotifier extends StateNotifier<GetConsultancyState> {
       String secondaryMobileCountryCode,
       bool resetPassword,
       int userId,
-      File consultancyImage) async
+      File consultancyImage,
+      String token,
+      ) async
   {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -116,7 +119,9 @@ class GetConsultancyNotifier extends StateNotifier<GetConsultancyState> {
           secondaryMobileCountryCode,
           resetPassword,
           userId,
-          consultancyImage);
+          consultancyImage,
+      token,
+      );
 
       state = state.copyWith(isLoading: false);
       return addConsultancyResponse;
@@ -159,13 +164,15 @@ class GetConsultancyNotifier extends StateNotifier<GetConsultancyState> {
       String secondaryMobileCountryCode,
       bool resetPassword,
       int userId,
-      File consultancyImage) async
+      File consultancyImage,
+      String token,
+      ) async
   {
     state = state.copyWith(isLoading: true, error: null);
     try {
       print(
           "edit-consultancy$id, $consultancyName,$consultancyId,$uenNumber,$fullAddress,$showAddressInput,$primaryContact,$primaryMobile,$primaryEmail,$secondaryContact,$secondaryEmail,$secondaryMobile,$consultancyType,$consultancyStatus,$licenseStartDate,$licenseEndDate,$licenseNumber,$feesStructure,$lastPaidStatus,$adminEmail,$primaryMobileCountryCode,$secondaryMobileCountryCode,$userId,$resetPassword,$consultancyImage");
-      final addConsultancyResponse = await apiService.editConsultancy(
+      final editConsultancyResponse = await apiService.editConsultancy(
         id,
           consultancyName,
           consultancyId,
@@ -190,10 +197,15 @@ class GetConsultancyNotifier extends StateNotifier<GetConsultancyState> {
           secondaryMobileCountryCode,
           resetPassword,
           userId,
-          consultancyImage);
+          consultancyImage,token);
 
-      state = state.copyWith(isLoading: false);
-      return addConsultancyResponse;
+      // if (editConsultancyResponse['status']) {
+        await fetchConsultancy(token); // Refresh list
+        state = state.copyWith(isLoading: false);
+        return editConsultancyResponse;
+      // }
+
+
     } catch (error) {
       print("error123 ${error.toString()}");
       state = state.copyWith(
@@ -208,13 +220,13 @@ class GetConsultancyNotifier extends StateNotifier<GetConsultancyState> {
     }
   }
 
-  Future<Map<String, dynamic>> deleteConsultancy(int id) async {
+  Future<Map<String, dynamic>> deleteConsultancy(int id,String token) async {
     try {
-      final response = await apiService.deleteConsultancy(id);
+      final response = await apiService.deleteConsultancy(id,token);
       final bool status = response['status'] ?? false;
 
       if (status) {
-        await fetchConsultancy(); // Refresh list
+        await fetchConsultancy(token); // Refresh list
         state = state.copyWith(isLoading: false);
       } else {
         state = state.copyWith(

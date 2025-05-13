@@ -18,6 +18,7 @@ import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BomConsultancyScreen extends ConsumerStatefulWidget {
   const BomConsultancyScreen({super.key});
@@ -33,6 +34,7 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
   bool isSearchBarVisible = false; // Track search bar visibility
   late List<Map<String, dynamic>> consultancies;
   final GlobalKey _menuIconKey = GlobalKey();
+  String? token;
 
   @override
   void initState() {
@@ -44,7 +46,10 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
 
   Future<void> _getConsultancyData() async {
     print('ghkjhk');
-    await ref.read(consultancyProvider.notifier).fetchConsultancy();
+
+    final prefs = await SharedPreferences.getInstance();
+     token = prefs.getString('token');
+    await ref.read(consultancyProvider.notifier).fetchConsultancy(token!);
   }
 
   // void _showConsultancyPopup(BuildContext context, Consultancy consultancy) {
@@ -201,7 +206,7 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
               ),
             ),
             Center(
-              child: ConsultancyPopup(
+              child: ConsultancyDetailPopup(
                 consultancy: consultancy,
                 onDelete: () {
                   setState(() {
@@ -471,7 +476,7 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
                                                                       .notifier)
                                                               .deleteConsultancy(
                                                                   consultancy[
-                                                                      'id']);
+                                                                      'id'],token!);
 
                                                           if (deleteResponse[
                                                                   'status'] ==

@@ -2,8 +2,11 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:harris_j_system/providers/consultant_provider.dart';
+import 'package:harris_j_system/services/api_service.dart';
 import 'package:harris_j_system/ulits/common_function.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
@@ -13,14 +16,14 @@ import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
-class BasicInformationScreen extends StatefulWidget {
+class BasicInformationScreen extends ConsumerStatefulWidget {
   const BasicInformationScreen({super.key});
 
   @override
-  State<BasicInformationScreen> createState() => _BasicInformationScreenState();
+  ConsumerState<BasicInformationScreen> createState() => _BasicInformationScreenState();
 }
 
-class _BasicInformationScreenState extends State<BasicInformationScreen> {
+class _BasicInformationScreenState extends ConsumerState<BasicInformationScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _middleNameController = TextEditingController();
@@ -40,6 +43,7 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
 
 
   File? _selectedImage;
+  File? _selectedResume;
 
   // ✅ Name Validation
   String? _validateName(String? value) {
@@ -106,16 +110,40 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
   }
 
   // ✅ Phone number Validation
-  void _validateAndSubmit() {
+  void _validateAndSubmit() async{
     setState(() {
       _citizenError = _selectedCitizenType == "Not Selected" ? "Citizenship is required" : null;
       _nationalityError = _selectedNationalityType == "Not Selected" ? "Nationality is required" : null;
     });
 
+    final firstName = _firstNameController.text.trim();
+    final middleName = _middleNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final dob = _dobController.text.trim();
+    final selectedCitizen = _selectedCitizenType;
+    final selectedNationality = _selectedNationalityType;
+    final address = _addressController.text.trim();
+    final mobileNumber = _contactNumberController.text.trim();
+
+
+
     if (_formKey.currentState!.validate() && _citizenError == null && _nationalityError == null) {
       // Proceed with form submission
       print("Form submitted successfully!");
+
+      try{
+
+        final response =  await ref.read(consultantProvider.notifier).updateBasicInfo(
+        firstName,middleName,lastName,dob,selectedCitizen!,selectedNationality!,address,mobileNumber,_selectedImage!,_selectedResume!,'');
+
+      }catch(e){
+
+      }
     }
+
+
+
+    // ApiService().updateBasicInfo(consultancyName, consultancyId, uenNumber, fullAddress, showAddressInput, primaryContact, primaryMobile, primaryEmail, secondaryContact, secondaryEmail, secondaryMobile, consultancyType, consultancyStatus, licenseStartDate, licenseEndDate, licenseNumber, feesStructure, lastPaidStatus, adminEmail, primaryMobileCountryCode, secondaryMobileCountryCode, resetPassword, userId, consultancyImageFile, token)
   }
 
   // ✅ Resume Validation
@@ -145,12 +173,14 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
       allowedExtensions: ['pdf', 'doc', 'docx'],
     );
 
-    if (result != null) {
+    if (result != null && result.files.single.path != null) {
       setState(() {
-        _resumeController .text = result.files.single.name; // Display file name
+        _resumeController.text = result.files.single.name; // Display file name
+        _selectedResume = File(result.files.single.path!); // Create File object
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

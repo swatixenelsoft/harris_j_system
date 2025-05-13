@@ -43,7 +43,7 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Hi Bruce Lee",
+                    Text("Hey Consultancy",
                         style: GoogleFonts.montserrat(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
@@ -57,10 +57,10 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.8,
+                    height: MediaQuery.sizeOf(context).height*0.8,
                     child: MasonryGridView.builder(
-                        itemCount: 4,
-                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 6,
+                        // physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
                         gridDelegate:
                         const SliverSimpleGridDelegateWithFixedCrossAxisCount(
@@ -74,10 +74,10 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
                             case 0:
                               card = GestureDetector(
                                 onTap: () {
-                                  context.push(Constant.timeSheet);
+                                  context.push(Constant.consultancyUserListScreen);
                                 },
                                 child: BottomCard(
-                                  title: "Timesheet",
+                                  title: "User Management",
                                   bgColor: const Color(0xff263238),
                                   textColor: Colors.white,
                                   image: 'assets/images/gridView1.png',
@@ -88,10 +88,10 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
                             case 1:
                               card = GestureDetector(
                                 onTap: () {
-                                  context.push(Constant.claimScreen);
+                                  context.push(Constant.consultancyClientListScreen);
                                 },
                                 child: BottomCard(
-                                  title: "Claims",
+                                  title: "Clients",
                                   lightRed: true,
                                   bgColor:
                                   const Color.fromRGBO(255, 25, 1, 0.09),
@@ -102,18 +102,23 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
                               );
                               break;
                             case 2:
-                              card = BottomCard(
-                                title: "Leave Log",
-                                white: true,
-                                bgColor: const Color.fromRGBO(0, 0, 0, 0.1),
-                                textColor: const Color(0xff5A5A5A),
-                                image: 'assets/images/gridView3.png',
-                                index: index,
+                              card = GestureDetector(
+                                onTap: () {
+                                  context.push(Constant.consultancyReportScreen);
+                                },
+                                child: BottomCard(
+                                  title: "Reports",
+                                  white: true,
+                                  bgColor: const Color.fromRGBO(0, 0, 0, 0.1),
+                                  textColor: const Color(0xff5A5A5A),
+                                  image: 'assets/images/gridView3.png',
+                                  index: index,
+                                ),
                               );
                               break;
                             case 3:
                               card = BottomCard(
-                                title: "Work Log",
+                                title: "Static Setup",
                                 orange: true,
                                 bgColor: const Color(0xffFFEDDA),
                                 textColor: const Color(0xff5A5A5A),
@@ -121,6 +126,17 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
                                 index: index,
                               );
                               break;
+                            case 5:
+                              card = BottomCard(
+                                title: "Feedback",
+                                orange: true,
+                                bgColor: const Color(0xffE5F1FF),
+                                textColor: const Color(0xff5A5A5A),
+                                image: 'assets/images/gridView5.png',
+                                index: index,
+                              );
+                              break;
+
                             default:
                               return const SizedBox.shrink();
                           }

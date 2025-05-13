@@ -48,8 +48,8 @@ class _SplashScreenState extends State<SplashScreen>
       upperBound: 2 * 3.1416, // Full 360-degree rotation in radians
     );
 
-    rotationAnimation = Tween<double>(begin: 0, end: 2 * 3.1416)
-        .animate(rotationController);
+    rotationAnimation =
+        Tween<double>(begin: 0, end: 2 * 3.1416).animate(rotationController);
 
     rotationController.repeat(); // Infinite rotation
 
@@ -75,12 +75,11 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     if (isLoggedIn) {
-      context.go(Constant.consultantDashBoardScreen); // Navigate to home
+      context.go(Constant.consultancyDashBoardScreen); // Navigate to home
     } else {
       context.go(Constant.onBoard); // Navigate to onboarding
     }
   }
-
 
   @override
   Widget build(BuildContext context) {

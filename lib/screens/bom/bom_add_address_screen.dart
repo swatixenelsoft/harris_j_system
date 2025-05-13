@@ -8,6 +8,7 @@ import 'package:harris_j_system/services/api_service.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BomAddAddressBottomSheet extends ConsumerStatefulWidget {
   const BomAddAddressBottomSheet({super.key,this.address});
@@ -45,6 +46,8 @@ class _BomAddAddressBottomSheetState
     'Shipping',
     'Other'
   ];
+  String? token;
+
 
   @override
   void initState() {
@@ -63,7 +66,7 @@ class _BomAddAddressBottomSheetState
         _apartmentNameController.text=addressMap['streetName']??'';
          ref
             .read(getCountryProvider.notifier)
-            .fetchStates(_selectedCountry!);
+            .fetchStates(_selectedCountry!,token!);
         _isVisible=true;
 
 // Now you can access values like:
@@ -78,7 +81,10 @@ class _BomAddAddressBottomSheetState
   }
 
   Future<void> _getCountryData() async {
-    await ref.read(getCountryProvider.notifier).fetchCountries();
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+    print('token $token');
+    await ref.read(getCountryProvider.notifier).fetchCountries(token!);
   }
 
   void _submitForm() async {
@@ -313,7 +319,7 @@ class _BomAddAddressBottomSheetState
                     });
                     await ref
                         .read(getCountryProvider.notifier)
-                        .fetchStates(_selectedCountry!);
+                        .fetchStates(_selectedCountry!,token!);
                   },
                   errorText: _isSubmitted && _selectedCountry == "Not Selected"
                       ? "Country is required"
