@@ -41,7 +41,6 @@ final bool containerIcon;
 
   @override
   Widget build(BuildContext context) {
-    print('svg $svgAsset');
     return SizedBox(
       width: width,
       height: height,

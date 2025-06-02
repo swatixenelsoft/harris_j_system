@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:harris_j_system/providers/consultant_provider.dart';
 import 'package:harris_j_system/widgets/leave_log_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CustomTabView extends StatefulWidget {
+  final GetConsultantState consultantState;
+  const CustomTabView({super.key,required this.consultantState});
+
   @override
-  _CustomTabViewState createState() => _CustomTabViewState();
+State<CustomTabView> createState() => _CustomTabViewState();
 }
+
 
 class _CustomTabViewState extends State<CustomTabView> {
   int selectedIndex = 0; // 0 -> Leave Log, 1 -> Work Summary
@@ -49,6 +56,9 @@ class _CustomTabViewState extends State<CustomTabView> {
       "textColor": Color(0xffFF1901)
     },
   ];
+
+  String? token;
+
 
   void _showPopup(BuildContext context, String tabName) {
     showGeneralDialog(
@@ -112,7 +122,7 @@ class _CustomTabViewState extends State<CustomTabView> {
 
                       // Wrapping _leaveLog() with a fixed height
                       SizedBox(
-                        height: selectedIndex == 1 ? 320:270, // Adjust the height as needed
+                        height: selectedIndex == 1 ? 320:290, // Adjust the height as needed
                         child: Scrollbar(
                           thickness: 4, // Adjust scrollbar thickness
                           radius: const Radius.circular(10),
@@ -124,7 +134,7 @@ class _CustomTabViewState extends State<CustomTabView> {
                             child: Padding(
                               padding: const EdgeInsets.only(right: 8),
                               child:
-                                  selectedIndex == 1 ? _workLog() : _leaveLog(),
+                                  selectedIndex == 1 ? _workLog() : _leaveLog(true),
                             ),
                           ),
                         ),
@@ -241,7 +251,7 @@ class _CustomTabViewState extends State<CustomTabView> {
   }
 
   Widget _buildLeaveLogContent() {
-    return _buildContent();
+    return _leaveLog(false);
   }
 
   Widget _buildWorkSummaryContent() {
@@ -249,6 +259,7 @@ class _CustomTabViewState extends State<CustomTabView> {
   }
 
   Widget _buildContent() {
+
     return Container(
       height: 140,
       decoration: const BoxDecoration(
@@ -269,7 +280,7 @@ class _CustomTabViewState extends State<CustomTabView> {
             // mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildStat(
-                  "168",
+                 widget.consultantState.consultantWorkLog!['forecasted_hours'].toString(),
                   "Hours Forecasted",
                   const Color(0xff008080),
                   CrossAxisAlignment.start,
@@ -283,7 +294,7 @@ class _CustomTabViewState extends State<CustomTabView> {
                       color: const Color(0xff000000))),
               const SizedBox(width: 57),
               _buildStat(
-                  "168",
+                  widget.consultantState.consultantWorkLog!['logged_hours'].toString(),
                   "Hours Logged",
                   const Color(0xff008080),
                   CrossAxisAlignment.start,
@@ -383,9 +394,9 @@ class _CustomTabViewState extends State<CustomTabView> {
       children: [
         _buildStatCard(
           [
-            _buildStatItem("168", "Total Work Hours",
+            _buildStatItem(widget.consultantState.consultantWorkLog!['forecasted_hours'].toString(), "Total Work Hours",
                 const Color.fromRGBO(0, 128, 128, 1)),
-            _buildStatItem("168", "Billed Work Hours",
+            _buildStatItem(widget.consultantState.consultantWorkLog!['logged_hours'].toString(), "Billed Work Hours",
                 const Color.fromRGBO(0, 128, 128, 1)),
           ],
           childAspectRatio: 5,
@@ -473,21 +484,38 @@ class _CustomTabViewState extends State<CustomTabView> {
     );
   }
 
-  Widget _leaveLog() {
+  Widget _leaveLog(bool fromZoom) {
+    final leaveLogs = widget.consultantState.consultantLeaveLog;
+
     return SizedBox(
-      height: 250,
+      height: !fromZoom ? 130 : 350,
       child: Scrollbar(
         thickness: 4,
         radius: const Radius.circular(10),
         thumbVisibility: true,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowHeight: 40,
+          child: leaveLogs == null || leaveLogs.isEmpty
+              ? SizedBox(
+            width: MediaQuery.of(context).size.width,
+            child: Center(
+              child: Text(
+                'No Leave Log Found',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.montserrat(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          )
+              : DataTable(
+            headingRowHeight: 30,
             columnSpacing: 20,
-            dataRowHeight: 50,
+            dataRowHeight: 30,
             headingRowColor: MaterialStateColor.resolveWith(
-                (states) => const Color(0xffF1F4F6)), // Set header color
+                    (states) => const Color(0xffF1F4F6)),
             headingTextStyle: GoogleFonts.montserrat(
               fontWeight: FontWeight.w600,
               color: const Color(0xff8D91A0),
@@ -499,12 +527,15 @@ class _CustomTabViewState extends State<CustomTabView> {
               DataColumn(label: Text("To")),
               DataColumn(label: Text("Days")),
             ],
-            rows: leaveList.map((leave) => _buildDataRow(leave)).toList(),
+            rows: leaveLogs
+                .map((leave) => _buildDataRow(leave))
+                .toList(),
           ),
         ),
       ),
     );
   }
+
 
   DataRow _buildDataRow(leave) {
     return DataRow(cells: [
@@ -516,28 +547,28 @@ class _CustomTabViewState extends State<CustomTabView> {
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
-            leave['type'],
+            leave['record']['leaveType'],
             style: GoogleFonts.montserrat(
-                color: leave['textColor'],
+                color: Color(0xff007bff),
                 fontWeight: FontWeight.w500,
-                fontSize: 14),
+                fontSize: 12),
           ),
         ),
       ),
       DataCell(Text(
-        leave['from'],
+        leave['record']['from'],
         style: GoogleFonts.montserrat(
-            color: Colors.black, fontWeight: FontWeight.w500, fontSize: 14),
+            color: Colors.black, fontWeight: FontWeight.w500, fontSize: 12),
       )),
       DataCell(Text(
-        leave['to'],
+        leave['record']['to'],
         style: GoogleFonts.montserrat(
-            color: Colors.black, fontWeight: FontWeight.w500, fontSize: 14),
+            color: Colors.black, fontWeight: FontWeight.w500, fontSize: 12),
       )),
       DataCell(Text(
-        leave['days'],
+        leave['record']['count'],
         style: GoogleFonts.montserrat(
-            color: Colors.red, fontWeight: FontWeight.w500, fontSize: 14),
+            color: Colors.red, fontWeight: FontWeight.w500, fontSize: 12),
       )),
     ]);
   }

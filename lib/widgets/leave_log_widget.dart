@@ -8,6 +8,8 @@ class LeaveLogScreen extends StatelessWidget {
     {"form": "#2850", "amount": "1000.00", "count": "01"},
   ];
 
+   LeaveLogScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return

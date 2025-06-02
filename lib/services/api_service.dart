@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:harris_j_system/services/api_constant.dart';
 
 class ApiService {
@@ -36,8 +39,9 @@ class ApiService {
         ApiConstant.getConsultancy,
         options: Options(
           headers: {
-        'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token'},
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
         ),
       );
 
@@ -59,10 +63,10 @@ class ApiService {
         options: Options(
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token'},
+            'Authorization': 'Bearer $token'
+          },
         ),
       );
-
 
       print('response $response');
       return response.data;
@@ -75,19 +79,16 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> fetchState(String country,String token) async {
+  Future<Map<String, dynamic>> fetchState(String country, String token) async {
     print(ApiConstant.countries + country);
 
     try {
       final response = await _dio.get(
         ApiConstant.states + country,
         options: Options(
-          headers: {
-            'Authorization': 'Bearer $token'},
+          headers: {'Authorization': 'Bearer $token'},
         ),
-
-
-    );
+      );
       print('response $response');
       return response.data;
     } on DioException catch (e) {
@@ -124,7 +125,7 @@ class ApiService {
     bool resetPassword,
     int userId,
     File consultancyImageFile,
-      String token,// Path to the image file
+    String token, // Path to the image file
   ) async {
     try {
       FormData formData = FormData.fromMap({
@@ -168,9 +169,7 @@ class ApiService {
             'Authorization': 'Bearer $token'
             // Add auth or other headers if needed
           },
-
-
-      ),
+        ),
       );
       print('addConsultancyresponse $response');
       return response.data;
@@ -215,7 +214,7 @@ class ApiService {
     bool resetPassword,
     int userId,
     File consultancyImageFile,
-      String token,// Path to the image file
+    String token, // Path to the image file
   ) async {
     try {
       FormData formData = FormData.fromMap({
@@ -278,19 +277,19 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> deleteConsultancy(int id,String token) async {
+  Future<Map<String, dynamic>> deleteConsultancy(int id, String token) async {
     try {
       print('deleteId $id');
-      final response =
-          await _dio.delete('${ApiConstant.deleteConsultancy}/$id',
-            options: Options(
-            headers: {
+      final response = await _dio.delete(
+        '${ApiConstant.deleteConsultancy}/$id',
+        options: Options(
+          headers: {
             'Content-Type': 'multipart/form-data',
             'Authorization': 'Bearer $token'
             // Add auth or other headers if needed
-            },
-          ),
-          );
+          },
+        ),
+      );
       print('response-delete $response');
       return response.data;
     } on DioException catch (e) {
@@ -303,8 +302,18 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> updateBasicInfo(
-  String firstName,String middleName,String lastName,String dob,String selectedCitizen,String selectedNationality,String address,String mobileNumber,File selectedImage,File selectedResume,String token,// Path to the image file
-      ) async {
+    String firstName,
+    String middleName,
+    String lastName,
+    String dob,
+    String selectedCitizen,
+    String selectedNationality,
+    String address,
+    String mobileNumber,
+    File selectedImage,
+    File selectedResume,
+    String token, // Path to the image file
+  ) async {
     try {
       FormData formData = FormData.fromMap({
         'user_id': '',
@@ -316,13 +325,12 @@ class ApiService {
         'nationality': selectedNationality,
         'address_by_user': address,
         'mobile_number': mobileNumber,
-        'profile_image':  await MultipartFile.fromFile(
+        'profile_image': await MultipartFile.fromFile(
           selectedImage.path,
         ),
-        'resume_file':  await MultipartFile.fromFile(
+        'resume_file': await MultipartFile.fromFile(
           selectedResume.path,
         ),
-
       });
 
       print('formData ${formData.fields},${formData.files}');
@@ -337,8 +345,6 @@ class ApiService {
             'Authorization': 'Bearer $token'
             // Add auth or other headers if needed
           },
-
-
         ),
       );
       print('addConsultancyresponse $response');
@@ -357,4 +363,297 @@ class ApiService {
       throw Exception(e.toString());
     }
   }
+
+//consultant Api
+  Future<Map<String, dynamic>> consultantTimesheet(
+      String token, String month, String year) async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'month': month,
+        'year': year,
+      });
+      // print('formData ${formData.fields}');
+      final response = await _dio.post(
+        ApiConstant.consultantTimeSheet,
+        data: formData,
+        options: Options(
+          headers: {
+            // 'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      log('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> consultantClaimSheet(
+      String token) async
+  {
+    try {
+
+      // print('formData ${formData.fields}');
+      final response = await _dio.post(
+        ApiConstant.consultantClaimSheet,
+        options: Options(
+          headers: {
+            // 'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      log('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> consultantLeaveWorkLog(
+      String token, String month, String year) async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'month': month,
+        'year': year,
+      });
+      // print('formData ${formData.fields}');
+      final response = await _dio.post(
+        ApiConstant.getLeaveWorkLog,
+        data: formData,
+        options: Options(
+          headers: {
+            // 'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      log('Response11 data: ${jsonEncode(response.data)}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> consultantTimesheetRemark(
+      String token, String month, String year) async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'month': month,
+        'year': year,
+      });
+      // print('formData ${formData.fields}');
+      final response = await _dio.post(
+        ApiConstant.getTimesheetRemarks,
+        data: formData,
+        options: Options(
+          headers: {
+            // 'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      log('Response22 data: ${jsonEncode(response.data)}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+
+  Future<Map<String, dynamic>> fetchDashboardData(String token) async {
+
+    try {
+      final response = await _dio.get(
+        ApiConstant.getDashboard,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token'},
+        ),
+      );
+      print('response $response');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> addFeedBack(
+    String token,
+    int userId,
+    String feedback,
+  ) async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'user_id': userId,
+        'message': feedback,
+      });
+      print('formData $token');
+      final response = await _dio.post(
+        ApiConstant.feedback,
+        data: formData,
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+
+  Future<Map<String, dynamic>> addTimeSheetData(
+      String token,
+      String userId,
+      String type,
+      String clientId,
+      String clientName,
+      String status,
+      List<Map<String, dynamic>> record,
+      String corporateEmail,
+      String reportingManagerEmail,
+      String selectMonth,
+      String selectYear,
+      dynamic certificate,
+      ) async
+  {
+    print('certificate $certificate $corporateEmail,$reportingManagerEmail,$selectMonth,$selectYear');
+
+    final Map<String, dynamic> formMap = {
+      'type': type,
+      'user_id': userId,
+      'client_id': clientId,
+      'client_name': clientName,
+      'status': status,
+      'record': jsonEncode(record),
+    };
+    if(corporateEmail.isNotEmpty && reportingManagerEmail.isNotEmpty&& selectMonth.isNotEmpty&& selectYear.isNotEmpty){
+      formMap['corporate_email'] =corporateEmail;
+      formMap['reporting_manager_email'] =reportingManagerEmail;
+      formMap['selectedMonth'] =selectMonth;
+      formMap['selectedYear'] =selectYear;
+    }
+
+    if (certificate != null && certificate is PlatformFile) {
+      formMap['certificate'] = await MultipartFile.fromFile(
+        certificate.path!,
+        filename: certificate.name,
+      );
+    }
+
+    for (final entry in formMap.entries) {
+      if (entry.value is MultipartFile) {
+        print('${entry.key}: [File] ${certificate.name}');
+      } else {
+        print('${entry.key}: ${entry.value}');
+      }
+    }
+
+    try {
+      FormData formData = FormData.fromMap(formMap);
+
+
+      log('formData ${formData.fields}');
+      final response = await _dio.post(
+        ApiConstant.addTimesheetData,
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response?.realUri}');
+      print('responsetimesheetelse ${e.response?.statusCode}');
+      print('responsetimesheetelse ${e.response?.data}');
+      return e.response?.data ?? {'error': 'No response from server'};
+    }
+  }
+
 }

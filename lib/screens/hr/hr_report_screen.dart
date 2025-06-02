@@ -7,16 +7,37 @@ import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 
-class ConsultancyReportScreen extends StatefulWidget {
-  const ConsultancyReportScreen({super.key});
+class HrReportScreen extends StatefulWidget {
+  const HrReportScreen({super.key});
 
   @override
-  State<ConsultancyReportScreen> createState() =>
-      _ConsultancyReportScreenState();
+  State<HrReportScreen> createState() =>
+      _HrReportScreenState();
 }
 
-class _ConsultancyReportScreenState extends State<ConsultancyReportScreen> {
+class _HrReportScreenState extends State<HrReportScreen> {
   final reports = [
+    "Per Consultancy Data Summary",
+    "All Consultancy Data Summary",
+    "Offboarded Consultancy Data Summaryyyyyyyyy",
+    "Per Consultancy Data Summary",
+    "All Consultancy Data Summary",
+    "Offboarded Consultancy Data Summary",
+    "Per Consultancy Data Summary",
+    "Per Consultancy Data Summary",
+    "All Consultancy Data Summary",
+    "Offboarded Consultancy Data Summaryyyyyyyyy",
+    "Per Consultancy Data Summary",
+    "All Consultancy Data Summary",
+    "Offboarded Consultancy Data Summary",
+    "Per Consultancy Data Summary",
+    "Per Consultancy Data Summary",
+    "All Consultancy Data Summary",
+    "Offboarded Consultancy Data Summaryyyyyyyyy",
+    "Per Consultancy Data Summary",
+    "All Consultancy Data Summary",
+    "Offboarded Consultancy Data Summary",
+    "Per Consultancy Data Summary",
     "Per Consultancy Data Summary",
     "All Consultancy Data Summary",
     "Offboarded Consultancy Data Summaryyyyyyyyy",
@@ -86,7 +107,7 @@ class _ConsultancyReportScreenState extends State<ConsultancyReportScreen> {
                     height: MediaQuery.of(context).size.height * 0.75,
                     child: ListView.separated(
                       separatorBuilder: (context, index) =>
-                          const SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       itemCount: reports.length,
                       itemBuilder: (context, index) {
                         return Padding(
@@ -166,7 +187,7 @@ class _ConsultancyReportScreenState extends State<ConsultancyReportScreen> {
                       context.pop();
                     },
                     child:
-                        SvgPicture.asset('assets/icons/back.svg', height: 15)),
+                    SvgPicture.asset('assets/icons/back.svg', height: 15)),
                 Text(
                   'Reports',
                   style: GoogleFonts.montserrat(
@@ -215,32 +236,32 @@ class _ConsultancyReportScreenState extends State<ConsultancyReportScreen> {
                 ),
               isSearchBarVisible
                   ? Expanded(
-                      child: CustomTextField(
-                        label: "Search",
-                        hintText: "Search",
-                        controller: _searchController,
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.close,
-                              size: 20, color: Colors.grey),
-                          onPressed: () {
-                            setState(() {
-                              _searchController.clear();
-                              isSearchBarVisible = false;
-                            });
-                          },
-                        ),
-                      ),
-                    )
+                child: CustomTextField(
+                  label: "Search",
+                  hintText: "Search",
+                  controller: _searchController,
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.close,
+                        size: 20, color: Colors.grey),
+                    onPressed: () {
+                      setState(() {
+                        _searchController.clear();
+                        isSearchBarVisible = false;
+                      });
+                    },
+                  ),
+                ),
+              )
                   : GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          isSearchBarVisible = true;
-                        });
-                      },
-                      child: SvgPicture.asset(
-                        'assets/icons/search_icon.svg',
-                      ),
-                    ),
+                onTap: () {
+                  setState(() {
+                    isSearchBarVisible = true;
+                  });
+                },
+                child: SvgPicture.asset(
+                  'assets/icons/search_icon.svg',
+                ),
+              ),
             ],
           )
         ],

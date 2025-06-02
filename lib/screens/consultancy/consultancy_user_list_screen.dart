@@ -9,6 +9,7 @@ import 'package:harris_j_system/providers/consultancy_provider.dart';
 import 'package:harris_j_system/screens/bom/widget/import_export.dart';
 import 'package:harris_j_system/screens/consultancy/consultancy_client_detail_popup.dart';
 import 'package:harris_j_system/screens/consultancy/widget/consultancy_user_data_table_widget.dart';
+import 'package:harris_j_system/screens/hr/hr_consultant_detail_popup.dart';
 import 'package:harris_j_system/screens/navigation/constant.dart';
 import 'package:harris_j_system/ulits/custom_icon_container.dart';
 import 'package:harris_j_system/ulits/custom_loader.dart';
@@ -106,8 +107,8 @@ class _ConsultancyUserListScreenState
               ),
             ),
             Center(
-              child: ConsultancyClientDetailPopup(
-                consultancy: consultancy,
+              child: HrConsultantDetailPopup(
+                consultant: consultancy,
                 onDelete: () {},
               ),
             ),
@@ -148,7 +149,7 @@ class _ConsultancyUserListScreenState
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CustomAppBar(
-          showBackButton: false, image: 'assets/images/bom/bom_logo.png'),
+          showBackButton: false, image: 'assets/icons/cons_logo.png'),
       body: SafeArea(
           child:
           // consultancyState.isLoading
@@ -287,13 +288,47 @@ class _ConsultancyUserListScreenState
                 CustomButton(
                   svgAsset: 'assets/icons/add_icon.svg',
                   text: 'Add User',
-                  onPressed: () async {},
+                  onPressed: () async {
+                    context.push(Constant.consultancyAddUserScreen);
+                  },
                   height: 39,
                   width: 110,
                 ),
                 const SizedBox(width: 10),
               ],
             ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              SizedBox(
+                width: 280,
+                child: CustomTextField(
+                  label: "Search",
+                  hintText: "Search Consultant...",
+                  controller: _searchController,
+                  prefixIcon: Padding(
+                    padding:
+                    const EdgeInsets.all(14.0), // optional padding for spacing
+                    child: SizedBox(
+                      height: 10,
+                      width: 10,
+                      child: SvgPicture.asset(
+                        'assets/icons/search_icon.svg',
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 30),
+              GestureDetector(
+                onTap: () {
+                  _showFilterDialog(context);
+                },
+                child: SvgPicture.asset('assets/icons/filter_icon.svg',
+                    height: 15),
+              ),
+            ],
           ),
         ],
       ),

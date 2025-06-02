@@ -5,6 +5,7 @@ import 'package:harris_j_system/screens/shared/on_board_screen.dart';
 import 'package:harris_j_system/screens/shared/splash_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: MyApp()));
 }
 

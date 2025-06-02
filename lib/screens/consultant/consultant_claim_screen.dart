@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:harris_j_system/providers/consultant_provider.dart';
+import 'package:harris_j_system/screens/navigation/constant.dart';
+import 'package:harris_j_system/ulits/custom_loader.dart';
+import 'package:harris_j_system/ulits/toast_helper.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,17 +15,21 @@ import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/remark_section.dart';
 import 'package:harris_j_system/widgets/tab_view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ClaimScreen extends StatefulWidget {
+import 'consultant_timesheet_screen.dart';
+
+class ClaimScreen extends ConsumerStatefulWidget {
   const ClaimScreen({super.key});
 
   @override
-  State<ClaimScreen> createState() => _ClaimScreenState();
+  ConsumerState<ClaimScreen> createState() => _ClaimScreenState();
 }
 
-class _ClaimScreenState extends State<ClaimScreen> {
+class _ClaimScreenState extends ConsumerState<ClaimScreen> {
   int activeIndex = 0;
   double calendarHeight = 350;
+  String? token;
 
   List<String> iconData = [
     'assets/icons/icon1.svg',
@@ -31,46 +41,75 @@ class _ClaimScreenState extends State<ClaimScreen> {
     'assets/icons/icon7.svg',
   ];
 
-  Map<DateTime, List<Map<String, dynamic>>> customData = {
-    DateTime(DateTime.now().year, DateTime.now().month, 5): [
-      {
-        'type': 'taxi',
-        'color': Colors.orange,
-      },
-    ],
-    DateTime(DateTime.now().year, DateTime.now().month, 6): [
-      {
-        'type': 'food',
-        'color': Colors.red,
-      },
-    ],
-    DateTime(DateTime.now().year, DateTime.now().month, 9): [
-      {
-        'type': 'meeting',
-        'color': Colors.blue,
-      },
-      {
-        'type': 'food',
-        'color': Colors.red,
-      },
-      {
-        'type': 'taxi',
-        'color': Colors.orange,
-      },
-      {
-        'type': 'taxi1',
-        'color': Colors.grey,
-      },
-      {
-        'type': 'taxi2',
-        'color': Colors.green,
-      },
-      {
-        'type': 'taxi3',
-        'color': Colors.yellow,
-      },
-    ],
-  };
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      _getConsultantTimeSheet();
+    });
+  }
+
+  Future<void> _getConsultantTimeSheet() async {
+    print('ghkjhk');
+
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+    await ref.read(consultantProvider.notifier).consultantClaimSheet(
+        token!);
+
+  }
+
+  Map<DateTime, List<Map<String, dynamic>>> parseTimelineData(Map<String, dynamic> json) {
+    final Map<DateTime, List<Map<String, dynamic>>> customData = {};
+
+    final List dataList = json['data'] ?? [];
+
+    for (var item in dataList) {
+      final List days = item['days'] ?? [];
+
+      for (var day in days) {
+        final int? dayNum = day['day'];
+        final String? type = day['type'];
+        final String? expenseType = day['details']?['expenseType'];
+
+        if (dayNum == null || (type != 'claims' && type != 'timesheet')) continue;
+
+        // Determine color based on expenseType or type
+        Color color;
+        switch ((expenseType ?? type)?.toLowerCase()) {
+          case 'taxi':
+            color = const Color(0xffEBF9F1);
+            break;
+          case 'dining':
+            color = const Color(0xffFBE7E8);
+            break;
+          case 'others':
+            color = const Color(0xffFF9F2D);
+            break;
+          default:
+            color = Colors.grey;
+        }
+
+        final dateKey = DateTime(
+          DateTime.parse(item['start_date']).year,
+          DateTime.parse(item['start_date']).month,
+          dayNum,
+        );
+
+        customData.putIfAbsent(dateKey, () => []).add({
+          'type': (expenseType ?? type)?.toLowerCase(),
+          'color': color,
+        });
+      }
+    }
+
+    print('customData $customData');
+    return customData;
+  }
+
+
+
+
 
   final List<String> tabsData = ["Claims", "Get Copies"];
 
@@ -85,25 +124,51 @@ class _ClaimScreenState extends State<ClaimScreen> {
     });
   }
 
+  void _refreshData() async {
+    await ref.read(consultantProvider.notifier).consultantClaimSheet(
+        token!);
+
+    setState(() {});
+    print('refresh ');
+  }
   @override
   Widget build(BuildContext context) {
-    print('custom ${customData}');
+    final consultantState = ref.watch(consultantProvider);
+
+    if (consultantState.isLoading) {
+      return const Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: CustomLoader(color: Color(0xffFF1901)),
+          ),
+        ),
+      );
+    }
+print('consultantState.consultantClaimSheet ${consultantState.consultantClaimSheet}');
+    final customData = parseTimelineData(consultantState.consultantClaimSheet!);
+    print('customData ${customData}');
     return Scaffold(
       body: SafeArea(
         child: NestedScrollView(
           physics: const ClampingScrollPhysics(),
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return <Widget>[
-              const SliverAppBar(
+               SliverAppBar(
                 automaticallyImplyLeading: false,
                 flexibleSpace: FlexibleSpaceBar(
-                  background: CustomAppBar(showBackButton: false,image: 'assets/icons/cons_logo.png'),
+                  background: CustomAppBar( showBackButton: false,
+                    image: 'assets/icons/cons_logo.png',
+                    onProfilePressed: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.clear();
+                      context.pushReplacement(Constant.login);
+                    },),
                 ),
               ),
               SliverToBoxAdapter(
                 child: Column(
                   children: [
-                    _buildHeaderContent(),
+                    _buildHeaderContent(consultantState),
                   ],
                 ),
               ),
@@ -119,7 +184,7 @@ class _ClaimScreenState extends State<ClaimScreen> {
                       Container(
                         // margin: const EdgeInsets.only(top: 30),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 9, vertical: 5),
+                            horizontal: 5, vertical: 5),
                         width: double.infinity,
                         color: const Color(0xffF5F5F5),
                         child: _stepperUI(context, iconData, activeIndex),
@@ -144,7 +209,9 @@ class _ClaimScreenState extends State<ClaimScreen> {
                             onHeightCalculated:
                                 _updateCalendarHeight, // Update dynamically
                             customData: customData,
-                            isFromClaimScreen: true),
+                            isFromClaimScreen: true,
+                          onDataUpdated: _refreshData,
+                        ),
                       ),
                     ],
                   ),
@@ -168,7 +235,7 @@ class _ClaimScreenState extends State<ClaimScreen> {
     );
   }
 
-  Widget _buildHeaderContent() {
+  Widget _buildHeaderContent(consultantState) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
       decoration: BoxDecoration(
@@ -181,7 +248,7 @@ class _ClaimScreenState extends State<ClaimScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeaderActions(),
+          _buildHeaderActions(consultantState),
           const SizedBox(height: 15),
           _buildEmployeeInfo(),
           const SizedBox(height: 15),
@@ -191,12 +258,30 @@ class _ClaimScreenState extends State<ClaimScreen> {
     );
   }
 
-  Widget _buildHeaderActions() {
+  Widget _buildHeaderActions(GetConsultantState consultantState) {
     return Row(
       children: [
-        SvgPicture.asset('assets/icons/back.svg', height: 15),
+        GestureDetector(
+            onTap: () {
+              context.pop();
+            },
+            child: SvgPicture.asset('assets/icons/back.svg', height: 15)),
         const Spacer(),
-        SvgPicture.asset('assets/icons/edit_icon.svg'),
+        GestureDetector(
+            onTap: () {
+              setState(() {
+                consultantState.isEditable =
+                !(consultantState.isEditable ?? false);
+              });
+
+              ToastHelper.showInfo(
+                context,
+                consultantState.isEditable ? "Edit Enabled" : "Edit Disabled",
+              );
+
+              print('isEdit ${consultantState.isEditable}');
+            },
+            child: SvgPicture.asset('assets/icons/edit_icon.svg')),
         const SizedBox(width: 10),
         CustomButton(
           text: 'Save',

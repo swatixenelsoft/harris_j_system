@@ -18,4 +18,13 @@ class Constant {
   static const String consultancyAddUserScreen = '/consultancy/consultancyAddUserScreen';
   static const String consultancyClientListScreen = '/consultancy/consultancyClientListScreen';
   static const String consultancyReportScreen = '/consultancy/consultancyReportScreen';
+
+  // HR Flow
+  static const String hrDashboardScreen = '/hr/hrDashboardScreen';
+  static const String hrConsultantListScreen = '/hr/hrConsultantListScreen';
+  static const String hrAddConsultantScreen = '/hr/hrAddConsultantScreen';
+  static const String hrReportScreen = '/hr/hrReportScreen';
+  static const String hrFeedBackScreen = '/hr/hrFeedBackScreen';
+  static const String hrConsultantTimesheetScreen = '/hr/hrConsultantTimesheetScreen';
+  static const String hrConsultantClaimScreen = '/hr/hrConsultantClaimScreen';
 }

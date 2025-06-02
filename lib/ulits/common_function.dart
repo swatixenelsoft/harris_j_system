@@ -199,9 +199,10 @@ class CommonFunction{
     return null;
   }
 
-  Future<void> storeCustomerData({int? userId,String? token}) async {
+  Future<void> storeCustomerData({int? userId,int? roleId,String? token}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', userId??0);
+    await prefs.setInt('roleId', roleId??0);
     await prefs.setBool('isLoggedIn', true);
     await prefs.setString('token', token??'');
   }
@@ -255,4 +256,11 @@ class CommonFunction{
     Overlay.of(context).insert(overlayEntry);
   }
 
+
+
+  String getCurrentTimeFormatted() {
+    final now = DateTime.now();
+    final formatter = DateFormat('hh:mm a'); // 12-hour format with AM/PM
+    return formatter.format(now); // e.g., "10:25 AM"
+  }
 }

@@ -17,7 +17,7 @@ final List<Map<String, dynamic>> tableData = [
     'consultancy_name': 'Encore Films',
     'license_expiry': '12 /08/2024  10 : 12 : 34 AM',
     'status': {
-      'label': 'Approved',
+      'label': 'Active',
       'color': Colors.green,
       'background': Colors.green.withOpacity(0.1),
     },
@@ -26,7 +26,7 @@ final List<Map<String, dynamic>> tableData = [
     'consultancy_name': 'Encore Films',
     'license_expiry': '12 /08/2024  10 : 12 : 34 AM',
     'status': {
-      'label': 'Approved',
+      'label': 'Active',
       'color': Colors.green,
       'background': Colors.green.withOpacity(0.1),
     },
@@ -35,7 +35,7 @@ final List<Map<String, dynamic>> tableData = [
     'consultancy_name': 'Encore Films',
     'license_expiry': '12 /08/2024  10 : 12 : 34 AM',
     'status': {
-      'label': 'Approved',
+      'label': 'Active',
       'color': Colors.green,
       'background': Colors.green.withOpacity(0.1),
     },
@@ -44,7 +44,7 @@ final List<Map<String, dynamic>> tableData = [
     'consultancy_name': 'Encore Films',
     'license_expiry': '12 /08/2024  10 : 12 : 34 AM',
     'status': {
-      'label': 'Approved',
+      'label': 'Active',
       'color': Colors.green,
       'background': Colors.green.withOpacity(0.1),
     },
@@ -53,7 +53,7 @@ final List<Map<String, dynamic>> tableData = [
     'consultancy_name': 'Encore Films',
     'license_expiry': '12 /08/2024  10 : 12 : 34 AM',
     'status': {
-      'label': 'Approved',
+      'label': 'Active',
       'color': Colors.green,
       'background': Colors.green.withOpacity(0.1),
     },
@@ -74,37 +74,28 @@ class BomDashboardScreen extends StatefulWidget {
 }
 
 class _BomDashboardScreenState extends State<BomDashboardScreen> {
-  bool showInfoSections = true;
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(seconds: 5), () {
-      setState(() {
-        showInfoSections = false;
-      });
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar:  CustomAppBar(
-          showBackButton: false,showProfileIcon : true, image: 'assets/images/bom/bom_logo.png',onProfilePressed: ()  async{
 
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.clear();
-        context.pushReplacement(Constant.login);
-      },
-     ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
+              CustomAppBar(
+                showBackButton: false,showProfileIcon : true, image: 'assets/images/bom/bom_logo.png',onProfilePressed: ()  async{
+
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+                context.pushReplacement(Constant.login);
+              },
+              ),
               // Notifications
 
-              if (showInfoSections)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Container(
@@ -157,38 +148,18 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
                     ),
                   ),
                 ),
-              SizedBox(height: showInfoSections ? 24 : 10),
+              SizedBox(height: 10),
 
               // User Greeting & Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Hi Bruce Lee",
-                        style: GoogleFonts.montserrat(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xff5A5A5A))),
-                    CustomButton(
-                      text: "View DashBoard",
-                      onPressed: () {
-                        setState(() {
-                          showInfoSections = !showInfoSections;
-                        });
-                      },
-                      height: 34,
-                      width: 151,
-                      isOutlined: true,
-                      borderRadius: 5,
-                      icon: showInfoSections
-                          ? Icons.keyboard_arrow_up_sharp
-                          : Icons.keyboard_arrow_down_sharp,
-                    ),
-                  ],
-                ),
+                child: Text("Hi Bruce Lee",
+                    style: GoogleFonts.montserrat(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xff5A5A5A))),
               ),
-              if (showInfoSections) ...[
+
                 const SizedBox(height: 16),
                 // Work Hour Log
                 Padding(
@@ -326,101 +297,99 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
                 ),
 
                 CustomTableView(data: tableData,heading:heading),
-              ],
+
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.8,
-                    child: MasonryGridView.builder(
-                        itemCount: 4,
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        gridDelegate:
-                            const SliverSimpleGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                        ),
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        itemBuilder: (context, index) {
-                          Widget card;
-                          switch (index) {
-                            case 0:
-                              card = GestureDetector(
-                                onTap: () {
-                                  context.push(Constant.bomConsultancyScreen);
-                                },
-                                child: BottomCard(
-                                  title: "Consultancy",
-                                  bgColor: const Color(0xff263238),
-                                  textColor: Colors.white,
-                                  image:
-                                      'assets/images/bom/bom_consultancy.png',
-                                  index: index,
-                                ),
-                              );
-                              break;
-                            case 1:
-                              card = GestureDetector(
-                                onTap: () {
-                                  context.push(Constant.bomFinanceScreen);
-                                },
-                                child: BottomCard(
-                                  title: "Finances",
-                                  lightRed: true,
-                                  bgColor:
-                                      const Color.fromRGBO(255, 25, 1, 0.09),
-                                  textColor: const Color(0xff5A5A5A),
-                                  image: 'assets/images/bom/bom_finances.png',
-                                  index: index,
-                                ),
-                              );
-                              break;
-                            case 2:
-                              card = GestureDetector(
-                                onTap: () {
-                                  context.push(Constant.bomReportScreen);
-                                },
-                                child: BottomCard(
-                                  title: "Reports",
-                                  white: true,
-                                  bgColor: const Color.fromRGBO(0, 0, 0, 0.1),
-                                  textColor: const Color(0xff5A5A5A),
-                                  image: 'assets/images/bom/bom_reports.png',
-                                  index: index,
-                                ),
-                              );
-                              break;
-                            case 3:
-                              card = GestureDetector(
-                                onTap: () {
-                                  context.push(Constant.bomStaticScreenScreen);
-                                },
-                                child: BottomCard(
-                                  title: "Static Settings",
-                                  orange: true,
-                                  bgColor: const Color(0xffFFEDDA),
-                                  textColor: const Color(0xff5A5A5A),
-                                  image:
-                                      'assets/images/bom/bom_static_settings.png',
-                                  index: index,
-                                ),
-                              );
-                              break;
-                            default:
-                              return const SizedBox.shrink();
-                          }
+                child: MasonryGridView.builder(
+                    itemCount: 4,
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    gridDelegate:
+                        const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                    ),
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    itemBuilder: (context, index) {
+                      Widget card;
+                      switch (index) {
+                        case 0:
+                          card = GestureDetector(
+                            onTap: () {
+                              context.push(Constant.bomConsultancyScreen);
+                            },
+                            child: BottomCard(
+                              title: "Consultancy",
+                              bgColor: const Color(0xff263238),
+                              textColor: Colors.white,
+                              image:
+                                  'assets/images/bom/bom_consultancy.png',
+                              index: index,
+                            ),
+                          );
+                          break;
+                        case 1:
+                          card = GestureDetector(
+                            onTap: () {
+                              context.push(Constant.bomFinanceScreen);
+                            },
+                            child: BottomCard(
+                              title: "Finances",
+                              lightRed: true,
+                              bgColor:
+                                  const Color.fromRGBO(255, 25, 1, 0.09),
+                              textColor: const Color(0xff5A5A5A),
+                              image: 'assets/images/bom/bom_finances.png',
+                              index: index,
+                            ),
+                          );
+                          break;
+                        case 2:
+                          card = GestureDetector(
+                            onTap: () {
+                              context.push(Constant.bomReportScreen);
+                            },
+                            child: BottomCard(
+                              title: "Reports",
+                              white: true,
+                              bgColor: const Color.fromRGBO(0, 0, 0, 0.1),
+                              textColor: const Color(0xff5A5A5A),
+                              image: 'assets/images/bom/bom_reports.png',
+                              index: index,
+                            ),
+                          );
+                          break;
+                        case 3:
+                          card = GestureDetector(
+                            onTap: () {
+                              context.push(Constant.bomStaticScreenScreen);
+                            },
+                            child: BottomCard(
+                              title: "Static Settings",
+                              orange: true,
+                              bgColor: const Color(0xffFFEDDA),
+                              textColor: const Color(0xff5A5A5A),
+                              image:
+                                  'assets/images/bom/bom_static_settings.png',
+                              index: index,
+                            ),
+                          );
+                          break;
+                        default:
+                          return const SizedBox.shrink();
+                      }
 
-                          // Apply margin only for index 1 and 3
-                          if (index == 1) {
-                            return Container(
-                              margin: const EdgeInsets.only(top: 20),
-                              child: card,
-                            );
-                          } else {
-                            return card;
-                          }
-                        })),
+                      // Apply margin only for index 1 and 3
+                      if (index == 1) {
+                        return Container(
+                          margin: const EdgeInsets.only(top: 20),
+                          child: card,
+                        );
+                      } else {
+                        return card;
+                      }
+                    }),
 
               )
             ],

@@ -14,70 +14,65 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late Animation<double> scaleAnimation;
-  late Animation<double> rotationAnimation;
   late AnimationController scaleController;
-  late AnimationController rotationController;
 
   @override
   void initState() {
     super.initState();
 
-    // Scale animation controller (for zoom in)
+    // Create a scale animation controller (zoom in -> zoom out)
     scaleController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     );
 
-    scaleAnimation = Tween<double>(begin: 0, end: 250)
-        .chain(CurveTween(curve: Curves.easeInOut))
-        .animate(scaleController)
+    // Tween for zoom in and out
+    scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.2), weight: 50), // Zoom in
+      TweenSequenceItem(tween: Tween(begin: 1.2, end: 0.0), weight: 50), // Zoom out
+    ]).animate(CurvedAnimation(
+      parent: scaleController,
+      curve: Curves.easeInOut,
+    ))
       ..addListener(() {
         setState(() {});
       })
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
-          // Start rotation animation once zoom-in is done
-          rotationController.forward();
+          checkLoginStatus();
         }
       });
 
-    // Rotation animation controller (for continuous rotation)
-    rotationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-      upperBound: 2 * 3.1416, // Full 360-degree rotation in radians
-    );
-
-    rotationAnimation =
-        Tween<double>(begin: 0, end: 2 * 3.1416).animate(rotationController);
-
-    rotationController.repeat(); // Infinite rotation
-
-    // Start zoom animation
-    scaleController.forward();
-
-    _navigation();
-  }
-
-  Future<void> _navigation() async {
-    await Future.delayed(const Duration(seconds: 3));
-
-    /// Ensure navigation happens after the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      checkLoginStatus();
-    });
+    scaleController.forward(); // Start the animation
   }
 
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final int roleId = prefs.getInt('roleId') ?? 0;
 
     if (!mounted) return;
 
     if (isLoggedIn) {
-      context.go(Constant.consultancyDashBoardScreen); // Navigate to home
+      if(roleId==6){
+        // context.go(Constant.hrDashboardScreen);
+        context.go(Constant.bomDashBoardScreen);
+
+      }
+      else if(roleId==11){
+        context.go(Constant.consultantDashBoardScreen);
+
+      }
+      else if(roleId==7)
+        {
+          context.go(Constant.consultancyDashBoardScreen);
+
+
+
+      }
+
     } else {
-      context.go(Constant.onBoard); // Navigate to onboarding
+      context.go(Constant.onBoard);
     }
   }
 
@@ -85,12 +80,11 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        // Apply rotation after zoom-in
-        child: Transform.rotate(
-          angle: rotationAnimation.value,
-          child: SizedBox(
-            width: scaleAnimation.value,
-            child: Image.asset('assets/icons/splash_icon.png'),
+        child: Transform.scale(
+          scale: scaleAnimation.value,
+          child: Image.asset(
+            "assets/images/bom/bom_logo.png",
+            width: 250,
           ),
         ),
       ),
@@ -100,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     scaleController.dispose();
-    rotationController.dispose();
     super.dispose();
   }
 }
+

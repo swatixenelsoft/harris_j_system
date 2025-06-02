@@ -30,7 +30,7 @@ class _CustomTableViewState extends State<CustomTableView> {
 
     // print()
     return DataTable(
-      columnSpacing: 15, // <-- add spacing between columns
+      columnSpacing: 12, // <-- add spacing between columns
       headingRowHeight: 38,
       dataRowMinHeight: 40,
       dataRowMaxHeight: 40,
@@ -52,17 +52,17 @@ class _CustomTableViewState extends State<CustomTableView> {
           cells: widget.heading.map((item) {
             final key = item['key']!;
             final value = row[key];
-            print("tablevalue $value,$key");
 
-            if (value is Map &&
-                value.containsKey('label') &&
-                value.containsKey('color')) {
+            if (key == 'status' &&
+                row.containsKey('statusColor') &&
+                row.containsKey('statusBackground')) {
               return DataCell(StatusLabel(
-                label: value['label'],
-                color: value['color'],
-                containerColor: value['background'],
+                label: value.toString(),
+                color: row['statusColor'],
+                containerColor: row['statusBackground'],
               ));
             }
+
 
             return  DataCell(
               ConstrainedBox(
@@ -122,30 +122,35 @@ class StatusLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 4,vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          color: containerColor),
+        borderRadius: BorderRadius.circular(4),
+        color: containerColor,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min, // <--- Important
         children: [
           Container(
             width: 7,
-            height: 7,
+            height: 10,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 3),
-          Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.w700,
-              fontSize: 10,
-              color: color,
+          Flexible( // <--- Wrap Text here
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis, // Prevent overflow
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.w700,
+                fontSize: 10,
+                color: color,
+              ),
             ),
-
-          )
+          ),
         ],
       ),
     );
+
   }
 }

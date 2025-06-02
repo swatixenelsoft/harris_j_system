@@ -157,7 +157,7 @@ class _ConsultancyClientListScreenState
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CustomAppBar(
-          showBackButton: false, image: 'assets/images/bom/bom_logo.png'),
+          showBackButton: false, image: 'assets/icons/cons_logo.png'),
       body: SafeArea(
         child:
         // consultancyState.isLoading
@@ -287,7 +287,7 @@ class _ConsultancyClientListScreenState
                     SvgPicture.asset('assets/icons/back.svg', height: 15)),
                 const SizedBox(width: 15),
                 Text(
-                  'User List',
+                  'Clients List',
                   style: GoogleFonts.montserrat(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -296,14 +296,48 @@ class _ConsultancyClientListScreenState
                 const Spacer(),
                 CustomButton(
                   svgAsset: 'assets/icons/add_icon.svg',
-                  text: 'Add User',
-                  onPressed: () async {},
+                  text: 'Add Client',
+                  onPressed: () async {
+
+                  },
                   height: 39,
                   width: 110,
                 ),
                 const SizedBox(width: 10),
               ],
             ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              SizedBox(
+                width: 280,
+                child: CustomTextField(
+                  label: "Search",
+                  hintText: "Search Consultant...",
+                  controller: _searchController,
+                  prefixIcon: Padding(
+                    padding:
+                    const EdgeInsets.all(14.0), // optional padding for spacing
+                    child: SizedBox(
+                      height: 10,
+                      width: 10,
+                      child: SvgPicture.asset(
+                        'assets/icons/search_icon.svg',
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 30),
+              GestureDetector(
+                onTap: () {
+                  _showFilterDialog(context);
+                },
+                child: SvgPicture.asset('assets/icons/filter_icon.svg',
+                    height: 15),
+              ),
+            ],
           ),
         ],
       ),

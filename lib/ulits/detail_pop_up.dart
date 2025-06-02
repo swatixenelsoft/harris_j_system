@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/screens/bom/bom_consultancy_screen.dart';
+import 'package:harris_j_system/screens/navigation/constant.dart';
 import 'package:harris_j_system/ulits/custom_icon_container.dart';
 import 'package:intl/intl.dart';
 
@@ -47,12 +49,18 @@ class ConsultancyDetailPopup extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Row(
+                   Row(
                     children: [
-                      CustomIconContainer(
-                          path: 'assets/icons/edit_pen.svg',
-                          bgColor:
-                          Color(0xffF5230C)),
+                      GestureDetector(
+                        onTap:() {
+                          context.push(Constant.bomAddConsultancyScreen, extra: consultancy);
+
+                        },
+                        child: CustomIconContainer(
+                            path: 'assets/icons/edit_pen.svg',
+                            bgColor:
+                            Color(0xffF5230C)),
+                      ),
                       SizedBox(width: 7),
                       CustomIconContainer(
                           path:  'assets/icons/red_delete_icon.svg'),
@@ -95,7 +103,7 @@ const SizedBox(width: 2),
                         // const SizedBox(width: 4),
                         Text(
                           consultancy['country'],
-                          style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold),
+                          style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -107,7 +115,7 @@ const SizedBox(width: 2),
                   // Primary Contact No and Fee Structure
                   _buildFieldPair(
                     leftLabel: 'Primary Contact No',
-                    leftValue: consultancy['primary_mobile']==null?"":'${consultancy['primary_mobile_country_code']} ${consultancy['primary_mobile']}',
+                    leftValue: consultancy['primary_mobile']==null?"No Number":'${consultancy['primary_mobile_country_code']} ${consultancy['primary_mobile']}',
                     rightLabel: 'Fee Structure',
                     rightValue: consultancy['fees_structure'],
                   ),

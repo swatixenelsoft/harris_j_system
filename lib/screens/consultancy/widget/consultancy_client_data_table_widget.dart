@@ -25,39 +25,85 @@ class GenericDataSource extends DataGridSource {
   }
 
   late List<DataGridRow> _dataGridRows;
+  late List<Map<String, dynamic>> _originalRowData;
 
   @override
   List<DataGridRow> get rows => _dataGridRows;
 
   @override
+  @override
   DataGridRowAdapter buildRow(DataGridRow row) {
     final item = row.getCells();
+    _originalRowData = data;
+    final index = _dataGridRows.indexOf(row);
+    final fullData = _originalRowData[index];
+
     return DataGridRowAdapter(
       cells: item.map((cell) {
         final columnName = cell.columnName;
         final value = cell.value;
 
-        print('value fggh ${item}');
+        Widget child;
+
+        if (columnName == 'actions') {
+          child = GestureDetector(
+            onTap: () {
+              print('✅ fullData: $fullData');
+              onZoomTap(fullData);
+            },// assuming first cell is full consultancy data
+            child: const CustomIconContainer(path: 'assets/icons/zoom.svg'),
+          );
+        } else if (columnName == 'queue') {
+          String queueValue = value.toString();
+          Color circleColor =
+              queueValue != 'active' ? Colors.red : Colors.green;
+
+          child = Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: circleColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          );
+        } else if (columnName == 'designation') {
+          child = Container(
+            height: 25,
+            padding: const EdgeInsets.only(top: 6, bottom: 6, left: 8, right: 8),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: const Color(0xffE5F1FF),
+                borderRadius: BorderRadius.circular(8)),
+            child:  Text(
+              value.toString(),
+              style: GoogleFonts.montserrat(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xff037EFF),
+              ),
+            ),
+          );
+        } else {
+          child = Text(
+            value.toString(),
+            style: GoogleFonts.montserrat(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xff1D212D),
+            ),
+          );
+        }
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           alignment:
               columnName == 'actions' ? Alignment.center : Alignment.centerLeft,
-          child: columnName == 'actions'
-              ?
-          GestureDetector(
-            onTap: () => onZoomTap(row.getCells()[2].value as Map<String, dynamic>), // item[0].value should be consultancy map
-                  child:
-                      const CustomIconContainer(path: 'assets/icons/zoom.svg'),
-                )
-              : Text(
-                  value ?? '',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xff1D212D),
-                  ),
-                ),
+          child: child,
         );
       }).toList(),
     );

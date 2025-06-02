@@ -51,33 +51,47 @@ class _BomAddAddressBottomSheetState
 
   @override
   void initState() {
+    print('isEdid');
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _getCountryData();
-      if (isEdit){
-        final Map<String, String> addressMap = {
-          for (var part in widget.address!.split(','))
-            part.split(':')[0].trim(): part.split(':')[1].trim()
-        };
-
-        _selectedCountry=addressMap['country']??'';
-        _postalCodeController.text=addressMap['postalCode']??'';
-       _selectedState=addressMap['city']??'';
-        _apartmentNameController.text=addressMap['streetName']??'';
-         ref
-            .read(getCountryProvider.notifier)
-            .fetchStates(_selectedCountry!,token!);
-        _isVisible=true;
-
-// Now you can access values like:
-        print(addressMap['streetName']); // fft
-        print(addressMap['city']);       // Badghis
-        print(addressMap['country']);    // Afghanistan
-        print(addressMap['postalCode']);
-      }
-
+      print('isEdit $isEdit');
+      fetchData();
 
     });
+  }
+
+  fetchData() async{
+  await  _getCountryData();
+
+    if(isEdit){
+     await _editData();
+    }
+  }
+
+  _editData() async{
+
+      print('isEdit');
+      final Map<String, String> addressMap = {
+        for (var part in widget.address!.split(','))
+          part.split(':')[0].trim(): part.split(':')[1].trim()
+      };
+
+      _selectedCountry=addressMap['country']??'';
+      _postalCodeController.text=addressMap['postalCode']??'';
+
+      _apartmentNameController.text=addressMap['streetName']??'';
+      print('_apartmentNameController ${_apartmentNameController.text}');
+     await ref
+          .read(getCountryProvider.notifier)
+          .fetchStates(_selectedCountry!,token!);
+      _isVisible=true;
+      _selectedState=addressMap['city']??'';
+// Now you can access values like:
+      print(addressMap['streetName']); // fft
+      print(addressMap['city']);       // Badghis
+      print(addressMap['country']);    // Afghanistan
+      print(addressMap['postalCode']);
+
   }
 
   Future<void> _getCountryData() async {

@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:harris_j_system/layout/bom_scaffold.dart';
 import 'package:harris_j_system/layout/consultancy_scaffold.dart';
 import 'package:harris_j_system/layout/consultant_scaffold.dart';
+import 'package:harris_j_system/layout/hr_scaffold.dart';
 import 'package:harris_j_system/screens/auth/basic_info_screen.dart';
 import 'package:harris_j_system/screens/bom/bom_add_address_screen.dart';
 import 'package:harris_j_system/screens/bom/bom_add_consultancy_screen.dart';
@@ -18,6 +19,13 @@ import 'package:harris_j_system/screens/consultancy/consultancy_user_list_screen
 import 'package:harris_j_system/screens/consultant/consultant_claim_screen.dart';
 import 'package:harris_j_system/screens/consultant/consultant_dashboard_screen.dart';
 import 'package:harris_j_system/screens/consultant/consultant_timesheet_screen.dart';
+import 'package:harris_j_system/screens/hr/hr_add_consultant_screen.dart';
+import 'package:harris_j_system/screens/hr/hr_consultant_claim_screen.dart';
+import 'package:harris_j_system/screens/hr/hr_consultant_list_screen.dart';
+import 'package:harris_j_system/screens/hr/hr_consultant_timesheet_screen.dart';
+import 'package:harris_j_system/screens/hr/hr_dashboard_screen.dart';
+import 'package:harris_j_system/screens/hr/hr_feedback_screen.dart';
+import 'package:harris_j_system/screens/hr/hr_report_screen.dart';
 import 'package:harris_j_system/screens/navigation/constant.dart';
 import 'package:harris_j_system/screens/shared/login_screen.dart';
 import 'package:harris_j_system/screens/shared/on_board_screen.dart';
@@ -120,6 +128,43 @@ final GoRouter goRouter = GoRouter(
         GoRoute(
           path: Constant.consultancyAddUserScreen,
           builder: (context, state) => const ConsultancyAddUserScreen(),
+        ),
+      ],
+    ),
+
+
+    /// HR FLOW
+    ShellRoute(
+      builder: (context, state, child) => HrScaffold(child: child),
+      routes: [
+        GoRoute(
+          path: Constant.hrDashboardScreen,
+          builder: (context, state) => const HrDashboardScreen(),
+        ),
+        GoRoute(
+          path: Constant.hrConsultantListScreen,
+          builder: (context, state) => const HrConsultantListScreen(),
+        ),
+        GoRoute(
+          path: Constant.hrAddConsultantScreen,
+          builder: (context, state) => const HrAddConsultantScreen(),
+        ),
+        GoRoute(
+          path: Constant.hrReportScreen,
+          builder: (context, state) => const HrReportScreen(),
+        ),
+        GoRoute(
+          path: Constant.hrFeedBackScreen,
+          builder: (context, state) => const HrFeedBackScreen(),
+        ),
+        GoRoute(
+          path: Constant.hrConsultantTimesheetScreen,
+          builder: (context, state) => const HrConsultantTimeSheetScreen(),
+        ),
+
+        GoRoute(
+          path: Constant.hrConsultantClaimScreen,
+          builder: (context, state) => const HrConsultantClaimScreen(),
         ),
       ],
     ),

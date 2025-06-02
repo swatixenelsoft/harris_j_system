@@ -9,6 +9,7 @@ import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_table.dart';
 import 'package:pie_chart/pie_chart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class ConsultancyDashboardScreen extends StatefulWidget {
@@ -28,7 +29,11 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(showBackButton: false,image: 'assets/icons/cons_logo.png'),
+      appBar:  CustomAppBar(showBackButton: false,image: 'assets/icons/cons_logo.png',onProfilePressed: () async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+        context.pushReplacement(Constant.login);
+      },),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -127,13 +132,18 @@ class _ConsultancyDashboardScreenState extends State<ConsultancyDashboardScreen>
                               );
                               break;
                             case 5:
-                              card = BottomCard(
-                                title: "Feedback",
-                                orange: true,
-                                bgColor: const Color(0xffE5F1FF),
-                                textColor: const Color(0xff5A5A5A),
-                                image: 'assets/images/gridView5.png',
-                                index: index,
+                              card = GestureDetector(
+                                onTap: () {
+                                  context.push(Constant.hrFeedBackScreen);
+                                },
+                                child: BottomCard(
+                                  title: "Feedback",
+                                  orange: true,
+                                  bgColor: const Color(0xffE5F1FF),
+                                  textColor: const Color(0xff5A5A5A),
+                                  image: 'assets/images/gridView5.png',
+                                  index: index,
+                                ),
                               );
                               break;
 

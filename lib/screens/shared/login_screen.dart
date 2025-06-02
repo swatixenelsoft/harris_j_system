@@ -84,6 +84,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (status) {
         await CommonFunction().storeCustomerData(
           userId: userId,
+          roleId:roleId,
           token:token
         );
 
@@ -95,7 +96,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           context.push(Constant.bomDashBoardScreen);
         } else if(dashboardName == "Consultant Dashboard" && roleId == 11){
           print('Navigating to Consultant Dashboard');
-          context.push(Constant.basicInfo);
+          context.push(Constant.consultantDashBoardScreen);
+        }
+        else if(dashboardName == "Consultancy Dashboard" && roleId == 7){
+          print('Navigating to Consultant Dashboard');
+          context.push(Constant.consultancyDashBoardScreen);
         }
         else{
           print('error');
