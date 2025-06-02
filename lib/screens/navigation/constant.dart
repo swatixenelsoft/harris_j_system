@@ -12,4 +12,16 @@ class Constant {
   static const String bomAddAddressScreen = '/bom/bomAddAddressScreen';
   static const String bomFinanceScreen = '/bom/bomFinanceScreen';
   static const String bomReportScreen = '/bom/bomReportScreen';
+<<<<<<< Updated upstream
+=======
+  static const String bomStaticScreenScreen = '/bom/bomStaticScreenScreen';
+  static const String consultancyDashBoardScreen = '/consultancy/consultancyDashBoardScreen';
+  static const String consultancyUserListScreen = '/consultancy/consultancyUserListScreen';
+  static const String consultancyAddUserScreen = '/consultancy/consultancyAddUserScreen';
+  static const String consultancyClientListScreen = '/consultancy/consultancyClientListScreen';
+  static const String consultancyReportScreen = '/consultancy/consultancyReportScreen';
+  static const String consultancyFeedbackScreen = '/consultancy/consultancyFeedbackScreen';
+  static const String consultancySettingsScreen  = '/consultancy/consultancySettingsScreen';
+  static const String operatorDashboardScreen= '/operator/operatorDashboardScreen';
+>>>>>>> Stashed changes
 }
