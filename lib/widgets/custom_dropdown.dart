@@ -7,6 +7,7 @@ class CustomDropdownField extends StatelessWidget {
   final String? value;
   final ValueChanged<String?> onChanged;
   final String? errorText;
+  final int borderColor;
   final double borderRadius;
 
   const CustomDropdownField({
@@ -16,6 +17,7 @@ class CustomDropdownField extends StatelessWidget {
     this.value,
     required this.onChanged,
     this.errorText,
+    this.borderColor=0xffE8E6EA,
     this.borderRadius=15,
   });
 
@@ -31,22 +33,22 @@ class CustomDropdownField extends StatelessWidget {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
-          borderSide: const BorderSide(color: Color(0xffE8E6EA)), // Light grey
+          borderSide:  BorderSide(color: Color(borderColor)), // Light grey
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
-          borderSide: const BorderSide(color: Color(0xffE8E6EA)),
+          borderSide:  BorderSide(color: Color(borderColor)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
-          borderSide: const BorderSide(color: Color(0xffE8E6EA)),
+          borderSide:  BorderSide(color: Color(borderColor)),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
           borderSide:  BorderSide(color: Colors.red.shade900),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12,vertical: 1),
-     errorText: errorText,
+        errorText: errorText,
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
