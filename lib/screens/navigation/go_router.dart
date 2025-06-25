@@ -59,6 +59,8 @@ final _consultantShellKey = GlobalKey<NavigatorState>();
 final _bomShellKey = GlobalKey<NavigatorState>();
 final _consultancyShellKey = GlobalKey<NavigatorState>();
 final _hrShellKey = GlobalKey<NavigatorState>();
+final _operatorShellKey = GlobalKey<NavigatorState>();
+final _financeShellKey = GlobalKey<NavigatorState>();
 
 final GoRouter goRouter = GoRouter(
   navigatorKey: _rootNavigatorKey, // Root navigator key
@@ -69,6 +71,7 @@ final GoRouter goRouter = GoRouter(
       path: Constant.splash,
       builder: (context, state) => const SplashScreen(),
     ),
+
     GoRoute(
       path: Constant.onBoard,
       builder: (context, state) => const OnBoardScreen(),
@@ -187,8 +190,9 @@ final GoRouter goRouter = GoRouter(
       ],
     ),
 
-    ///operator Flow
+    ///OPERATOR FLOW
     ShellRoute(
+      navigatorKey: _operatorShellKey,
       builder: (context, state, child) => OperatorScaffold(child: child),
       routes: [
         GoRoute(
@@ -250,8 +254,9 @@ final GoRouter goRouter = GoRouter(
       ],
     ),
 
-    //Finance Flow
+    ///FINANCE FLOW
     ShellRoute(
+      navigatorKey: _financeShellKey,
       builder: (context, state, child) => FinanceScaffold(child: child),
       routes: [
         GoRoute(
