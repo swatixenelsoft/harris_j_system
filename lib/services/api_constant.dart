@@ -45,4 +45,6 @@ class ApiConstant {
   static const String deleteClient = "consultancy/deleteClient";
   static const String getUsers = "consultancy/getUsers";
   static const String addUser = "consultancy/addUser";
+  static const String editUser = "consultancy/updateUser";
+  static const String deleteUser = "consultancy/deleteUser";
 }

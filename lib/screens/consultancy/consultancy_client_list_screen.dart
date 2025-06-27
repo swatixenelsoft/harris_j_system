@@ -218,7 +218,7 @@ class _ConsultancyClientListScreenState
                                   data: clientList,
                                   columns: [
                                     'serving_client',
-                                    'consultants',
+                                    'consultant_count',
                                     'actions'
                                   ],
                                   onZoomTap: (client) {
@@ -250,7 +250,7 @@ class _ConsultancyClientListScreenState
                                     ),
                                   ),
                                   GridColumn(
-                                    columnName: 'consultants',
+                                    columnName: 'consultant_count',
                                     width: 130, // 👈 Increase this width
                                     label: Container(
                                       alignment: Alignment.centerLeft,

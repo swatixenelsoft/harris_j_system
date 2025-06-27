@@ -6,6 +6,7 @@ class CountryCodePhoneField extends StatefulWidget {
   final TextEditingController controller;
   final Function(String)? onCountryCodeChanged;
   final String? Function(String?)? validator;
+  final bool readOnly;
 
 
   const CountryCodePhoneField({
@@ -13,6 +14,7 @@ class CountryCodePhoneField extends StatefulWidget {
     required this.controller,
     this.onCountryCodeChanged,
     this.validator,
+    this.readOnly = false,
   });
 
   @override
@@ -86,6 +88,7 @@ class _CountryCodePhoneFieldState extends State<CountryCodePhoneField> {
           const SizedBox(width: 8),
           Expanded(
             child: TextFormField(
+
               controller: widget.controller,
               validator: widget.validator,
               style:  GoogleFonts.montserrat(
@@ -93,6 +96,7 @@ class _CountryCodePhoneFieldState extends State<CountryCodePhoneField> {
                 fontWeight: FontWeight.w400,
                 color: const Color(0xff000000),
               ),
+              readOnly: widget.readOnly,
               decoration: InputDecoration(
                 prefixText: '+${_selectedCountry.phoneCode} ', // show country code
                 prefixStyle: GoogleFonts.montserrat(

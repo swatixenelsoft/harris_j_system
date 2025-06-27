@@ -121,7 +121,7 @@ class _ConsultancyUserListScreenState
   }
 
   void _showConsultancyPopup(
-      BuildContext context, Map<String, dynamic> consultancy) {
+      BuildContext context, Map<String, dynamic> user) {
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.5),
@@ -136,8 +136,37 @@ class _ConsultancyUserListScreenState
             ),
             Center(
               child: HrConsultantDetailPopup(
-                consultant: consultancy,
-                onDelete: () {},
+                consultant: user,
+                onEdit: (){
+                  context.pop();
+                  context.push(Constant.consultancyAddUserScreen,
+                      extra:user );
+                },
+                onDelete: () {
+                  DeleteConfirmationDialog.show(
+                      context: context,
+                      itemName: 'client',
+                      onConfirm: () async {
+                        final deleteResponse = await ref
+                            .read(consultancyProvider.notifier)
+                            .deleteUser(user['id'].toString(), user['user_id'].toString(),token!);
+
+                        if (deleteResponse['success'] == true) {
+                          Navigator.of(context).pop();
+                          ToastHelper.showSuccess(
+                            context,
+                            deleteResponse['message'] ??
+                                'User deleted successfully',
+                          );
+                        } else {
+                          ToastHelper.showError(
+                            context,
+                            deleteResponse['message'] ??
+                                'Failed to delete user',
+                          );
+                        }
+                      });
+                },
               ),
             ),
           ],

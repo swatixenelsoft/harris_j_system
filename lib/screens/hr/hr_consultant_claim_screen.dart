@@ -196,10 +196,10 @@ class _HrConsultantClaimScreenState
       Color color;
       switch (expenseType.toLowerCase()) {
         case 'taxi':
-          color = const Color(0xffEBF9F1);
+          color = const Color(0xffB8E6D0);
           break;
         case 'dining':
-          color = const Color(0xffFBE7E8);
+          color = const Color(0xffE9BDBF);
           break;
         case 'others':
           color = const Color(0xffFF9F2D);

@@ -447,7 +447,6 @@ class _ConsultancyAddClientScreenState
                               ? Container(
                                   margin:
                                       const EdgeInsets.symmetric(horizontal: 2),
-                                  height: 80,
                                   width: MediaQuery.of(context).size.width,
                                   decoration: const BoxDecoration(
                                     color: Colors.white,

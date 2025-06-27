@@ -99,9 +99,9 @@ class _HrConsultantTimeSheetScreenState
       barrierColor: Colors.black.withOpacity(0.5),
       builder: (BuildContext context) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.65,
+          initialChildSize: 0.66,
           minChildSize: 0.4,
-          maxChildSize: 0.65,
+          maxChildSize: 0.66,
           expand: false,
           builder: (_, scrollController) => Container(
             decoration: const BoxDecoration(

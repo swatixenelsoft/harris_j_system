@@ -1335,7 +1335,8 @@ class ApiService {
     String userStatus,
     File consultantImage,
     String token,
-  ) async {
+  ) async
+  {
     try {
       FormData formData = FormData.fromMap({
         'emp_name': employeeName,
@@ -1384,6 +1385,109 @@ class ApiService {
     } catch (e) {
       print('Unexpected error: ${e.toString()}');
       throw Exception(e.toString());
+    }
+  }
+
+  Future<Map<String, dynamic>> editUser(
+      String employeeName,
+      String employeeCode,
+      String gender,
+      String fullAddress,
+      String showInputAddress,
+      String dob,
+      String age,
+      String countryCode,
+      String primaryMobile,
+      String primaryEmail,
+      String adminEmail,
+      bool resetPassword,
+      int userId,
+      String designation,
+      String userStatus,
+      File consultantImage,
+      String token,
+      String id,
+      ) async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'emp_name': employeeName,
+        'emp_code': employeeCode,
+        'sex': gender,
+        'full_address': fullAddress,
+        'show_address_input': showInputAddress,
+        'dob': dob,
+        // 'age': age,
+        'mobile_number_code': countryCode,
+        'mobile_number': primaryMobile,
+        'email': primaryEmail,
+        'status': userStatus,
+        'designation': designation,
+        'login_email': adminEmail,
+        'reset_password': resetPassword ? 1 : 0,
+        'user_id': userId.toString(),
+        'receipt_file': await MultipartFile.fromFile(consultantImage.path),
+        'joining_date': '',
+        'resignation_date': '',
+        'id':id,
+      });
+
+      print('formData: ${formData.fields}, ${formData.files}');
+      print('Endpoint: ${ApiConstant.editUser}');
+
+      final response = await _dio.post(
+        ApiConstant.editUser,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      print('Response [${response.statusCode}]: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('Dio error: ${e.response?.statusCode}, ${e.response}');
+      if (e.response != null && e.response?.data is Map<String, dynamic>) {
+        throw Exception(e.response?.data['message'] ?? 'An error occurred');
+      } else {
+        throw Exception('No response from server');
+      }
+    } catch (e) {
+      print('Unexpected error: ${e.toString()}');
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteUser(String id, String userId,String token) async {
+    try {
+      FormData formData = FormData.fromMap({
+        'id': id,
+        'user_id':userId,
+      });
+      print('formData $token, ${formData.fields}');
+      print('deleteId $id');
+      final response = await _dio.post(
+        ApiConstant.deleteUser,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+      print('response-delete $response');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
     }
   }
 }

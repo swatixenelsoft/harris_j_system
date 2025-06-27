@@ -102,8 +102,8 @@ class ConsultancyClientDetailPopup extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
-                          image: AssetImage('assets/icons/singapore_flag.png'),
-                          // image: NetworkImage(consultancy['flag']),
+
+                          image: NetworkImage( client['flag']),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -112,9 +112,9 @@ class ConsultancyClientDetailPopup extends StatelessWidget {
 
                     // const SizedBox(width: 4),
                     Text(
-                      'Singapore',
+                      client['country'],
                       style: GoogleFonts.montserrat(
-                          fontSize: 12, fontWeight: FontWeight.bold),
+                          fontSize: 12, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -126,7 +126,7 @@ class ConsultancyClientDetailPopup extends StatelessWidget {
               // Primary Contact No and Fee Structure
               _buildFieldPair(
                 leftLabel: 'Consultants',
-                leftValue: '10',
+                leftValue:client['consultant_count'].toString(),
                 rightLabel: '',
                 rightValue: "",
               ),

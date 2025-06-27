@@ -39,11 +39,7 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
 
   final List<String> _addressType = [
     'Not Selected',
-    'Home',
     'Office',
-    'Billing',
-    'Shipping',
-    'Other'
   ];
   String? token;
 

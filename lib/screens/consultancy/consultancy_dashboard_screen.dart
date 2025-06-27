@@ -123,13 +123,19 @@ class _ConsultancyDashboardScreenState
                               );
                               break;
                             case 3:
-                              card = BottomCard(
-                                title: "Static Setup",
-                                orange: true,
-                                bgColor: const Color(0xffFFEDDA),
-                                textColor: const Color(0xff5A5A5A),
-                                image: 'assets/images/gridView4.png',
-                                index: index,
+                              card = GestureDetector(
+                                onTap: () {
+                                  context
+                                      .push(Constant.consultancySettingsScreen);
+                                },
+                                child: BottomCard(
+                                  title: "Static Setup",
+                                  orange: true,
+                                  bgColor: const Color(0xffFFEDDA),
+                                  textColor: const Color(0xff5A5A5A),
+                                  image: 'assets/images/gridView4.png',
+                                  index: index,
+                                ),
                               );
                               break;
                             case 5:

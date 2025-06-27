@@ -168,6 +168,9 @@ class _HrConsultantListScreenState
             Center(
               child: HrConsultantDetailPopup(
                 consultant: consultancy,
+                onEdit: (){
+
+                },
                 onDelete: () {
                   print('fhgfd');
                   DeleteConfirmationDialog.show(

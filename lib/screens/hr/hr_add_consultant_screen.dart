@@ -1143,16 +1143,17 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                             // validator: validateEmail,
                             validator: validateUserIdOrEmail,
                           ),
-                          // const SizedBox(height: 10),
-                          // CustomTextField(
-                          //   padding: 0,
-                          //   borderRadius: 8,
-                          //   label: 'Type Default Password *',
-                          //   hintText: 'Type Default Password *',
-                          //   controller: _passwordCredential,
-                          //   // validator: validateEmail,
-                          //   validator: validateUserIdOrEmail,
-                          // ),
+                          const SizedBox(height: 10),
+                          if (isEdit) ...[
+                            CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Type Default Password *',
+                            hintText: 'Type Default Password *',
+                            controller: _passwordCredential,
+                            // validator: validateEmail,
+                            validator: validateUserIdOrEmail,
+                          ),
                           const SizedBox(height: 12),
                           CustomButton(
                             container: true,
@@ -1165,7 +1166,7 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                                 reset_password_value = !reset_password_value;
                               });
                             },
-                          ),
+                          ),],
                           const SizedBox(height: 30),
                           Padding(
                             padding: const EdgeInsets.symmetric(

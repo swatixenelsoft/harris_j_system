@@ -249,7 +249,8 @@ class ConsultancyNotifier extends StateNotifier<ConsultancyState> {
     String userStatus,
     File consultantImage,
     String token,
-  ) async {
+  ) async
+  {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final addUserResponse = await apiService.addUser(
@@ -287,6 +288,91 @@ class ConsultancyNotifier extends StateNotifier<ConsultancyState> {
         "status": false,
         "message": error.toString(),
       };
+    }
+  }
+
+  Future<Map<String, dynamic>> editUser(
+      String employeeName,
+      String employeeCode,
+      String gender,
+      String fullAddress,
+      String showInputAddress,
+      String dob,
+      String age,
+      String countryCode,
+      String primaryMobile,
+      String primaryEmail,
+      String adminEmail,
+      bool resetPassword,
+      int userId,
+      String designation,
+      String userStatus,
+      File consultantImage,
+      String token,
+      String id,
+      ) async
+  {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final addUserResponse = await apiService.editUser(
+        employeeName,
+        employeeCode,
+        gender,
+        fullAddress,
+        showInputAddress,
+        dob,
+        age,
+        countryCode,
+        primaryMobile,
+        primaryEmail,
+        adminEmail,
+        resetPassword,
+        userId,
+        designation,
+        userStatus,
+        consultantImage,
+        token,
+        id,
+      );
+
+      // Optionally reload user list
+      getUsers(token);
+
+      state = state.copyWith(isLoading: false);
+      return addUserResponse;
+    } catch (error) {
+      print("error123 ${error.toString()}");
+      state = state.copyWith(
+        isLoading: false,
+        error: error.toString(),
+      );
+      return {
+        "success": false,
+        "message": error.toString(),
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteUser(String id, String userId,String token) async {
+    try {
+      final response = await apiService.deleteUser(id,userId ,token);
+      final bool status = response['success'] ?? false;
+
+      if (status) {
+        await getUsers(token); // Refresh list
+        state = state.copyWith(isLoading: false);
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: response['message'] ?? 'Delete failed',
+        );
+      }
+
+      return response;
+    } catch (e) {
+      final errorMsg = e.toString();
+      state = state.copyWith(isLoading: false, error: errorMsg);
+      return {'status': false, 'message': errorMsg};
     }
   }
 }

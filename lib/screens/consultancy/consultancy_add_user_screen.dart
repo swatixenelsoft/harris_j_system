@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
 
@@ -54,11 +55,12 @@ class _ConsultancyAddUserScreen
   String? selectedGender = 'Male';
   bool reset_password_value = false;
   dynamic _selectedImage;
-  final List<String> _userList = ['Not Selected', 'Active', 'Disable'];
+  final List<String> _userList = ['Not Selected', 'Active', 'Disabled'];
   final List<String> _designation = [
     'Not Selected',
     'Designation1',
-    'Designation2'
+    'Designation2',
+    'HR',
   ];
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   dynamic _confirmedAddress;
@@ -66,63 +68,64 @@ class _ConsultancyAddUserScreen
 
   @override
   void initState() {
-    // print('editcons ${widget.consultancy},$_selectedImage');
-    // if (isEdit) {
-    //   _employeeName.text = widget.consultancy!['consultancy_name'] ?? '';
-    //   _employeeCode.text = widget.consultancy!['consultancy_id'] ?? '';
-    //
-    //   _confirmedAddress = widget.consultancy!['show_address_input'] ?? '';
-    //   _uenNumber.text = widget.consultancy!['uen_number'] ?? '';
-    //   _primaryContactPerson.text = widget.consultancy!['primary_contact'] ?? '';
-    //   _primaryCountryCode =
-    //       widget.consultancy!['primary_mobile_country_code'] ?? '';
-    //   _mobileNumber.text = widget.consultancy!['primary_mobile'] ?? '';
-    //   _emailAddress.text = widget.consultancy!['primary_email'] ?? '';
-    //   _secondaryContactPerson.text =
-    //       widget.consultancy!['secondary_contact'] ?? '';
-    //   _secondaryEmailAddress.text =
-    //       widget.consultancy!['secondary_email'] ?? '';
-    //   _secondaryCountryCode =
-    //       widget.consultancy!['secondary_mobile_country_code'] ?? '';
-    //   _secondaryMobileNumber.text =
-    //       widget.consultancy!['secondary_mobile'] ?? '';
-    //   _selectedEmployeeStatus =
-    //       widget.consultancy!['consultancy_status'] ?? '';
-    //   _selectedClient = widget.consultancy!['consultancy_type'] ?? '';
-    //   _dobController.text = DateFormat('dd/MM/yyyy').format(
-    //           DateTime.parse(widget.consultancy!['license_start_date'])) ??
-    //       '';
-    //
-    //   _licenseNumber.text = widget.consultancy!['license_number'] ?? '';
-    //   _selectedLastPaidStatus = widget.consultancy!['last_paid_status'] ?? '';
-    //   _selectedFeeStructure = widget.consultancy!['fees_structure'] ?? '';
-    //   _userCredential.text = widget.consultancy!['admin_email'] ?? '';
-    //   _lastPaidDate = widget.consultancy!['last_paid_date'] ?? '';
-    //   _paymentMode = widget.consultancy!['payment_mode'] ?? '';
-    //   _licenseNumber.text = widget.consultancy!['license_number'] ?? '';
-    // }
-    // urlToFile();
+    log('consultancy client ${widget.userList}');
+    Future.microtask(() {
+      getData();
+    });
+
     super.initState();
   }
 
-  // urlToFile() async {
-  //   // Get temporary directory
-  //   final imageUrl = ApiConstant.imageBaseUrl +
-  //       (widget.consultancy?['consultancy_logo'] ?? '');
-  //
-  //   final directory = await getTemporaryDirectory();
-  //   final fileName =
-  //       path.basename(imageUrl); // ✅ Correct usage// Extract filename
-  //   final filePath = '${directory.path}/$fileName';
-  //
-  //   // Download image
-  //   final response = await http.get(Uri.parse(imageUrl));
-  //
-  //   // Save file
-  //   final file = File(filePath);
-  //   await file.writeAsBytes(response.bodyBytes);
-  //   _selectedImage = file;
-  // }
+  getData() async{
+    ref.read(consultancyProvider.notifier).setLoading(true);
+    if(isEdit){
+      final user = widget.userList!;
+
+      _employeeName.text = user['emp_name'] ?? '';
+      _employeeCode.text = user['emp_code'] ?? '';
+      _mobileNumber.text = user['mobile_number']?.toString() ?? '';
+      _emailAddress.text = user['email'] ?? '';
+      _dobController.text = user['dob'] != null
+          ?DateFormat('dd/MM/yyyy').format( DateTime.parse(user['dob'].toString().split('T').first))
+          : '';
+      _ageController.text = CommonFunction().calculateAge(user['dob']).toString();
+      _userCredential.text = user['login_email'] ?? '';
+      reset_password_value = user['reset_password'] == false;
+
+      _selectedUser = user['status'] ?? 'Not Selected';
+      _selectedDesignation = user['designation'] ?? 'Not Selected';
+      selectedGender = user['sex'] ?? 'Male';
+      _primaryCountryCode = user['mobile_number_code'] ?? '+65';
+      _selectedImage = user['receipt_file'];
+
+      _confirmedAddress = user['show_address_input'];
+    }
+ await   urlToFile();
+    ref.read(consultancyProvider.notifier).setLoading(false);
+  }
+
+  urlToFile() async {
+    final imageUrl = ApiConstant.imageBaseUrl + (widget.userList?['receipt_file'] ?? '');
+
+    final directory = await getTemporaryDirectory();
+    final fileName = path.basename(imageUrl);
+    final filePath = '${directory.path}/$fileName';
+
+    try {
+      final response = await http.get(Uri.parse(imageUrl));
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+
+      setState(() {
+        _selectedImage = file;
+      });
+
+      print('_selectedImage $_selectedImage');
+    } catch (e) {
+      print('❌ Failed to download image: $e');
+    }
+  }
+
 
   @override
   void dispose() {
@@ -365,6 +368,11 @@ class _ConsultancyAddUserScreen
     final primaryCountryCode = _primaryCountryCode.trim();
     final resetPassword = reset_password_value;
     final userStatus = _selectedUser!;
+    String id = ''; // declare it with a default value
+    if (isEdit) {
+      id = widget.userList!['id']?.toString() ?? '';
+    }
+
 
     print('''
 ========= Employee Form Data =========
@@ -402,35 +410,32 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
     print('isEdit $isEdit');
     try {
       print('isEdit $isEdit');
-      // final response = isEdit
-      //     ? await ref.read(consultancyProvider.notifier).editConsultancy(
-      //     widget.consultancy!['id'],
-      //     consultancyName,
-      //     consultancyId,
-      //     uenNumber,
-      //     fullAddress,
-      //     showInputAddress,
-      //     primaryContactPerson,
-      //     primaryMobileNumber,
-      //     primaryEmailAddress,
-      //     secondaryContactPerson,
-      //     secondaryMobileNumber,
-      //     secondaryEmailAddress,
-      //     selectedConsultancyType!,
-      //     selectedConsultancyStatus!,
-      //     licenseStartDate.toString(),
-      //     licenseEndDate.toString(),
-      //     licenseNumber,
-      //     selectedFeeStructure!,
-      //     selectedLastPaidStatus!,
-      //     adminCredential,
-      //     primaryCountryCode,
-      //     secondaryCountryCode,
-      //     resetPassword,
-      //     userId,
-      //     _selectedImage!,token!)
-      //     :
-      final response = await ref.read(consultancyProvider.notifier).addUser(
+
+      final response = isEdit?
+
+      await ref.read(consultancyProvider.notifier).editUser(
+          employeeName,
+          employeeCode,
+          gender!,
+          fullAddress,
+          showInputAddress,
+          dateOfBirth,
+          age,
+          primaryCountryCode,
+          mobileNumber,
+          email,
+          adminCredential,
+          resetPassword,
+          userId,
+          selectedDesignation,
+          userStatus,
+          _selectedImage!,
+          token!,
+      id,
+      )
+
+    :
+      await ref.read(consultancyProvider.notifier).addUser(
           employeeName,
           employeeCode,
           gender!,
@@ -451,7 +456,7 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
 
       if (!mounted) return;
 
-      final dynamic status = response['status'];
+      final dynamic status = response['success'];
 
       print('status $status');
 
@@ -460,13 +465,13 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
 
         //  Show success toast
         ToastHelper.showSuccess(
-            context, response['message'] ?? 'Consultant created successfully!');
+            context, response['message'] ?? 'User created successfully!');
       } else if (status == true) {
         context.pop(true);
 
         //  Show success toast
         ToastHelper.showSuccess(
-            context, response['message'] ?? 'Consultant update successfully!');
+            context, response['message'] ?? 'User update successfully!');
       } else {
         ToastHelper.showError(context, response['message']);
       }
@@ -704,7 +709,6 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                                     children: [
                                       Container(
                                           width: 70,
-                                          height: 35,
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 5),
                                           decoration: const BoxDecoration(
@@ -883,7 +887,7 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                           ),
                           if (isEdit) ...[
                             const SizedBox(height: 10),
-                            CustomTextField(
+                         if(reset_password_value)   CustomTextField(
                               padding: 0,
                               borderRadius: 8,
                               label: 'Type Default Password *',

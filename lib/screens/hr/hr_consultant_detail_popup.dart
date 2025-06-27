@@ -7,10 +7,11 @@ import 'package:intl/intl.dart';
 
 class HrConsultantDetailPopup extends StatelessWidget {
   final Map<String, dynamic> consultant;
+  final VoidCallback onEdit;
   final VoidCallback onDelete; // Callback to notify parent of deletion
 
   const HrConsultantDetailPopup(
-      {super.key, required this.consultant, required this.onDelete});
+      {super.key, required this.consultant,required this.onEdit, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +51,14 @@ class HrConsultantDetailPopup extends StatelessWidget {
                   ),
                   Row(
                     children: [
-                      CustomIconContainer(
-                          path: 'assets/icons/edit_pen.svg',
-                          bgColor: Color(0xffF5230C)),
+                      GestureDetector(
+                        onTap: (){
+                          onEdit();
+                        },
+                        child: CustomIconContainer(
+                            path: 'assets/icons/edit_pen.svg',
+                            bgColor: Color(0xffF5230C)),
+                      ),
                       SizedBox(width: 7),
                       GestureDetector(
                         onTap: () {
@@ -154,15 +160,7 @@ class HrConsultantDetailPopup extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              _buildFieldPair(
-                leftLabel: 'Joining Date',
-                leftValue:
-                    CommonFunction().formatDate(consultant['joining_date']),
-                rightLabel: 'Last Working Date',
-                rightValue:
-                    CommonFunction().formatDate(consultant['resignation_date']),
-              ),
+
               const SizedBox(height: 16),
               _buildFieldPair(
                 leftLabel: 'Designation',
