@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/screens/bom/widget/finance_popup.dart';
 import 'package:harris_j_system/screens/finance/compose_button_page.dart';
+import 'package:harris_j_system/screens/finance/finance_edit_screen.dart';
 
 import 'package:harris_j_system/screens/operator/action_click.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
@@ -792,10 +793,28 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                           Row(
                             children: [
                               GestureDetector(
+                                onTap: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.white,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                    ),
+                                    builder: (context) {
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                                        ),
+                                        child: const EditInvoiceDetailDialog(),
+                                      );
+                                    },
+                                  );
+                                },
                                 child: SvgPicture.asset(
                                   'assets/icons/editor.svg',
-                                  height: 20,
-                                  width: 20,
+                                  height: 25,
+                                  width: 25,
                                 ),
                               ),
                               const SizedBox(width: 10),

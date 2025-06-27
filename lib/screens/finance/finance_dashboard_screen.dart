@@ -520,7 +520,7 @@ class _FinanceDashboardScreenState extends State<FinanceDashboardScreen> {
                       case 6:
                         card = GestureDetector(
                           onTap: () {
-                            context.push(Constant.operatorFeedbackScreen);
+                            context.push(Constant.financeStaticSettingScreen);
                           },
                           child: BottomCard(
                             title: "Static Settings",

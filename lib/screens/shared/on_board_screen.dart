@@ -38,9 +38,8 @@ class _OnBoardScreenState extends State<OnBoardScreen> {
   ];
 
   void _onSkip() {
-    context.push(Constant.login);
+    context.push(Constant.financeDashboardScreen);
   }
-
   void _onNext() {
     if (_currentPage == pages.length - 1) {
       // Last page => "Done"
@@ -52,7 +51,6 @@ class _OnBoardScreenState extends State<OnBoardScreen> {
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

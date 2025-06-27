@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:harris_j_system/widgets/custom_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
+import 'package:harris_j_system/widgets/custom_app_bar.dart';
 
 class FinanceAddGroupScreen extends StatefulWidget {
   const FinanceAddGroupScreen({super.key});
@@ -18,226 +22,156 @@ class _FinanceAddGroupScreenState extends State<FinanceAddGroupScreen> {
   String? selectedClient;
   String? selectedConsultant;
 
-  final Color redColor = const Color(0xffFF1901);
+  final Color brandRed = const Color(0xFFFF1901);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
+      appBar: CustomAppBar(
+        showBackButton: false,
+        image: 'assets/icons/cons_logo.png',
+        onProfilePressed: () async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.clear();
+          Navigator.pushReplacementNamed(context,'/login');
+        },
+      ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(20),
+            topLeft: Radius.circular(20),
+          ),
+          border: Border(
+            top: BorderSide(color: Color(0xffE8E8E8)),
+            left: BorderSide(color: Color(0xffE8E8E8)),
+            right: BorderSide(color: Color(0xffE8E8E8)),
+          ),
+        ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top App Header Row
+              // Title Row
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        "Consultancy.",
-                        style: GoogleFonts.montserrat(
-                          fontWeight: FontWeight.w800,
-                          color: redColor,
-                          fontSize: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        "LOGO",
-                        style: GoogleFonts.montserrat(
-                          fontWeight: FontWeight.w400,
-                          color: redColor,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
+                  GestureDetector(
+                    onTap: () {
+                      context.pop();
+                    },
+                    child: SvgPicture.asset('assets/icons/back.svg', height: 15),
                   ),
-                  Row(
-                    children: [
-                      Icon(Icons.notifications, color: redColor),
-                      const SizedBox(width: 12),
-                      Icon(Icons.person, color: redColor),
-                    ],
-                  )
+                  const SizedBox(width: 90),
+                  Text(
+                    'Add Group',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 16),
-
-              // Container Card
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
+              const SizedBox(height: 24),
+              // Heading Divider
+              Row(
+                children: [
+                  Text(
+                    "New / modify Group Billing",
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: Color(0xffFF1901),
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Back + Title
-                      Row(
-                        children: [
-                          const Icon(Icons.arrow_back, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Add Group',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
+                  const Expanded(
+                    child: Divider(
+                      thickness: 1,
+                      color: Colors.black26,
+                      indent: 8,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // Client Dropdown
+              Text(
+                "Client Name",
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: Color(0xffFF1901),
+                ),
+              ),
+              const SizedBox(height: 6),
+              CustomDropdownField(
+                label: "Encore Films",
+                items: clientList,
+                value: selectedClient,
+                onChanged: (val) => setState(() => selectedClient = val),
+              ),
+              const SizedBox(height: 20),
+              // Group Name Text Field
+              CustomTextField(
+                hintText: "Group Name*",
+                controller: groupNameController,
+                useUnderlineBorder: false,
+                padding: 0,
+                borderRadius: 12,
+              ),
+              const SizedBox(height: 20),
 
-                      // Heading Divider
-                      Row(
-                        children: [
-                          Text(
-                            "New / modify Group Billing",
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: redColor,
-                            ),
-                          ),
-                          const Expanded(
-                            child: Divider(
-                              thickness: 1,
-                              color: Colors.black26,
-                              indent: 8,
-                            ),
-                          ),
-                        ],
+              // Consultant Dropdown
+              CustomDropdownField(
+                label: "Select Consultants",
+                items: consultantList,
+                value: selectedConsultant,
+                onChanged: (val) => setState(() => selectedConsultant = val),
+              ),
+              const Spacer(), // Replaces large SizedBox for flexible spacing
+              // Bottom Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Color(0xffFF1901)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      const SizedBox(height: 20),
-
-                      // Client Dropdown
-                      Text(
-                        "Client Name",
+                      onPressed: () {},
+                      child: Text(
+                        "Delete Group",
                         style: GoogleFonts.montserrat(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
-                          color: redColor,
+                          color: Color(0xffFF1901),
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      CustomDropdownField(
-                        label: "Encore Films",
-                        items: clientList,
-                        value: selectedClient,
-                        onChanged: (val) =>
-                            setState(() => selectedClient = val),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Group Name Text Field
-                      CustomTextField(
-                        hintText: "Group Name*",
-                        controller: groupNameController,
-                        useUnderlineBorder: false,
-                        padding: 0,
-                        borderRadius: 12,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Consultant Dropdown
-                      CustomDropdownField(
-                        label: "Select Consultants",
-                        items: consultantList,
-                        value: selectedConsultant,
-                        onChanged: (val) =>
-                            setState(() => selectedConsultant = val),
-                      ),
-
-                      const Spacer(),
-
-                      // Bottom Buttons Row
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: redColor),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                              ),
-                              onPressed: () {},
-                              child: Text(
-                                "Delete Group",
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                  color: redColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.clear, size: 18),
-                              label: Text(
-                                "Clear",
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: redColor,
-                                foregroundColor: Colors.white,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.save, size: 18),
-                              label: Text(
-                                "Save",
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: redColor,
-                                foregroundColor: Colors.white,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SvgPicture.asset(
+                      'assets/icons/clearr.svg',
+                      width: 36.0,
+                      height: 36.0,
+                    ),
+                  ),
+                  Expanded(
+                    child: SvgPicture.asset(
+                      'assets/icons/savee.svg',
+                      width: 36.0,
+                      height: 36.0,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

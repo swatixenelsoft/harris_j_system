@@ -33,6 +33,7 @@ import 'package:harris_j_system/screens/finance/finance_feedback_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_invoice_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_reports_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_screen.dart';
+import 'package:harris_j_system/screens/finance/finance_static_settings_screen.dart';
 import 'package:harris_j_system/screens/hr/hr_add_consultant_screen.dart';
 
 import 'package:harris_j_system/screens/hr/hr_consultant_claim_screen.dart';
@@ -291,6 +292,11 @@ final GoRouter goRouter = GoRouter(
           path: Constant.financeAddGroupScreen,
           builder: (context, state) => const FinanceAddGroupScreen(),
         ),
+        GoRoute(
+          path: Constant.financeStaticSettingScreen,
+          builder: (context, state) => const FinanceStaticSettingScreen(),
+        ),
+
       ],
     ),
   ],

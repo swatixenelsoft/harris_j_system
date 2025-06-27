@@ -50,6 +50,7 @@ class Constant {
   static const String financeReportScreen = '/finance/financeReportScreen';
   static const String financeFeedbackScreen = '/finance/financeFeedbackScreen';
   static const String financeAddGroupScreen = '/finance/financeAddGroupScreen';
+  static const String financeStaticSettingScreen= '/finance/financeStaticSettingScreen';
 
   // HR Flow
   static const String hrDashboardScreen = '/hr/hrDashboardScreen';
