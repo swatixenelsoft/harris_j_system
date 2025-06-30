@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/screens/consultancy/add_holiday_screen.dart';
+import 'package:harris_j_system/screens/consultancy/consultancy_detailed_holiday_screen.dart';
 import 'package:harris_j_system/screens/consultancy/create_holiday_profile_screen.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 
@@ -12,7 +13,6 @@ class HolidayManagementScreen extends StatefulWidget {
   State<HolidayManagementScreen> createState() =>
       _HolidayManagementScreenState();
 }
-
 class _HolidayManagementScreenState extends State<HolidayManagementScreen> {
   final List<Map<String, dynamic>> holidays = List.generate(
     16,
@@ -42,7 +42,6 @@ class _HolidayManagementScreenState extends State<HolidayManagementScreen> {
       SnackBar(content: Text('Added ${newHoliday['name']}')),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -114,8 +113,7 @@ class _HolidayManagementScreenState extends State<HolidayManagementScreen> {
                             child: SingleChildScrollView(
                               child: Padding(
                                 padding: EdgeInsets.only(
-                                  bottom:
-                                      MediaQuery.of(context).viewInsets.bottom,
+                                  bottom: MediaQuery.of(context).viewInsets.bottom,
                                 ),
                                 child: Container(
                                   constraints: BoxConstraints(
@@ -134,7 +132,6 @@ class _HolidayManagementScreenState extends State<HolidayManagementScreen> {
                 ],
               ),
             ),
-
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: ConstrainedBox(
@@ -206,13 +203,14 @@ class _HolidayManagementScreenState extends State<HolidayManagementScreen> {
                       DataCell(
                         GestureDetector(
                           onTap: () {
-                            if (!showDetailedTable &&
-                                holiday['name'] == 'Singapore Holiday') {
-                              setState(() {
-                                showDetailedTable = true;
-                              });
-                            }
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DetailedHolidayScreen(),
+                              ),
+                            );
                           },
+
                           child: Container(
                             constraints:
                                 BoxConstraints(maxWidth: screenWidth * 0.4),

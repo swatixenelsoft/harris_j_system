@@ -38,7 +38,7 @@ class _OnBoardScreenState extends State<OnBoardScreen> {
   ];
 
   void _onSkip() {
-    context.push(Constant.financeDashboardScreen);
+    context.push(Constant.login);
   }
   void _onNext() {
     if (_currentPage == pages.length - 1) {

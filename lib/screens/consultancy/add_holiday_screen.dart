@@ -2,28 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
-
 class AddHolidayForm extends StatefulWidget {
   final Function(Map<String, dynamic>) onSubmit;
-
   const AddHolidayForm({super.key, required this.onSubmit});
-
   @override
   State<AddHolidayForm> createState() => _AddHolidayFormState();
 }
-
 class _AddHolidayFormState extends State<AddHolidayForm> {
   final _holidayNameController = TextEditingController();
   final _holidayDateController = TextEditingController();
   bool holidayStatus = true;
-
   @override
   void dispose() {
     _holidayNameController.dispose();
     _holidayDateController.dispose();
     super.dispose();
   }
-
   Future<void> _selectDate(BuildContext context) async {
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
@@ -34,7 +28,6 @@ class _AddHolidayFormState extends State<AddHolidayForm> {
         end: DateTime.now().add(const Duration(days: 1)),
       ),
     );
-
     if (picked != null) {
       setState(() {
         _holidayDateController.text =
@@ -42,14 +35,12 @@ class _AddHolidayFormState extends State<AddHolidayForm> {
       });
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     final double padding = screenWidth * 0.02;
     final double fontSize = screenWidth * 0.035;
-
     return Container(
       width: screenWidth,
       decoration: BoxDecoration(
