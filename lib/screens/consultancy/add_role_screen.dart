@@ -1,199 +1,213 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:harris_j_system/providers/static_system_provider.dart';
+import 'package:harris_j_system/services/api_constant.dart';
+import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class CustomAddRoleDialog extends StatefulWidget {
-  final Function(Map<String, dynamic>)?
-      onSubmit; // Optional callback for submitting data
+class AddBottomSheet extends ConsumerStatefulWidget {
+  final String title;
+  final String label;
+  final String hintText;
+  final List<String> tags;
+  final Function(Map<String, dynamic>)? onSubmit;
 
-  const CustomAddRoleDialog({super.key, this.onSubmit});
+  const AddBottomSheet({
+    super.key,
+    required this.title,
+    required this.label,
+    required this.hintText,
+    required this.tags,
+    this.onSubmit,
+  });
 
   @override
-  _CustomAddRoleDialogState createState() => _CustomAddRoleDialogState();
+  ConsumerState<AddBottomSheet> createState() => _AddBottomSheetState();
 }
 
-class _CustomAddRoleDialogState extends State<CustomAddRoleDialog> {
+class _AddBottomSheetState extends ConsumerState<AddBottomSheet> {
+  final TextEditingController _textController = TextEditingController();
   String? selectedTag;
-  final TextEditingController _addController = TextEditingController();
-  bool roleStatus = true; // Added status toggle like AddHolidayForm
 
-  @override
-  void dispose() {
-    _addController.dispose();
-    super.dispose();
+  Future<Map<String, dynamic>> _submitForm() async {
+    final prefs = await SharedPreferences.getInstance();
+    final consultancyId = prefs.getInt('userId') ?? 0;
+    final token = prefs.getString('token') ?? '';
+    FocusScope.of(context).unfocus();
+
+    final name = _textController.text.trim();
+    final tag = selectedTag;
+
+    try {
+      final response = await ref.read(staticSettingProvider.notifier).addRole(
+        widget.title == 'Add Designation'
+            ? ApiConstant.addDesignation
+            : ApiConstant.addRole,
+        consultancyId.toString(),
+        name,
+        tag ?? '',
+        token,
+      );
+
+      final bool success = response['success'] == true;
+
+      if (!mounted) return {'success': false, 'message': 'Widget not mounted'};
+
+      return response; // Always return a Map
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Something went wrong: $e',
+      };
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
-    // Responsive sizing using MediaQuery
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
-    final double padding = screenWidth * 0.03;
-    final double fontSize = screenWidth * 0.035;
 
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(0)),
-      child: Container(
-        width: screenWidth, // Full width to span screen
-        decoration: BoxDecoration(
-          color: Colors.grey[100], // Subtle background like AddHolidayForm
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Container(
-              width: screenWidth,
-              padding: EdgeInsets.symmetric(
-                  horizontal: padding * 2, vertical: padding * 2),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFF1901),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Add Role',
-                    style: GoogleFonts.montserrat(
-                      color: Colors.white,
-                      fontSize: fontSize * 1.1,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: SvgPicture.asset(
-                      'assets/icons/closee.svg',
-                      width: 25,
-                      height: 25,
-                    ),
-                  ),
-                ],
-              ),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.40,
+      minChildSize: 0.3,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, scrollController) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: Container(
+          color: Colors.grey[100],
+          child: SingleChildScrollView(
+            controller: scrollController,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-            SizedBox(height: screenHeight * 0.02),
-            // Content
-            Padding(
-              padding: EdgeInsets.symmetric(
-                  horizontal: padding * 2, vertical: padding),
-              child: Column(
-                children: [
-                  // Custom Designation Name TextField
-                  CustomTextField(
-                    label: 'Role Name*',
-                    hintText: 'Enter role name',
-                    controller: _addController,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a role name';
-                      }
-                      return null;
-                    },
-                    borderRadius: 10,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  width: screenWidth,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFF1901),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
                   ),
-                  SizedBox(height: screenHeight * 0.03),
-                  // Custom Add Tag Dropdown
-                  CustomDropdownField(
-                    label: 'Add Tag',
-                    items: ['Tag 1', 'Tag 2', 'Tag 3'],
-                    value: selectedTag,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedTag = value;
-                      });
-                    },
-                    borderRadius: 10,
-                    borderColor: 0xffE8E6EA,
-                  ),
-                  SizedBox(height: screenHeight * 0.01),
-
-                  SizedBox(height: screenHeight * 0.13),
-                  // Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Cancel Button
-                      SizedBox(
-                        width: screenWidth * 0.30, // Reduced width
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFFFF1901),
-                            side: const BorderSide(color: Color(0xFFFF1901)),
-                            padding: EdgeInsets.symmetric(
-                              vertical: screenHeight * 0.01,
-                              horizontal: screenHeight * 0.005,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            'Cancel',
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: fontSize * 0.9,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                      Text(
+                        widget.title,
+                        style: GoogleFonts.montserrat(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      SizedBox(width: padding),
-                      // Save Button
-                      SizedBox(
-                        width: screenWidth * 0.30, // Reduced width
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF1901),
-                            padding: EdgeInsets.symmetric(
-                              vertical: screenHeight * 0.01,
-                              horizontal: screenHeight * 0.005,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (_addController.text.isNotEmpty) {
-                              final result = {
-                                'designation': _addController.text,
-                                'tag': selectedTag ?? 'No Tag',
-                              };
-                              if (widget.onSubmit != null) {
-                                widget.onSubmit!(result);
-                              }
-                              Navigator.pop(context, result);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Please fill in the designation name'),
-                                ),
-                              );
-                            }
-                          },
-                          child: Text(
-                            'Save',
-                            style: GoogleFonts.spaceGrotesk(
-                              color: Colors.white,
-                              fontSize: fontSize * 0.9,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: SvgPicture.asset(
+                          'assets/icons/closee.svg',
+                          width: 25,
+                          height: 25,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: screenHeight * 0.01),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: 15),
+
+                // Input Field
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: CustomTextField(
+                    label: widget.label,
+                    hintText: widget.hintText,
+                    controller: _textController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter ${widget.label.toLowerCase()}';
+                      }
+                      return null;
+                    },
+                    borderRadius: 8,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Dropdown
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: CustomDropdownField(
+                    label: 'Add Tag',
+                    items: widget.tags,
+                    value: selectedTag,
+                    onChanged: (value) {
+                      print('tag_value $value');
+                      setState(() {
+
+                        selectedTag = value;
+                      });
+                    },
+                    borderRadius: 8,
+                    borderColor: 0xffE8E6EA,
+                  ),
+                ),
+
+                const SizedBox(height: 45),
+
+                // Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CustomButton(
+                      onPressed: () => Navigator.pop(context),
+                      text: 'Cancel',
+                      width: 116,
+                      isOutlined: true,
+                    ),
+                    const SizedBox(width: 8),
+                    CustomButton(
+                      text: "Save",
+                      onPressed: () async {
+                        if (_textController.text.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please fill in the name')),
+                          );
+                          return;
+                        }
+
+                        final result = await _submitForm();
+
+                        if (result['success'] == true) {
+                          widget.onSubmit?.call(result);
+                          if (mounted) {
+                            Navigator.pop(context, result);
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(result['message'] ?? 'Failed to save')),
+                          );
+                        }
+                      },
+
+                      width: 116,
+                    )
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
+

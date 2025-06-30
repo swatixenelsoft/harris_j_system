@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class CustomDropdownField extends StatelessWidget {
   final String label;
+  final String hint;
   final List<String> items;
   final String? value;
   final ValueChanged<String?> onChanged;
@@ -13,6 +14,7 @@ class CustomDropdownField extends StatelessWidget {
   const CustomDropdownField({
     super.key,
     required this.label,
+     this.hint='',
     required this.items,
     this.value,
     required this.onChanged,
@@ -26,7 +28,13 @@ class CustomDropdownField extends StatelessWidget {
     return InputDecorator(
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.montserrat(
+        hintText: hint,
+        labelStyle: GoogleFonts.spaceGrotesk(
+          color: const Color.fromRGBO(0, 0, 0, 0.4), // Light black with opacity
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),
+        hintStyle: GoogleFonts.spaceGrotesk(
           color: const Color.fromRGBO(0, 0, 0, 0.4), // Light black with opacity
           fontSize: 12,
           fontWeight: FontWeight.w400,

@@ -9,6 +9,7 @@ import 'package:harris_j_system/screens/consultancy/consultancy_roles_privilages
 import 'package:harris_j_system/screens/consultancy/consultancy_system_properties_screen.dart';
 import 'package:harris_j_system/ulits/common_function.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
+import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_country_picker_field.dart';
 import 'package:harris_j_system/widgets/custom_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_phone_number_field.dart';
@@ -130,6 +131,23 @@ class _ConsultancySettingsScreenState extends State<ConsultancySettingsScreen> {
                       fontWeight: FontWeight.w700,
                       color: const Color(0xffFF1901)),
                 ),
+const Spacer(),
+                if (_currentTabIndex == 2)
+                  CustomButton(
+                    leftPadding: 2,
+                    text: 'Add Lookup',
+                    width: 110,
+                    height: 39,
+                    borderRadius: 6,
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AddLookupPopup(),
+                      );
+                    },
+                    isOutlined: false,
+                    svgAsset: 'assets/icons/circle.svg',
+                  ),
               ],
             ),
           ),
@@ -235,7 +253,7 @@ class _ConsultancySettingsScreenState extends State<ConsultancySettingsScreen> {
       case 1:
         return const HolidayManagementScreen();
       case 2:
-        return const HolidayPropertyScreen();
+        return const SystemPropertyScreen();
       case 3:
         return const DesignationRoleScreen();
       case 4:

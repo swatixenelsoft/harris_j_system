@@ -1335,8 +1335,7 @@ class ApiService {
     String userStatus,
     File consultantImage,
     String token,
-  ) async
-  {
+  ) async {
     try {
       FormData formData = FormData.fromMap({
         'emp_name': employeeName,
@@ -1389,26 +1388,25 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> editUser(
-      String employeeName,
-      String employeeCode,
-      String gender,
-      String fullAddress,
-      String showInputAddress,
-      String dob,
-      String age,
-      String countryCode,
-      String primaryMobile,
-      String primaryEmail,
-      String adminEmail,
-      bool resetPassword,
-      int userId,
-      String designation,
-      String userStatus,
-      File consultantImage,
-      String token,
-      String id,
-      ) async
-  {
+    String employeeName,
+    String employeeCode,
+    String gender,
+    String fullAddress,
+    String showInputAddress,
+    String dob,
+    String age,
+    String countryCode,
+    String primaryMobile,
+    String primaryEmail,
+    String adminEmail,
+    bool resetPassword,
+    int userId,
+    String designation,
+    String userStatus,
+    File consultantImage,
+    String token,
+    String id,
+  ) async {
     try {
       FormData formData = FormData.fromMap({
         'emp_name': employeeName,
@@ -1429,7 +1427,7 @@ class ApiService {
         'receipt_file': await MultipartFile.fromFile(consultantImage.path),
         'joining_date': '',
         'resignation_date': '',
-        'id':id,
+        'id': id,
       });
 
       print('formData: ${formData.fields}, ${formData.files}');
@@ -1461,11 +1459,12 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> deleteUser(String id, String userId,String token) async {
+  Future<Map<String, dynamic>> deleteUser(
+      String id, String userId, String token) async {
     try {
       FormData formData = FormData.fromMap({
         'id': id,
-        'user_id':userId,
+        'user_id': userId,
       });
       print('formData $token, ${formData.fields}');
       print('deleteId $id');
@@ -1483,6 +1482,91 @@ class ApiService {
       print('response-delete $response');
       return response.data;
     } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> addLookUp(
+      String consultancyId,
+      String propertyName,
+      String propertyDescription,
+      bool status,
+      String hexColor,
+      List lookupOptions,
+      String token) async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'consultancy_id': consultancyId,
+        'property_name': propertyName,
+        'property_description': propertyDescription,
+        'status': status ? '1' : '0',
+        'hex_color': hexColor,
+        'lookup_options': lookupOptions,
+      });
+      print('formData $token, ${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.addLookup,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+      print('response-addlookup $response');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> addRole(
+      String endPoint,
+      String consultancyId,
+      String name,
+      String tag,
+      String token) async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'consultancy_id': consultancyId,
+        'name': name,
+        'tag': tag,
+        'status': '1',
+
+      });
+      print('formData $token, ${formData.fields},$endPoint');
+
+      final response = await _dio.post(
+        endPoint,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('eroro msg $e');
       if (e.response != null) {
         return e.response?.data ?? {'error': 'Unknown error'};
       } else {

@@ -89,7 +89,8 @@ class ConsultancyNotifier extends StateNotifier<ConsultancyState> {
     String primaryCode,
     String secondaryCode,
     String token,
-  ) async {
+  ) async
+  {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final addConsultancyResponse = await apiService.addClient(

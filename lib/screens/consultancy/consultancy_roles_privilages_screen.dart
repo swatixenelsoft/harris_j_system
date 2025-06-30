@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/screens/consultancy/add_designation_screen.dart';
 import 'package:harris_j_system/screens/consultancy/add_role_screen.dart';
+import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_dropdown.dart';
 
 class DesignationRoleScreen extends StatefulWidget {
@@ -14,6 +16,9 @@ class DesignationRoleScreen extends StatefulWidget {
 class _DesignationRoleScreenState extends State<DesignationRoleScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  final designations = ['Consultant', 'Operator', 'Human Resources', 'Finance'];
+  String selectedDesignation = 'Consultant';
 
   final List<Map<String, dynamic>> roles = [
     {'role': 'Consultant', 'assigned': true},
@@ -67,6 +72,8 @@ class _DesignationRoleScreenState extends State<DesignationRoleScreen>
     },
   ];
 
+  get onSubmit => null;
+
   @override
   void initState() {
     super.initState();
@@ -76,126 +83,132 @@ class _DesignationRoleScreenState extends State<DesignationRoleScreen>
     });
   }
 
+
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70.0), // Increased AppBar height
-        child: AppBar(
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          backgroundColor: Colors.white,
-          title: SizedBox(
-            width: double.infinity,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 0),
-              child: TabBar(
-                controller: _tabController,
-                isScrollable: false,
-                indicator: const BoxDecoration(),
-                labelPadding: EdgeInsets.zero,
-                tabs: [
-                  _buildTab("Designation & Role", 0),
-                  _buildTab("Privileges", 1),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionHeader('Designation', onAdd: () {
-                          showModalBottomSheet(
-                            context: context,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(10)),
-                            ),
-                            builder: (context) => CustomAddDesignationDialog(),
-                          );
-                        }),
-                        const SizedBox(height: 8),
-                        _buildDesignationList(),
-                        const SizedBox(height: 24),
-                        const Divider(height: 1, color: Color(0xFFFF1901)),
-                        const SizedBox(height: 20),
-                        _buildSectionHeader('Roles', onAdd: () {
-                          showModalBottomSheet(
-                            context: context,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(10)),
-                            ),
-                            builder: (context) => CustomAddRoleDialog(),
-                          );
-                        }),
-                        const SizedBox(height: 8),
-                        _buildRolesTable(),
-                      ],
-                    ),
-                  ),
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildRoleDropdown(),
-                        const SizedBox(height: 16),
-                        _buildPrivilegesTable(),
-                        const SizedBox(height: 16),
-                        _buildActionButtons(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    return Column(
+      children: [
+        TabBar(
+          controller: _tabController,
+          isScrollable: false,
+          indicator: const BoxDecoration(),
+          labelPadding: EdgeInsets.zero,
+          dividerColor: Colors.transparent,
+          tabs: [
+            _buildTab("Designation & Role", 0),
+            _buildTab("Privileges", 1),
           ],
         ),
-      ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: 16, right: 16, top: 10),
+                      child: _buildSectionHeader('Designation', onAdd: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => AddBottomSheet(
+                            title: 'Add Designation',
+                            label: 'Designation Name*',
+                            hintText: 'Enter designation name',
+                            tags: const ['HR', 'Manager', 'Assistant'],
+                            onSubmit: (data) {
+                              print('Designation: $data');
+                            },
+                          ),
+                        );
+
+
+                      }),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
+                      child: _buildDesignationList(),
+                    ),
+                    const SizedBox(height: 24),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Divider(height: 1, color: Color(0xFFFF1901)),
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildSectionHeader('Roles', onAdd: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => AddBottomSheet(
+                            title: 'Add Role',
+                            label: 'Role Name*',
+                            hintText: 'Enter role name',
+                            tags: const ['Tag 1', 'Tag 2', 'Tag 3'],
+                            onSubmit: (data) {
+                              print('Role: $data');
+                            },
+                          ),
+                        );
+
+                      }),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildRolesTable(),
+                  ],
+                ),
+              ),
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildRoleDropdown(),
+                    const SizedBox(height: 16),
+                    _buildPrivilegesTable(),
+                    const SizedBox(height: 16),
+                    _buildActionButtons(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildTab(String title, int index) {
     final bool isSelected = _tabController.index == index;
-    return FractionallySizedBox(
-      widthFactor: 1.0,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFFFF1901)
-              : const Color.fromRGBO(242, 242, 242, 1),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(8),
-            topRight: Radius.circular(8),
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected ? const Color(0xFFFF1901) : const Color(0xffF2F2F2),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
         ),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(
-            vertical: 13, horizontal: 8), // Increased vertical padding
-        child: Text(
-          title,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontFamily: 'Montserrat',
-            fontWeight: FontWeight.w500,
-            fontSize: 16, // Increased font size
-          ),
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
+      ),
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(
+          vertical: 13, horizontal: 8), // Increased vertical padding
+      child: Text(
+        title,
+        style: GoogleFonts.montserrat(
+          color: isSelected ? Colors.white : Colors.black,
+          fontWeight: FontWeight.w600,
+          fontSize: 12, // Increased font size
         ),
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -206,63 +219,55 @@ class _DesignationRoleScreenState extends State<DesignationRoleScreen>
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: GoogleFonts.spaceGrotesk(
             fontSize: 16,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Montserrat',
-            color: Color(0xFFFF1901),
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFFFF1901),
           ),
         ),
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFFF1901),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-          icon: SvgPicture.asset(
-            'assets/icons/add_icon.svg',
-            height: 16,
-            width: 16,
-          ),
-          label: Text('Add $title',
-              style: const TextStyle(fontFamily: 'Montserrat')),
+        CustomButton(
+          text: 'Add $title',
           onPressed: onAdd,
-        ),
+          svgAsset: 'assets/icons/add_icon.svg',
+          height: 39,
+          width: 125,
+        )
       ],
     );
   }
 
   Widget _buildDesignationList() {
-    final designations = [
-      'Consultant',
-      'Operator',
-      'Human Resources',
-      'Finance'
-    ];
     return Column(
       children: designations.map((designation) {
-        final isSelected = designation == 'Consultant';
-        return Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? const Color.fromRGBO(255, 150, 27, 0.1)
-                : Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Text(
-            designation,
-            style: TextStyle(
-              fontFamily: 'Montserrat',
-              color: isSelected ? const Color(0xFFFF1901) : Colors.black,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              fontSize: 14,
+        final isSelected = designation == selectedDesignation;
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              selectedDesignation = designation;
+            });
+            print('selectedDesignation $selectedDesignation,$isSelected');
+          },
+          child: Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? const Color.fromRGBO(255, 150, 27, 0.1)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color.fromRGBO(0, 0, 0, 0.25)),
             ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+            child: Text(
+              designation,
+              style: GoogleFonts.spaceGrotesk(
+                color: isSelected ? const Color(0xFFFF1901) : Colors.black,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         );
       }).toList(),
@@ -273,21 +278,21 @@ class _DesignationRoleScreenState extends State<DesignationRoleScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Custom table heading
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(15),
           decoration: const BoxDecoration(
             color: Color(0xFFFF1901),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
           ),
           child: Row(
-            children: const [
+            children: [
               Expanded(
                 child: Text(
                   'Application Role',
-                  style: TextStyle(
+                  style: GoogleFonts.spaceGrotesk(
                     color: Colors.white,
-                    fontFamily: 'Montserrat',
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     fontSize: 14,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -295,13 +300,12 @@ class _DesignationRoleScreenState extends State<DesignationRoleScreen>
                 ),
               ),
               SizedBox(
-                width: 120,
+                width: 180,
                 child: Text(
                   'Assign',
-                  style: TextStyle(
+                  style: GoogleFonts.spaceGrotesk(
                     color: Colors.white,
-                    fontFamily: 'Montserrat',
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -312,53 +316,32 @@ class _DesignationRoleScreenState extends State<DesignationRoleScreen>
             ],
           ),
         ),
-        DataTable(
-          columnSpacing: 0,
-          border: TableBorder(
-            horizontalInside: BorderSide(color: Colors.grey, width: 1.0),
-            bottom: BorderSide(color: Colors.grey, width: 1.0),
-          ),
-          columns: const [
-            DataColumn(
-              label: Text(
-                'Role',
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'Status',
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-          rows: roles.map((role) {
+
+        Column(
+          children: roles.map((role) {
             final isAssigned = role['assigned'] as bool;
-            return DataRow(
-              cells: [
-                DataCell(
-                  Container(
-                    width: 160,
+            return Container(
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Color(0xffE4E4EF)),
+                ),
+              ),
+              padding: const EdgeInsets.only( left: 15,right: 20,top: 12,bottom: 12),
+              child: Row(
+                children: [
+                  Expanded(
                     child: Text(
                       role['role'].toString(),
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 14,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 13,
+                        color: const Color(0xff1D212D),
+                        fontWeight: FontWeight.w700,
+
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
                   ),
-                ),
-                DataCell(
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -366,34 +349,43 @@ class _DesignationRoleScreenState extends State<DesignationRoleScreen>
                       });
                     },
                     child: Container(
-                      width: 127,
+                      width: 114,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                          horizontal: 10, vertical: 10),
                       decoration: BoxDecoration(
                         color: isAssigned
-                            ? const Color.fromRGBO(31, 146, 84, 1)
-                            : Colors.grey.shade400,
-                        borderRadius: BorderRadius.circular(50),
+                            ? const Color(0xff1F9254)
+                            : const Color(0xffA8B9CA),
+                        borderRadius: BorderRadius.circular(40),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if(!isAssigned) Container(
+                            width: 16,
+                            height: 16,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          if(!isAssigned)   const SizedBox(width: 3),
                           SizedBox(
-                            width: 85,
+                            width: 75,
                             child: Text(
                               isAssigned ? 'Assigned' : 'Unassigned',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: GoogleFonts.spaceGrotesk(
                                 color: Colors.white,
-                                fontSize: 14,
-                                fontFamily: 'Montserrat',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Container(
-                            width: 12,
-                            height: 12,
+                          if(isAssigned)  const SizedBox(width: 3),
+                          if(isAssigned) Container(
+                            width: 16,
+                            height: 16,
                             decoration: const BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
@@ -403,14 +395,15 @@ class _DesignationRoleScreenState extends State<DesignationRoleScreen>
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           }).toList(),
         ),
       ],
     );
   }
+
 
   Widget _buildRoleDropdown() {
     return Column(

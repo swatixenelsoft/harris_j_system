@@ -47,4 +47,7 @@ class ApiConstant {
   static const String addUser = "consultancy/addUser";
   static const String editUser = "consultancy/updateUser";
   static const String deleteUser = "consultancy/deleteUser";
+  static const String addLookup = "consultancy-system-property/save";
+  static const String addRole = "consultancy-role/save";
+  static const String addDesignation = "consultancy-designation/save";
 }
