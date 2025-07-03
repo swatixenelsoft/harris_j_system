@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:harris_j_system/providers/static_system_provider.dart';
 import 'package:harris_j_system/services/api_constant.dart';
 
 class ApiService {
@@ -1574,4 +1575,187 @@ class ApiService {
       }
     }
   }
+  Future<Map<String, dynamic>> createHoliday({
+    required String consultancyId,
+    required String holidayProfileName,
+    required String holidayProfileDate,
+    required int daysCount,
+    required String validUpto,
+    required int holidayProfileStatus,
+    required String childHolidayName,
+    required String childHolidayDate,
+    required int childHolidayDayCount,
+    required String childHolidayValidUpto,
+    required int childHolidayStatus,
+    required String token,
+  })  async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'consultancy_id': consultancyId,
+        'holiday_name': holidayProfileName,
+        'holiday_date': holidayProfileDate,
+        'days_count': daysCount,
+        'valid_upto': validUpto,
+        'status': holidayProfileStatus,
+        'child_holiday_name': childHolidayName,
+        'child_holiday_date': childHolidayDate,
+        'child_days_count': childHolidayDayCount,
+        'child_valid_upto': childHolidayValidUpto,
+        'child_status': childHolidayStatus,
+      });
+
+      print('formData $token, ${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.createHoliday, // Make sure this constant is defined
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      print('response-createHoliday $response');
+      return response.data;
+    } on DioException catch (e) {
+      print('erro ${e.toString()}');
+      if (e.response != null) {
+        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+      } else {
+        return {'success': false, 'message': 'No response from server'};
+      }
+    }
+  }
+
+
+  Future<Map<String, dynamic>> addHoliday({
+    required String consultancyId,
+    required String holidayProfileName,
+    required String holidayProfileDate,
+    required int daysCount,
+    required String validUpto,
+    required int holidayProfileStatus,
+    required String parentId,
+    required String token,
+  })  async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'consultancy_id': consultancyId,
+        'holiday_name': holidayProfileName,
+        'holiday_date': holidayProfileDate,
+        'days_count': daysCount,
+        'valid_upto': validUpto,
+        'status': holidayProfileStatus,
+       'parent_id':parentId,
+      });
+
+      print('formData $token, ${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.createHoliday, // Make sure this constant is defined
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      print('response-addHoliday $response');
+      return response.data;
+    } on DioException catch (e) {
+      print('erro ${e.toString()}');
+      if (e.response != null) {
+        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+      } else {
+        return {'success': false, 'message': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> editHoliday({
+
+    required String holidayProfileName,
+    required String holidayProfileDate,
+    required int daysCount,
+    required String validUpto,
+    required int holidayProfileStatus,
+    required String id,
+    required String token,
+  })  async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+
+        'holiday_name': holidayProfileName,
+        'holiday_date': holidayProfileDate,
+        'days_count': daysCount,
+        'valid_upto': validUpto,
+        'status': holidayProfileStatus,
+        'id':id,
+      });
+
+      print('formData $token, ${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.createHoliday, // Make sure this constant is defined
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      print('response-editHoliday $response');
+      return response.data;
+    } on DioException catch (e) {
+      print('erro ${e.toString()}');
+      if (e.response != null) {
+        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+      } else {
+        return {'success': false, 'message': 'No response from server'};
+      }
+    }
+  }
+
+
+  Future<Map<String, dynamic>> getHolidayList(
+      String userId,
+      String token,
+      ) async {
+
+    try {
+      FormData formData = FormData.fromMap({
+        'user_id': userId,
+      });
+      print('formData $token, ${formData.fields}');
+      final response = await _dio.post(
+        ApiConstant.getHolidayList, // make sure this constant is correct
+        data:formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      print('response-getHolidayList ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+      } else {
+        return {'success': false, 'message': 'No response from server'};
+      }
+    }
+  }
+
 }
