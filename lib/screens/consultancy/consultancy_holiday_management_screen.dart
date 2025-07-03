@@ -1,343 +1,265 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:harris_j_system/screens/consultancy/add_holiday_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:harris_j_system/providers/static_system_provider.dart';
 import 'package:harris_j_system/screens/consultancy/consultancy_detailed_holiday_screen.dart';
 import 'package:harris_j_system/screens/consultancy/create_holiday_profile_screen.dart';
+import 'package:harris_j_system/screens/consultancy/edit_form_screen.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 
-class HolidayManagementScreen extends StatefulWidget {
+class HolidayManagementScreen extends ConsumerStatefulWidget {
   const HolidayManagementScreen({super.key});
 
   @override
-  State<HolidayManagementScreen> createState() =>
+  ConsumerState<HolidayManagementScreen> createState() =>
       _HolidayManagementScreenState();
 }
-class _HolidayManagementScreenState extends State<HolidayManagementScreen> {
-  final List<Map<String, dynamic>> holidays = List.generate(
-    16,
-    (index) => {'name': 'Singapore Holiday', 'status': 'Active'},
-  );
 
-  final List<Map<String, dynamic>> detailedHolidays = [
-    {'name': 'New Year\'s Day', 'status': 'Active'},
-    {'name': 'Chinese New Year', 'status': 'Active'},
-    {'name': 'Good Friday', 'status': 'Active'},
-    {'name': 'Hari Raya Puasa', 'status': 'Active'},
-    {'name': 'Labour Day', 'status': 'Active'},
-    {'name': 'Vesak Day', 'status': 'Active'},
-    {'name': 'Hari Raya Haji', 'status': 'Active'},
-    {'name': 'National Day', 'status': 'Active'},
-    {'name': 'Deepavali', 'status': 'Active'},
-    {'name': 'Christmas Day', 'status': 'Active'},
-  ];
+class _HolidayManagementScreenState
+    extends ConsumerState<HolidayManagementScreen> {
+  String userId = '';
+  String token = '';
 
-  bool showDetailedTable = false;
-
-  void _addHoliday(Map<String, dynamic> newHoliday) {
-    setState(() {
-      detailedHolidays.add(newHoliday);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Added ${newHoliday['name']}')),
-    );
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => _loadHolidayList());
   }
+
+  Future<void> _loadHolidayList() async {
+    ref.read(staticSettingProvider.notifier).setLoading(true);
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token') ?? '';
+    userId = prefs.getInt('userId')?.toString() ?? '';
+    final notifier = ref.read(staticSettingProvider.notifier);
+    await notifier.getHolidayList(userId: userId, token: token);
+    ref.read(staticSettingProvider.notifier).setLoading(false);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
+    final w = MediaQuery.of(context).size.width;
+    final h = MediaQuery.of(context).size.height;
+    final iconSize = w * 0.05;
 
-    final double columnSpacing = 8;
-    final double headingRowHeight = screenHeight * 0.05;
-    final double dataRowHeight = screenHeight * 0.075;
-    final double iconSize = screenWidth * 0.05;
-    final double fontSize = screenWidth * 0.035;
+    final staticSettingState = ref.watch(staticSettingProvider);
+    List detailedHolidays = staticSettingState.holidayList ?? [];
 
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Search clicked'))),
+                      child: SvgPicture.asset('assets/icons/search.svg',
+                          width: 16, height: 16),
+                    ),
+                    const SizedBox(width: 20),
+                    GestureDetector(
+                      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('More options clicked'))),
+                      child: SvgPicture.asset('assets/icons/vert.svg',
+                          width: 16, height: 16),
+                    ),
+                  ],
+                ),
+                CustomButton(
+                  text: 'Create Holiday Profile',
+                  leftPadding: 0,
+                  width: 150,
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      builder: (_) {
+                        return Padding(
+                          padding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).viewInsets.bottom),
+                          child: Container(
+                            constraints: BoxConstraints(maxHeight: h * 0.7),
+                            child: CreateHolidayProfileForm(
+                              token: token,
+                              userId: userId,
+                              onHolidayAdded: (json) {
+                                if (!json['isSaveAndAdd']) {
+                                  Navigator.pop(context);
+                                  _loadHolidayList();
+                                }
+                              },
 
-            Padding(
-              padding: const EdgeInsets.only(
-                  left: 25, right: 10, top: 0, bottom: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        child: SvgPicture.asset(
-                          'assets/icons/search.svg',
-                          width: 16,
-                          height: 16,
-                        ),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Search clicked')),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 20),
-                      GestureDetector(
-                        child: SvgPicture.asset(
-                          'assets/icons/vert.svg',
-                          width: 16,
-                          height: 16,
-                        ),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('More options clicked')),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  CustomButton(
-                    text:showDetailedTable?'Add Holiday': 'Create Holiday Profile',
-                    leftPadding: 0,
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(16)),
-                        ),
-                        backgroundColor: Colors.white, // Match form background
-                        barrierColor: Colors.black54,
-                        builder: (BuildContext context) {
-                          return SizedBox(
-                            width: screenWidth, // Full screen width
-                            child: SingleChildScrollView(
-                              child: Padding(
-                                padding: EdgeInsets.only(
-                                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                                ),
-                                child: Container(
-                                  constraints: BoxConstraints(
-                                    maxHeight: screenHeight * 0.7,
-                                  ),
-                                  child: const CreateHolidayProfileForm(),
-                                ),
-                              ),
                             ),
-                          );
-                        },
-                      );
-                    },
-                    width: 150,
-                  )
-                ],
-              ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
             ),
+          ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth: screenWidth,
-              ),
+              constraints: BoxConstraints(minWidth: w),
               child: DataTable(
-                headingRowHeight: headingRowHeight,
-                dataRowHeight: dataRowHeight,
+                headingRowHeight: h * 0.05,
+                dataRowHeight: h * 0.075,
                 headingRowColor:
-                    MaterialStateProperty.all(const Color(0xFFFF1901)),
-                dataRowColor: MaterialStateProperty.all(Colors.white),
-                columnSpacing: columnSpacing,
-                decoration: const BoxDecoration(
-                  border: Border(right: BorderSide.none, left: BorderSide.none),
-                ),
+                MaterialStateProperty.all(const Color(0xFFFF1901)),
                 columns: [
                   DataColumn(
-                    label: Container(
-                      constraints: BoxConstraints(maxWidth: screenWidth * 0.4),
-                      child: Text(
-                        'Holiday Name',
-                        style: GoogleFonts.montserrat(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
+                      label: Text('Holiday Name',
+                          style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12))),
                   DataColumn(
-                    label: Container(
-                      constraints: BoxConstraints(maxWidth: screenWidth * 0.3),
-                      child: Text(
-                        'Status',
-                        style: GoogleFonts.montserrat(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
+                      label: Text('Status',
+                          style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12))),
                   DataColumn(
-                    label: Container(
-                      constraints: BoxConstraints(maxWidth: screenWidth * 0.3),
-                      child: Text(
-                        'Actions',
-                        style: GoogleFonts.montserrat(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
+                      label: Text('Actions',
+                          style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12))),
                 ],
-                rows: (showDetailedTable ? detailedHolidays : holidays)
-                    .asMap()
-                    .entries
-                    .map((entry) {
-                  int index = entry.key;
-                  final holiday = entry.value;
-                  return DataRow(
-                    cells: [
-                      DataCell(
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const DetailedHolidayScreen(),
-                              ),
-                            );
-                          },
+                rows: detailedHolidays.asMap().entries.map((e) {
+                  final idx = e.key;
+                  final holiday = e.value;
 
-                          child: Container(
-                            constraints:
-                                BoxConstraints(maxWidth: screenWidth * 0.4),
-                            child: Text(
-                              holiday['name'],
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
+                  return DataRow(cells: [
+                    DataCell(
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetailedHolidayScreen(
+                                token: token,
+                                userId: userId,
+                                childrenHoliday: holiday['children'],
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ),
+                          );
+                        },
+                        child: Text(holiday['holiday_name'] ?? 'Unknown',
+                            style: GoogleFonts.montserrat(fontSize: 14)),
                       ),
-                      DataCell(
-                        Container(
-                          constraints:
-                              BoxConstraints(maxWidth: screenWidth * 0.3),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.02,
-                            vertical: screenHeight * 0.005,
-                          ),
-                          decoration: BoxDecoration(
-                            color: holiday['status'] == 'Active'
-                                ? const Color(0xFFEBF9F1)
-                                : const Color(0xFFFFE3E3),
-                            borderRadius:
-                                BorderRadius.circular(screenWidth * 0.05),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.circle,
-                                size: screenWidth * 0.02,
-                                color: holiday['status'] == 'Active'
+                    ),
+                    DataCell(
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: w * 0.02, vertical: h * 0.005),
+                        decoration: BoxDecoration(
+                          color: holiday['status'] == 1
+                              ? const Color(0xFFEBF9F1)
+                              : const Color(0xFFFFE3E3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.circle,
+                                size: w * 0.02,
+                                color: holiday['status'] == 1
                                     ? const Color(0xFF1F9254)
-                                    : Colors.red,
-                              ),
-                              SizedBox(width: screenWidth * 0.005),
-                              Text(
-                                holiday['status'],
-                                style: GoogleFonts.montserrat(
+                                    : Colors.red),
+                            const SizedBox(width: 4),
+                            Text(
+                              holiday['status'] == 1 ? 'Active' : 'Inactive',
+                              style: GoogleFonts.montserrat(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
-                                  height: 1.0,
-                                  letterSpacing: 0,
-                                  color: holiday['status'] == 'Active'
+                                  color: holiday['status'] == 1
                                       ? const Color(0xFF1F9254)
-                                      : Colors.red[900],
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
+                                      : Colors.red[900]),
+                            ),
+                          ],
                         ),
                       ),
-                      DataCell(
-                        Container(
-                          constraints:
-                              BoxConstraints(maxWidth: screenWidth * 0.3),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content:
-                                            Text('View ${holiday['name']}')),
-                                  );
-                                },
-                                child: SizedBox(
-                                  width: iconSize,
-                                  height: iconSize,
-                                  child: SvgPicture.asset(
-                                    'assets/icons/fullscreen.svg',
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: screenWidth * 0.01),
-                              GestureDetector(
-                                onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content:
-                                            Text('Edit ${holiday['name']}')),
-                                  );
-                                },
-                                child: SizedBox(
-                                  width: iconSize,
-                                  height: iconSize,
-                                  child: SvgPicture.asset(
-                                    'assets/icons/pen.svg',
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: screenWidth * 0.01),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    if (showDetailedTable) {
-                                      detailedHolidays.removeAt(index);
-                                    } else {
-                                      holidays.removeAt(index);
-                                    }
-                                  });
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content:
-                                            Text('Deleted ${holiday['name']}')),
-                                  );
-                                },
-                                child: SizedBox(
-                                  width: iconSize,
-                                  height: iconSize,
-                                  child: SvgPicture.asset(
-                                    'assets/icons/delete.svg',
-                                  ),
-                                ),
-                              ),
-                            ],
+                    ),
+                    DataCell(
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'View ${holiday['holiday_name'] ?? 'Unknown'}'))),
+                            child: SvgPicture.asset('assets/icons/fullscreen.svg',
+                                width: iconSize),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                  BorderRadius.vertical(top: Radius.circular(16)),
+                                ),
+                                builder: (_) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                        bottom: MediaQuery.of(context)
+                                            .viewInsets
+                                            .bottom),
+                                    child: Container(
+                                      constraints: BoxConstraints(maxHeight: h * 0.8),
+                                      child: EditHolidayForm(
+                                        token: token,
+                                        id: '',
+                                        holidayData: {
+                                          'id': holiday['id'],
+                                          'name': holiday['holiday_name'] ?? '',
+                                          'status': holiday['status'],
+                                          'startDate': holiday['start_date'],
+                                          'endDate': holiday['end_date'],
+                                        },
+                                        onSubmit: (updatedHoliday) async {
+                                          Navigator.pop(context);
+                                          await _loadHolidayList(); // Refresh list
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                            child: SvgPicture.asset('assets/icons/pen.svg',
+                                width: iconSize),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text(
+                                      'Delete ${holiday['holiday_name'] ?? 'Unknown'}')));
+                            },
+                            child: SvgPicture.asset('assets/icons/delete.svg',
+                                width: iconSize),
+                          ),
+                        ],
                       ),
-                    ],
-                  );
+                    ),
+                  ]);
                 }).toList(),
               ),
             ),

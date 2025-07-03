@@ -1,50 +1,174 @@
 import 'dart:ui'; // For BackdropFilter
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:harris_j_system/providers/static_system_provider.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 
-class CreateHolidayProfileForm extends StatefulWidget {
-  const CreateHolidayProfileForm({super.key});
+class CreateHolidayProfileForm extends ConsumerStatefulWidget {
+  final Function(Map<String, dynamic>) onHolidayAdded;
+  final String token;
+  final String userId;
+
+  const CreateHolidayProfileForm({
+    super.key,
+    required this.onHolidayAdded,
+    required this.token,
+    required this.userId,
+  });
 
   @override
-  State<CreateHolidayProfileForm> createState() =>
+  ConsumerState<CreateHolidayProfileForm> createState() =>
       _CreateHolidayProfileFormState();
 }
 
-class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
+class _CreateHolidayProfileFormState extends ConsumerState<CreateHolidayProfileForm> {
   final _profileNameController = TextEditingController();
   final _holidayNameController = TextEditingController();
   final _holidayDateController = TextEditingController();
+  final _createdDateController = TextEditingController();
   bool profileStatus = true;
+  DateTimeRange? selectedRange;
   bool holidayStatus = true;
+  int daysCount=0;
+
+  @override
+  void initState() {
+    super.initState();
+    _createdDateController.text = "${DateTime.now().toLocal()}".split(' ')[0];
+  }
 
   @override
   void dispose() {
     _profileNameController.dispose();
     _holidayNameController.dispose();
     _holidayDateController.dispose();
+    _createdDateController.dispose();
     super.dispose();
   }
 
+
   Future<void> _selectDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
+    final picked = await showDateRangePicker(
       context: context,
-      initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      initialDateRange: DateTimeRange(
+        start: DateTime.now(),
+        end: DateTime.now().add(const Duration(days: 1)),
+      ),
     );
-    if (pickedDate != null) {
+    if (picked != null) {
       setState(() {
-        _holidayDateController.text = "${pickedDate.toLocal()}".split(' ')[0];
+         daysCount = picked.end.difference(picked.start).inDays + 1; // inclusive of start & end
+        _holidayDateController.text =
+        "${picked.start.year}-${picked.start.month.toString().padLeft(2, '0')}-${picked.start.day.toString().padLeft(2, '0')}"
+            " to "
+            "${picked.end.year}-${picked.end.month.toString().padLeft(2, '0')}-${picked.end.day.toString().padLeft(2, '0')}"
+         ;
       });
+    }
+  }
+
+
+  Future<void> _saveHoliday({required bool isSaveAndAdd}) async {
+    final holidayName = _holidayNameController.text.trim();
+    final profileName = _profileNameController.text.trim();
+    final createdDate =_createdDateController.text.trim();
+    final holidayProfileStatus=profileStatus==true?1:0;
+    final holidayDateRange=_holidayDateController.text.trim();
+    final holidayStatusValue=holidayStatus==true?1:0;
+
+    // if (holidayName.isEmpty || holidayDate.isEmpty || profileName.isEmpty) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Please fill all required fields')),
+    //   );
+    //   return;
+    // }
+
+    if (widget.token.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Authentication token is missing')),
+      );
+      return;
+    }
+    if (widget.userId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Consultancy ID is missing')),
+      );
+      return;
+    }
+
+    try {
+
+
+      print('''
+======== Holiday Form Submission ========
+Holiday Name           : $holidayName
+Profile Name           : $profileName
+Created Date           : $createdDate
+dayCount               :$daysCount
+Profile Status         : $holidayProfileStatus
+Holiday Date Range     : $holidayDateRange
+Holiday Status Value   : $holidayStatusValue
+========================================
+''');
+
+      final holiday = await ref.read(staticSettingProvider.notifier).createHoliday(
+        consultancyId: widget.userId,
+        holidayProfileName: profileName,
+        holidayProfileDate: createdDate,
+        daysCount: daysCount,
+        validUpto: '2025',
+        holidayProfileStatus: holidayProfileStatus,
+        childHolidayName:holidayName,
+        childHolidayDate:holidayDateRange,
+        childHolidayDayCount:daysCount,
+        childHolidayValidUpto:'2025',
+        childHolidayStatus:holidayStatusValue,
+        token: widget.token,
+      );
+
+      print('createHoliday response: $holiday');
+      if (holiday['success'] == true) {
+        widget.onHolidayAdded({
+          'name': holiday['data']['holiday_name'],
+          'status': holidayStatus ? 'Active' : 'Inactive',
+          'isSaveAndAdd': isSaveAndAdd, // 👈 Important
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Holiday $holidayName created successfully')),
+        );
+
+        if (isSaveAndAdd) {
+          _profileNameController.clear();
+          _holidayNameController.clear();
+          _holidayDateController.clear();
+          setState(() {
+            profileStatus = true;
+            holidayStatus = true;
+            _createdDateController.text =
+            "${DateTime.now().toLocal()}".split(' ')[0];
+          });
+        }
+
+      }
+
+
+    } catch (e) {
+      print('createHoliday error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 600, // ensure enough height in dialog/popup
+      height: 600,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -58,7 +182,6 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
       ),
       child: Column(
         children: [
-          // Header
           Container(
             decoration: const BoxDecoration(
               color: Color(0xFFFF1901),
@@ -84,7 +207,6 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
             ),
           ),
 
-          // Scrollable Form
           Expanded(
             child: Scrollbar(
               thumbVisibility: true,
@@ -100,28 +222,26 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                       children: [
                         const SizedBox(height: 10),
 
-                        // Profile Name
                         CustomTextField(
-                          label: "Holiday Profile Name * ",
-                          hintText: "Enter profile Five",
+                          label: "Holiday Profile Name *",
+                          hintText: "Enter profile name",
                           controller: _profileNameController,
                         ),
 
                         const SizedBox(height: 16),
 
-                        // Created Date (Disabled)
                         TextField(
                           enabled: false,
+                          controller: _createdDateController,
                           decoration: InputDecoration(
                             labelText: 'Created Date',
                             prefixIcon: Padding(
                               padding: const EdgeInsets.all(10.0),
                               child: ClipRect(
                                 child: BackdropFilter(
-                                  filter: ImageFilter.blur(
-                                      sigmaX: 3.0, sigmaY: 3.0),
+                                  filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
                                   child: Image.asset(
-                                    'assets/icons/calendar.png', // Make sure the path is correct
+                                    'assets/icons/calendar.png',
                                     width: 24,
                                     height: 24,
                                   ),
@@ -131,8 +251,7 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10)),
                             disabledBorder: OutlineInputBorder(
-                              borderSide:
-                                  const BorderSide(color: Color(0xfffA8B9CA)),
+                              borderSide: const BorderSide(color: Color(0xffA8B9CA)),
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
@@ -140,7 +259,6 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
 
                         const SizedBox(height: 10),
 
-                        // Profile Status
                         Row(
                           children: [
                             const Text('Status:'),
@@ -149,8 +267,7 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                               scale: 0.8,
                               child: Switch(
                                 value: profileStatus,
-                                onChanged: (val) =>
-                                    setState(() => profileStatus = val),
+                                onChanged: (val) => setState(() => profileStatus = val),
                                 activeTrackColor: const Color(0xff008000),
                                 inactiveThumbColor: Colors.white,
                               ),
@@ -158,8 +275,7 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                             Text(
                               profileStatus ? 'Active' : 'Inactive',
                               style: GoogleFonts.montserrat(
-                                color:
-                                    profileStatus ? Colors.black : Colors.grey,
+                                color: profileStatus ? Colors.black : Colors.grey,
                               ),
                             ),
                           ],
@@ -167,7 +283,6 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
 
                         const SizedBox(height: 10),
 
-                        // Add Holiday Title
                         Text(
                           'Add Holiday',
                           style: GoogleFonts.montserrat(
@@ -178,7 +293,6 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                         const Divider(color: Colors.red),
                         const SizedBox(height: 16),
 
-                        // Holiday Name
                         CustomTextField(
                           label: "Holiday Name",
                           hintText: "New Year",
@@ -187,7 +301,6 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
 
                         const SizedBox(height: 16),
 
-                        // Holiday Date Picker
                         CustomTextField(
                           label: "Holiday Date",
                           hintText: "Select date",
@@ -197,10 +310,9 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                             padding: const EdgeInsets.all(12.0),
                             child: ClipRect(
                               child: BackdropFilter(
-                                filter:
-                                    ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
+                                filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
                                 child: Image.asset(
-                                  'assets/icons/red_calendar.png', // Make sure the path is correct
+                                  'assets/icons/red_calendar.png',
                                   width: 24,
                                   height: 24,
                                 ),
@@ -212,7 +324,6 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
 
                         const SizedBox(height: 16),
 
-                        // Holiday Status
                         Row(
                           children: [
                             const Text('Status:'),
@@ -221,8 +332,7 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                               scale: 0.8,
                               child: Switch(
                                 value: holidayStatus,
-                                onChanged: (val) =>
-                                    setState(() => holidayStatus = val),
+                                onChanged: (val) => setState(() => holidayStatus = val),
                                 activeTrackColor: const Color(0xff008000),
                                 inactiveThumbColor: Colors.white,
                               ),
@@ -230,8 +340,7 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                             Text(
                               holidayStatus ? 'Active' : 'Inactive',
                               style: GoogleFonts.montserrat(
-                                color:
-                                    holidayStatus ? Colors.black : Colors.grey,
+                                color: holidayStatus ? Colors.black : Colors.grey,
                               ),
                             ),
                           ],
@@ -239,26 +348,27 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
 
                         const SizedBox(height: 10),
 
-                        // Buttons Row
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            // Clear
                             Expanded(
                               child: OutlinedButton(
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: const Color(0xFFFF1901),
-                                  side: const BorderSide(
-                                      color: Color(0xFFFF1901)),
+                                  side: const BorderSide(color: Color(0xFFFF1901)),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10)),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
                                 onPressed: () {
                                   _profileNameController.clear();
                                   _holidayNameController.clear();
                                   _holidayDateController.clear();
+                                  setState(() {
+                                    profileStatus = true;
+                                    holidayStatus = true;
+                                    _createdDateController.text = "${DateTime.now().toLocal()}".split(' ')[0];
+                                  });
                                 },
                                 child: Text(
                                   'Clear',
@@ -270,18 +380,15 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                               ),
                             ),
                             const SizedBox(width: 12),
-
-                            // Save
                             Expanded(
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFFF1901),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10)),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                onPressed: () => Navigator.pop(context),
+                                onPressed: () => _saveHoliday(isSaveAndAdd: false),
                                 child: Text(
                                   'Save',
                                   style: GoogleFonts.spaceGrotesk(
@@ -292,20 +399,15 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                               ),
                             ),
                             const SizedBox(width: 12),
-
-                            // Save & Add
                             Expanded(
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFFF1901),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10)),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                onPressed: () {
-                                  // TODO: Save and reset logic
-                                },
+                                onPressed: () => _saveHoliday(isSaveAndAdd: true),
                                 child: Text(
                                   'Save & Add',
                                   style: GoogleFonts.spaceGrotesk(
@@ -317,7 +419,6 @@ class _CreateHolidayProfileFormState extends State<CreateHolidayProfileForm> {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 24),
                       ],
                     ),

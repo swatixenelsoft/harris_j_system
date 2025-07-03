@@ -6,30 +6,53 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/providers/static_system_provider.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 
-class AddHolidayForm extends ConsumerStatefulWidget {
+class EditHolidayForm extends ConsumerStatefulWidget {
+  final Map<String, dynamic> holidayData;
   final Function(Map<String, dynamic>) onSubmit;
   final String token;
-  final String userId;
-  final String parentId;
+  final String id;
 
-  const AddHolidayForm({
+  const EditHolidayForm({
     super.key,
+    required this.holidayData,
     required this.onSubmit,
     required this.token,
-    required this.userId,
-    required this.parentId,
+    required this.id,
   });
 
   @override
-  ConsumerState<AddHolidayForm> createState() => _AddHolidayFormState();
+  ConsumerState<EditHolidayForm> createState() => _EditHolidayFormState();
 }
 
-class _AddHolidayFormState extends ConsumerState<AddHolidayForm> {
+class _EditHolidayFormState extends ConsumerState<EditHolidayForm> {
   final _holidayNameController = TextEditingController();
   final _holidayDateController = TextEditingController();
   DateTimeRange? selectedRange;
   bool holidayStatus = true;
   int daysCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final data = widget.holidayData;
+    _holidayNameController.text = data['name'] ?? '';
+    holidayStatus = (data['status'] == 'Active' || data['status'] == 1);
+
+    if (data['startDate'] != null && data['endDate'] != null) {
+      try {
+        DateTime start = DateTime.parse(data['startDate'].toString());
+        DateTime end = DateTime.parse(data['endDate'].toString());
+        selectedRange = DateTimeRange(start: start, end: end);
+        daysCount = end.difference(start).inDays + 1;
+        _holidayDateController.text =
+        "${start.year}-${start.month.toString().padLeft(2, '0')}-${start.day.toString().padLeft(2, '0')} to "
+            "${end.year}-${end.month.toString().padLeft(2, '0')}-${end.day.toString().padLeft(2, '0')}";
+      } catch (e) {
+        debugPrint('Invalid date format in holidayData');
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -43,18 +66,18 @@ class _AddHolidayFormState extends ConsumerState<AddHolidayForm> {
       context: context,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      initialDateRange: DateTimeRange(
-        start: DateTime.now(),
-        end: DateTime.now().add(const Duration(days: 1)),
-      ),
+      initialDateRange: selectedRange ??
+          DateTimeRange(
+            start: DateTime.now(),
+            end: DateTime.now().add(const Duration(days: 1)),
+          ),
     );
     if (picked != null) {
       setState(() {
         selectedRange = picked;
         daysCount = picked.end.difference(picked.start).inDays + 1;
         _holidayDateController.text =
-        "${picked.start.year}-${picked.start.month.toString().padLeft(2, '0')}-${picked.start.day.toString().padLeft(2, '0')}"
-            " to "
+        "${picked.start.year}-${picked.start.month.toString().padLeft(2, '0')}-${picked.start.day.toString().padLeft(2, '0')} to "
             "${picked.end.year}-${picked.end.month.toString().padLeft(2, '0')}-${picked.end.day.toString().padLeft(2, '0')}";
       });
     }
@@ -73,18 +96,17 @@ class _AddHolidayFormState extends ConsumerState<AddHolidayForm> {
     }
 
     try {
-      final holiday = await ref.read(staticSettingProvider.notifier).addHoliday(
-        consultancyId: widget.userId,
-        daysCount: daysCount,
-        validUpto: selectedRange!.end.year.toString(),
-        token: widget.token,
+      final response = await ref.read(staticSettingProvider.notifier).editHoliday(
+        id: widget.holidayData['id'].toString(),
         holidayProfileName: holidayName,
         holidayProfileDate: holidayDateRange,
+        daysCount: daysCount,
+        validUpto: selectedRange!.end.year.toString(),
         holidayProfileStatus: holidayStatusValue,
-        parentId: widget.parentId,
+        token: widget.token,
       );
 
-      if (holiday['success'] == true) {
+      if (response['success'] == true) {
         widget.onSubmit({
           'name': holidayName,
           'status': holidayStatus ? 'Active' : 'Inactive',
@@ -94,20 +116,12 @@ class _AddHolidayFormState extends ConsumerState<AddHolidayForm> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Holiday $holidayName created successfully')),
+          SnackBar(content: Text('Holiday "$holidayName" updated successfully')),
         );
-
-        // Clear form
-        _holidayNameController.clear();
-        _holidayDateController.clear();
-        setState(() {
-          holidayStatus = true;
-          selectedRange = null;
-          daysCount = 0;
-        });
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(holiday['message'] ?? 'Failed to create holiday')),
+          SnackBar(content: Text(response['message'] ?? 'Failed to update holiday')),
         );
       }
     } catch (e) {
@@ -116,7 +130,7 @@ class _AddHolidayFormState extends ConsumerState<AddHolidayForm> {
       );
     }
   }
-//
+
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
@@ -133,7 +147,6 @@ class _AddHolidayFormState extends ConsumerState<AddHolidayForm> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
           Container(
             width: w,
             padding: EdgeInsets.symmetric(horizontal: padding * 2, vertical: padding * 2),
@@ -145,7 +158,7 @@ class _AddHolidayFormState extends ConsumerState<AddHolidayForm> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Add Holiday',
+                  'Edit Holiday',
                   style: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontSize: fontSize * 1.1,
@@ -164,7 +177,6 @@ class _AddHolidayFormState extends ConsumerState<AddHolidayForm> {
             ),
           ),
           const SizedBox(height: 16),
-          // Form Fields
           Padding(
             padding: EdgeInsets.symmetric(horizontal: padding * 2),
             child: Column(
@@ -214,7 +226,6 @@ class _AddHolidayFormState extends ConsumerState<AddHolidayForm> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                // Buttons
                 Row(
                   children: [
                     Expanded(
@@ -242,7 +253,7 @@ class _AddHolidayFormState extends ConsumerState<AddHolidayForm> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                         child: Text(
-                          'Add Holiday',
+                          'Save & Add',
                           style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: fontSize * 0.9, fontWeight: FontWeight.w600),
                         ),
                       ),
