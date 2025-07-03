@@ -11,8 +11,11 @@ import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AddLookupPopup extends ConsumerStatefulWidget {
+  final Map<String,dynamic>? lookupItem;
+  final Map<String,dynamic>? optionItem;
+  final int? index;
 
-  const AddLookupPopup({super.key});
+  const AddLookupPopup({super.key, this.lookupItem,this.optionItem,this.index});
 
   @override
   ConsumerState<AddLookupPopup> createState() => _AddLookupPopupState();
@@ -33,6 +36,10 @@ class _AddLookupPopupState extends ConsumerState<AddLookupPopup> {
   bool propertyStatus=false;
   bool optionStatus=false;
   bool optionVisibility=false;
+
+  bool get isPropertyEdit => widget.lookupItem != null;
+  bool get isOptionEdit => widget.optionItem != null;
+
 
   void _showPropertyColorPicker() {
     showDialog(
@@ -125,6 +132,7 @@ class _AddLookupPopupState extends ConsumerState<AddLookupPopup> {
     final optionHexColor = optionHexCode.text;
     final optionVisibilityValue =optionVisibility;
 
+
     final List<Map<String, dynamic>> lookupOptions = [
       {
         "option_name": optionName,
@@ -146,6 +154,8 @@ propertyDescription : $propertyDescription
 status              : $status
 hexColor            : $hexColor
 options             : ${lookupOptions}
+isEdit:${isPropertyEdit ? widget.lookupItem!['id'] : ''}
+isoptionEdit:${isOptionEdit ? widget.index: ''}
 ========================================
 ''');
 
@@ -158,6 +168,8 @@ options             : ${lookupOptions}
         hexColor,
         lookupOptions,
         token,
+        isPropertyEdit ? widget.lookupItem!['id'].toString() : '',
+        isOptionEdit ? widget.index.toString() : '',
       );
 
       final bool success = response['success'] == true;
@@ -179,7 +191,37 @@ options             : ${lookupOptions}
     }
   }
 
+@override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    print('isOptionEdit $isOptionEdit');
+if(isPropertyEdit){
+  print('lookUp ${widget.lookupItem}');
+  final lookupItem = widget.lookupItem!;
 
+  propertyNameCtrl.text=lookupItem['property_name'];
+  propertyDescCtrl.text=lookupItem['property_description'];
+  propertyHexCode.text=lookupItem['hex_color']??"#000000";
+  propertyStatus=lookupItem['status']==1?true:false;
+}
+if(isOptionEdit){
+
+  final optionItem = widget.optionItem!;
+  print('optionItem $optionItem');
+
+  optionValueCtrl.text=optionItem['option_value'];
+  optionNameCtrl.text=optionItem['option_name'];
+  optionSequenceCtrl.text=optionItem['sequence'];
+  optionDescriptionCtrl.text=optionItem['option_description'];
+  optionHexCode.text=optionItem['hex_color'];
+  optionStatus=optionItem['status']=="1"?true:false;
+  optionVisibility=optionItem['visibility']=="1"?true:false;
+
+
+}
+
+  }
 
   @override
   Widget build(BuildContext context) {

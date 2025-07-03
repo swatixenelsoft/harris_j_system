@@ -9,6 +9,8 @@ import 'package:harris_j_system/services/api_constant.dart';
 class ApiService {
   final Dio _dio = Dio(BaseOptions(
     baseUrl: ApiConstant.baseUrl,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
   ));
 
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -969,9 +971,9 @@ class ApiService {
         ),
       );
 
-      print('Request URL: ${response.requestOptions.uri},$month,$year');
+      print('Request URL: ${response.requestOptions.uri}');
       print('Response statusCode: ${response.statusCode}');
-      print('Response data: ${response.data}');
+      log('Response datatime: ${jsonEncode(response.data)}');
 
       return response.data;
     } on DioException catch (e) {
@@ -1497,8 +1499,10 @@ class ApiService {
       bool status,
       String hexColor,
       List lookupOptions,
-      String token) async
-  {
+      String token,
+      String id,
+      String index,
+      ) async {
     try {
       FormData formData = FormData.fromMap({
         'consultancy_id': consultancyId,
@@ -1507,6 +1511,9 @@ class ApiService {
         'status': status ? '1' : '0',
         'hex_color': hexColor,
         'lookup_options': lookupOptions,
+        if (id != "") 'id': id,
+        if (index != "") 'lookup_option_index': index,
+
       });
       print('formData $token, ${formData.fields}');
 
@@ -1532,25 +1539,125 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> addRole(
-      String endPoint,
-      String consultancyId,
-      String name,
-      String tag,
-      String token) async
-  {
+  Future<Map<String, dynamic>> addRoleDesignation(String endPoint,
+      String consultancyId, String name, String tag, String token) async {
     try {
-      FormData formData = FormData.fromMap({
-        'consultancy_id': consultancyId,
-        'name': name,
-        'tag': tag,
-        'status': '1',
+      final isDesignation = endPoint == 'consultancy-designation/save';
 
+      final formData = FormData.fromMap({
+        'consultancy_id': consultancyId,
+        if (isDesignation) 'designation_name': name,
+        if (isDesignation) 'designation_tag': tag,
+        if (!isDesignation) 'name': name,
+        if (!isDesignation) 'tag': tag,
+        'status': '1',
       });
       print('formData $token, ${formData.fields},$endPoint');
 
       final response = await _dio.post(
         endPoint,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('eroro msg $e');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> getDesignation(
+       String userId, String token) async
+  {
+    try {
+
+      final formData = FormData.fromMap({'user_id': userId});
+      print('formData $token, ${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.designationList,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('eroro msg $e');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> getRole(
+      String userId, String token) async
+  {
+    try {
+
+      final formData = FormData.fromMap({'user_id': userId});
+      print('formData $token, ${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.roleList,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('eroro msg $e');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> getSystemPropertyList(
+      String userId, String token) async
+  {
+    try {
+
+      final formData = FormData.fromMap({'user_id': userId});
+      print('formData $token, ${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.systemPropertyList,
         data: formData,
         options: Options(
           headers: {

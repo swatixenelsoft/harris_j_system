@@ -15,6 +15,7 @@ class AddBottomSheet extends ConsumerStatefulWidget {
   final String hintText;
   final List<String> tags;
   final Function(Map<String, dynamic>)? onSubmit;
+  final Map<String,dynamic>? designationData;
 
   const AddBottomSheet({
     super.key,
@@ -23,6 +24,7 @@ class AddBottomSheet extends ConsumerStatefulWidget {
     required this.hintText,
     required this.tags,
     this.onSubmit,
+    this.designationData,
   });
 
   @override
@@ -32,6 +34,7 @@ class AddBottomSheet extends ConsumerStatefulWidget {
 class _AddBottomSheetState extends ConsumerState<AddBottomSheet> {
   final TextEditingController _textController = TextEditingController();
   String? selectedTag;
+  bool get isEdit => widget.designationData != null;
 
   Future<Map<String, dynamic>> _submitForm() async {
     final prefs = await SharedPreferences.getInstance();
@@ -43,7 +46,7 @@ class _AddBottomSheetState extends ConsumerState<AddBottomSheet> {
     final tag = selectedTag;
 
     try {
-      final response = await ref.read(staticSettingProvider.notifier).addRole(
+      final response = await ref.read(staticSettingProvider.notifier).addRoleDesignation(
         widget.title == 'Add Designation'
             ? ApiConstant.addDesignation
             : ApiConstant.addRole,
@@ -67,6 +70,23 @@ class _AddBottomSheetState extends ConsumerState<AddBottomSheet> {
   }
 
 
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    print('isEdit $isEdit');
+    if(isEdit){
+      print('designationData ${widget.designationData}');
+      final designationData = widget.designationData!;
+
+      _textController.text=designationData['property_name'];
+      selectedTag=designationData['designation_tag'];
+
+
+    }
+
+  }
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -188,6 +208,7 @@ class _AddBottomSheetState extends ConsumerState<AddBottomSheet> {
                           widget.onSubmit?.call(result);
                           if (mounted) {
                             Navigator.pop(context, result);
+
                           }
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(

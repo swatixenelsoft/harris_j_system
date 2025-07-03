@@ -50,4 +50,7 @@ class ApiConstant {
   static const String addLookup = "consultancy-system-property/save";
   static const String addRole = "consultancy-role/save";
   static const String addDesignation = "consultancy-designation/save";
+  static const String designationList = "consultancy-designation/listing";
+  static const String roleList = "consultancy-role/listing";
+  static const String systemPropertyList = "consultancy-system-property/listing";
 }

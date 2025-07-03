@@ -1,84 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:harris_j_system/providers/static_system_provider.dart';
+import 'package:harris_j_system/screens/consultancy/add_lookup_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class SystemPropertyScreen extends StatefulWidget {
+class SystemPropertyScreen extends ConsumerStatefulWidget {
   const SystemPropertyScreen({super.key});
 
   @override
-  State<SystemPropertyScreen> createState() => _SystemPropertyScreenState();
+  ConsumerState<SystemPropertyScreen> createState() => _SystemPropertyScreenState();
 }
 
-class _SystemPropertyScreenState extends State<SystemPropertyScreen> {
-  final List<Map<String, dynamic>> holidays = [
-    {'name': 'Leave Type', 'status': 'Active'},
-    {'name': 'Expense Type', 'status': 'Active'},
-    {'name': 'Claim Status', 'status': 'Active'},
-    {'name': 'Claim Form', 'status': 'Inactive'},
-    {'name': 'Status', 'status': 'Active'},
-    {'name': 'Designation', 'status': 'Active'},
-    {'name': 'Gender', 'status': 'Active'},
-    {'name': 'Document Type', 'status': 'Inactive'},
-    {'name': 'Leave Type', 'status': 'Active'},
-    {'name': 'Leave Type', 'status': 'Active'},
-    {'name': 'Expense Type', 'status': 'Active'},
-    {'name': 'Claim Status', 'status': 'Active'},
-    {'name': 'Claim Form', 'status': 'Inactive'},
-    {'name': 'Status', 'status': 'Active'},
-    {'name': 'Designation', 'status': 'Active'},
-    {'name': 'Gender', 'status': 'Active'},
-    {'name': 'Document Type', 'status': 'Inactive'},
-    {'name': 'Leave Type', 'status': 'Active'},
-  ];
-
-  final Map<int, List<Map<String, String>>> optionsMap = {
-    0: [
-      {'name': 'Medical Leave', 'value': '1'},
-      {'name': 'Casual Leave', 'value': '2'},
-      {'name': 'Paid Leave', 'value': '3'},
-      {'name': 'Unpaid Leave', 'value': '4'},
-    ],
-    1: [
-      {'name': 'Travel', 'value': '10'},
-      {'name': 'Food', 'value': '11'},
-    ],
-    2: [
-      {'name': 'Approved', 'value': '21'},
-      {'name': 'Rejected', 'value': '22'},
-    ],
-    3: [
-      {'name': 'Form A', 'value': 'A'},
-      {'name': 'Form B', 'value': 'B'},
-    ],
-    4: [
-      {'name': 'Active', 'value': '1'},
-      {'name': 'Inactive', 'value': '0'},
-    ],
-    5: [
-      {'name': 'Manager', 'value': 'MGR'},
-      {'name': 'Developer', 'value': 'DEV'},
-      {'name': 'Tester', 'value': 'QA'},
-    ],
-    6: [
-      {'name': 'Male', 'value': 'M'},
-      {'name': 'Female', 'value': 'F'},
-      {'name': 'Other', 'value': 'O'},
-    ],
-    7: [
-      {'name': 'Passport', 'value': 'PASS'},
-      {'name': 'Aadhaar Card', 'value': 'AAD'},
-      {'name': 'Pan Card', 'value': 'PAN'},
-    ],
-    8: [
-      {'name': 'Maternity Leave', 'value': 'ML'},
-      {'name': 'Paternity Leave', 'value': 'PL'},
-    ],
-  };
-
+class _SystemPropertyScreenState extends ConsumerState<SystemPropertyScreen> {
   int? _expandedRowIndex;
+
+
+  getSystemPropertyList() async {
+    ref.read(staticSettingProvider.notifier).setLoading(true);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final  userId = prefs.getInt('userId');
+
+    await ref.read(staticSettingProvider.notifier).getSystemProperty(userId.toString(),token!);
+
+    ref.read(staticSettingProvider.notifier).setLoading(false);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    Future.microtask(() {
+      getSystemPropertyList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final staticSettingState = ref.watch(staticSettingProvider);
+
+
+    final isLoading = staticSettingState.isLoading;
+    print('isLoading $isLoading');
+    final lookupList=staticSettingState.lookupList??[];
+    print('lookupList $lookupList');
+
     return Column(
       children: [
         // Header Row
@@ -126,14 +95,13 @@ class _SystemPropertyScreenState extends State<SystemPropertyScreen> {
         // List of Properties
         Expanded(
           child: ListView.builder(
-            itemCount: holidays.length,
+            itemCount: lookupList!.length,
             shrinkWrap: true,
-
             itemBuilder: (context, index) {
-              final item = holidays[index];
-              final bool isActive = item['status'] == 'Active';
+              final item = lookupList[index];
+              final bool isActive = item['status'] == 1;
               final bool isExpanded = _expandedRowIndex == index;
-
+              final List<dynamic>? options = item['lookup_options'];
               return Column(
                 children: [
                   // Property Row
@@ -141,13 +109,17 @@ class _SystemPropertyScreenState extends State<SystemPropertyScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
                     color: Colors.white,
                     child: Row(
-              mainAxisAlignment : MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Expanded(
                           flex: 2,
                           child: Text(
-                            item['name'],
-                            style: GoogleFonts.spaceGrotesk(fontSize: 12,color: const Color(0xff1D212D),fontWeight: FontWeight.w400),
+                            item['property_name'] ?? '',
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 12,
+                              color: const Color(0xff1D212D),
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
                         ),
                         Expanded(
@@ -169,7 +141,7 @@ class _SystemPropertyScreenState extends State<SystemPropertyScreen> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  item['status'],
+                                  isActive ? 'Active' : 'Inactive',
                                   style: GoogleFonts.spaceGrotesk(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -180,7 +152,6 @@ class _SystemPropertyScreenState extends State<SystemPropertyScreen> {
                             ),
                           ),
                         ),
-
                         Expanded(
                           flex: 2,
                           child: Row(
@@ -191,7 +162,6 @@ class _SystemPropertyScreenState extends State<SystemPropertyScreen> {
                                 onTap: () {
                                   setState(() {
                                     _expandedRowIndex = isExpanded ? null : index;
-                                    print('isExpanded: $isExpanded, Index: $index, Options: ${optionsMap[index]?.length ?? 0}');
                                   });
                                 },
                                 child: SvgPicture.asset(
@@ -202,9 +172,15 @@ class _SystemPropertyScreenState extends State<SystemPropertyScreen> {
                               const SizedBox(width: 14),
                               GestureDetector(
                                 onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Edit ${item['name']}')),
+
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AddLookupPopup(lookupItem:item),
                                   );
+
+                                  // ScaffoldMessenger.of(context).showSnackBar(
+                                  //   SnackBar(content: Text('Edit ${item['property_name']}')),
+                                  // );
                                 },
                                 child: SvgPicture.asset('assets/icons/pen2.svg', width: 20),
                               ),
@@ -215,13 +191,14 @@ class _SystemPropertyScreenState extends State<SystemPropertyScreen> {
                     ),
                   ),
                   const Divider(height: 1, color: Color(0xffE4E4EF), thickness: 1.0),
-                  // Expanded Options List
+
+                  // Expanded lookup_options
                   if (isExpanded)
                     Container(
                       color: const Color(0xFFF9F9F9),
                       child: Column(
                         children: [
-                          // Options Header
+                          // Header
                           Container(
                             padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
                             color: const Color(0xFFF2F2F2),
@@ -263,75 +240,72 @@ class _SystemPropertyScreenState extends State<SystemPropertyScreen> {
                             ),
                           ),
                           const Divider(height: 1, color: Color(0xffE4E4EF), thickness: 1.0),
-                          // Options List or Fallback
-                          optionsMap[index]?.isNotEmpty == true
+
+                          // Lookup options list
+                          (options != null && options .isNotEmpty)
                               ? Column(
-                            children: [
-                              ...List.generate(
-                                optionsMap[index]!.length,
-                                    (optIndex) {
-                                  final option = optionsMap[index]![optIndex];
-                                  return Column(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 16.0),
-                                        color: Colors.white,
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                option['name'] ?? '',
-                                                style: GoogleFonts.spaceGrotesk(fontSize: 12,fontWeight: FontWeight.w400),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                option['value'] ?? '',
-                                                style: GoogleFonts.spaceGrotesk(fontSize: 12,fontWeight: FontWeight.w400),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 2,
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      ScaffoldMessenger.of(context).showSnackBar(
-                                                        SnackBar(content: Text('Edit ${option['name']}')),
-                                                      );
-                                                    },
-                                                    child: SvgPicture.asset('assets/icons/pen2.svg', width: 20),
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      setState(() {
-                                                        optionsMap[index]!.removeAt(optIndex);
-                                                      });
-                                                      ScaffoldMessenger.of(context).showSnackBar(
-                                                        SnackBar(content: Text('Deleted ${option['name']}')),
-                                                      );
-                                                    },
-                                                    child: SvgPicture.asset('assets/icons/dustbin.svg', width: 20),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
+                            children: List.generate(options.length, (optIndex) {
+                              final option = options[optIndex];
+                              print('optionnnn ${option}');
+                              return Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 16.0),
+                                    color: Colors.white,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            option['option_name'] ?? '',
+                                            style: GoogleFonts.spaceGrotesk(fontSize: 12, fontWeight: FontWeight.w400),
+                                          ),
                                         ),
-                                      ),
-                                      if (optIndex < optionsMap[index]!.length - 1)
-                                        const Divider(height: 1, color: Color(0xffE4E4EF), thickness: 1.0), // Normal divider between options
-                                    ],
-                                  );
-                                },
-                              ),
-                              const Divider(height: 1, color: Color(0xff575757), thickness: 1), // Darker divider after last option
-                            ],
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            option['option_value'] ?? '',
+                                            style: GoogleFonts.spaceGrotesk(fontSize: 12, fontWeight: FontWeight.w400),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) => AddLookupPopup(lookupItem:item,optionItem:option,index:optIndex),
+                                                  );
+                                                },
+                                                child: SvgPicture.asset('assets/icons/pen2.svg', width: 20),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              GestureDetector(
+                                                onTap: () {
+                                                  setState(() {
+                                                    item['lookup_options'].removeAt(optIndex);
+                                                  });
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('Deleted ${option['option_name']}')),
+                                                  );
+                                                },
+                                                child: SvgPicture.asset('assets/icons/dustbin.svg', width: 20),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (optIndex < item['lookup_options'].length - 1)
+                                    const Divider(height: 1, color: Color(0xffE4E4EF), thickness: 1.0),
+                                ],
+                              );
+                            }),
                           )
                               : Container(
                             padding: const EdgeInsets.all(16.0),
@@ -348,6 +322,7 @@ class _SystemPropertyScreenState extends State<SystemPropertyScreen> {
             },
           ),
         ),
+
       ],
     );
 
