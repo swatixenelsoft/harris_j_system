@@ -53,14 +53,12 @@ class _EditHolidayFormState extends ConsumerState<EditHolidayForm> {
       }
     }
   }
-
   @override
   void dispose() {
     _holidayNameController.dispose();
     _holidayDateController.dispose();
     super.dispose();
   }
-
   Future<void> _selectDate(BuildContext context) async {
     final picked = await showDateRangePicker(
       context: context,

@@ -31,7 +31,8 @@ class _CreateHolidayProfileFormState extends ConsumerState<CreateHolidayProfileF
   bool profileStatus = true;
   DateTimeRange? selectedRange;
   bool holidayStatus = true;
-  int daysCount=0;
+  int daysCount = 0;
+  bool _isLoading = false; // Loading state to prevent multiple submissions
 
   @override
   void initState() {
@@ -48,7 +49,6 @@ class _CreateHolidayProfileFormState extends ConsumerState<CreateHolidayProfileF
     super.dispose();
   }
 
-
   Future<void> _selectDate(BuildContext context) async {
     final picked = await showDateRangePicker(
       context: context,
@@ -61,54 +61,66 @@ class _CreateHolidayProfileFormState extends ConsumerState<CreateHolidayProfileF
     );
     if (picked != null) {
       setState(() {
-         daysCount = picked.end.difference(picked.start).inDays + 1; // inclusive of start & end
+        daysCount = picked.end.difference(picked.start).inDays + 1; // Inclusive of start & end
         _holidayDateController.text =
         "${picked.start.year}-${picked.start.month.toString().padLeft(2, '0')}-${picked.start.day.toString().padLeft(2, '0')}"
             " to "
-            "${picked.end.year}-${picked.end.month.toString().padLeft(2, '0')}-${picked.end.day.toString().padLeft(2, '0')}"
-         ;
+            "${picked.end.year}-${picked.end.month.toString().padLeft(2, '0')}-${picked.end.day.toString().padLeft(2, '0')}";
       });
     }
   }
 
-
   Future<void> _saveHoliday({required bool isSaveAndAdd}) async {
+    if (_isLoading) return; // Prevent multiple submissions
+
+    setState(() {
+      _isLoading = true; // Set loading state
+    });
+
     final holidayName = _holidayNameController.text.trim();
     final profileName = _profileNameController.text.trim();
-    final createdDate =_createdDateController.text.trim();
-    final holidayProfileStatus=profileStatus==true?1:0;
-    final holidayDateRange=_holidayDateController.text.trim();
-    final holidayStatusValue=holidayStatus==true?1:0;
+    final createdDate = _createdDateController.text.trim();
+    final holidayProfileStatus = profileStatus ? 1 : 0;
+    final holidayDateRange = _holidayDateController.text.trim();
+    final holidayStatusValue = holidayStatus ? 1 : 0;
 
-    // if (holidayName.isEmpty || holidayDate.isEmpty || profileName.isEmpty) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text('Please fill all required fields')),
-    //   );
-    //   return;
-    // }
+    // Validate required fields
+    if (holidayName.isEmpty || holidayDateRange.isEmpty || profileName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
 
     if (widget.token.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Authentication token is missing')),
       );
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
     if (widget.userId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Consultancy ID is missing')),
       );
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
     try {
-
-
       print('''
 ======== Holiday Form Submission ========
 Holiday Name           : $holidayName
 Profile Name           : $profileName
 Created Date           : $createdDate
-dayCount               :$daysCount
+Day Count              : $daysCount
 Profile Status         : $holidayProfileStatus
 Holiday Date Range     : $holidayDateRange
 Holiday Status Value   : $holidayStatusValue
@@ -122,49 +134,57 @@ Holiday Status Value   : $holidayStatusValue
         daysCount: daysCount,
         validUpto: '2025',
         holidayProfileStatus: holidayProfileStatus,
-        childHolidayName:holidayName,
-        childHolidayDate:holidayDateRange,
-        childHolidayDayCount:daysCount,
-        childHolidayValidUpto:'2025',
-        childHolidayStatus:holidayStatusValue,
+        childHolidayName: holidayName,
+        childHolidayDate: holidayDateRange,
+        childHolidayDayCount: daysCount,
+        childHolidayValidUpto: '2025',
+        childHolidayStatus: holidayStatusValue,
         token: widget.token,
       );
 
       print('createHoliday response: $holiday');
       if (holiday['success'] == true) {
+        // Notify parent widget
         widget.onHolidayAdded({
           'name': holiday['data']['holiday_name'],
           'status': holidayStatus ? 'Active' : 'Inactive',
-          'isSaveAndAdd': isSaveAndAdd, // 👈 Important
+          'isSaveAndAdd': isSaveAndAdd,
         });
 
+        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Holiday $holidayName created successfully')),
         );
 
+        // Handle Save & Add or Save
         if (isSaveAndAdd) {
-          _profileNameController.clear();
-          _holidayNameController.clear();
-          _holidayDateController.clear();
+          // Small delay for smooth UX before resetting form
+          await Future.delayed(const Duration(milliseconds: 0));
           setState(() {
+            _profileNameController.clear();
+            _holidayNameController.clear();
+            _holidayDateController.clear();
             profileStatus = true;
             holidayStatus = true;
-            _createdDateController.text =
-            "${DateTime.now().toLocal()}".split(' ')[0];
+            daysCount = 0;
+            _createdDateController.text = "${DateTime.now().toLocal()}".split(' ')[0];
           });
+        } else {
+          // Close the dialog for Save
+          Navigator.pop(context);
         }
-
       }
-
-
     } catch (e) {
       print('createHoliday error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
       );
+    } finally {
+      setState(() {
+        _isLoading = false; // Reset loading state
+      });
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -206,7 +226,6 @@ Holiday Status Value   : $holidayStatusValue
               ],
             ),
           ),
-
           Expanded(
             child: Scrollbar(
               thumbVisibility: true,
@@ -221,15 +240,12 @@ Holiday Status Value   : $holidayStatusValue
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 10),
-
                         CustomTextField(
                           label: "Holiday Profile Name *",
                           hintText: "Enter profile name",
                           controller: _profileNameController,
                         ),
-
                         const SizedBox(height: 16),
-
                         TextField(
                           enabled: false,
                           controller: _createdDateController,
@@ -256,9 +272,7 @@ Holiday Status Value   : $holidayStatusValue
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 10),
-
                         Row(
                           children: [
                             const Text('Status:'),
@@ -280,9 +294,7 @@ Holiday Status Value   : $holidayStatusValue
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 10),
-
                         Text(
                           'Add Holiday',
                           style: GoogleFonts.montserrat(
@@ -292,15 +304,12 @@ Holiday Status Value   : $holidayStatusValue
                         ),
                         const Divider(color: Colors.red),
                         const SizedBox(height: 16),
-
                         CustomTextField(
                           label: "Holiday Name",
                           hintText: "New Year",
                           controller: _holidayNameController,
                         ),
-
                         const SizedBox(height: 16),
-
                         CustomTextField(
                           label: "Holiday Date",
                           hintText: "Select date",
@@ -321,9 +330,7 @@ Holiday Status Value   : $holidayStatusValue
                           ),
                           onTap: () => _selectDate(context),
                         ),
-
                         const SizedBox(height: 16),
-
                         Row(
                           children: [
                             const Text('Status:'),
@@ -345,9 +352,7 @@ Holiday Status Value   : $holidayStatusValue
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 10),
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -360,14 +365,18 @@ Holiday Status Value   : $holidayStatusValue
                                       borderRadius: BorderRadius.circular(10)),
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                onPressed: () {
+                                onPressed: _isLoading
+                                    ? null // Disable button when loading
+                                    : () {
                                   _profileNameController.clear();
                                   _holidayNameController.clear();
                                   _holidayDateController.clear();
                                   setState(() {
                                     profileStatus = true;
                                     holidayStatus = true;
-                                    _createdDateController.text = "${DateTime.now().toLocal()}".split(' ')[0];
+                                    daysCount = 0;
+                                    _createdDateController.text =
+                                    "${DateTime.now().toLocal()}".split(' ')[0];
                                   });
                                 },
                                 child: Text(
@@ -388,8 +397,19 @@ Holiday Status Value   : $holidayStatusValue
                                       borderRadius: BorderRadius.circular(10)),
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                onPressed: () => _saveHoliday(isSaveAndAdd: false),
-                                child: Text(
+                                onPressed: _isLoading
+                                    ? null // Disable button when loading
+                                    : () => _saveHoliday(isSaveAndAdd: false),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                    : Text(
                                   'Save',
                                   style: GoogleFonts.spaceGrotesk(
                                     color: Colors.white,
@@ -407,8 +427,19 @@ Holiday Status Value   : $holidayStatusValue
                                       borderRadius: BorderRadius.circular(10)),
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                onPressed: () => _saveHoliday(isSaveAndAdd: true),
-                                child: Text(
+                                onPressed: _isLoading
+                                    ? null // Disable button when loading
+                                    : () => _saveHoliday(isSaveAndAdd: true),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                    : Text(
                                   'Save & Add',
                                   style: GoogleFonts.spaceGrotesk(
                                     color: Colors.white,
