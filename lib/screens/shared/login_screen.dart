@@ -48,10 +48,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (trimmedPassword.length < 8) {
       return "The password must be at least 8 characters.";
     }
-    final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W).+$');
-    if (!passwordRegex.hasMatch(trimmedPassword)) {
-      return "The password must contain at least one lowercase letter, one uppercase letter ,least one number and a special character";
-    }
+    // final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W).+$');
+    // if (!passwordRegex.hasMatch(trimmedPassword)) {
+    //   return "The password must contain at least one lowercase letter, one uppercase letter ,least one number and a special character";
+    // }
     if (trimmedPassword.length > 16) {
       return "The password must be at most 16 characters.";
     }
@@ -114,7 +114,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         } else if (dashboardName == "HR Dashboard" && roleId == 8) {
           print('Navigating to HR Dashboard');
           context.push(Constant.hrDashboardScreen);
-        } else {
+        }
+        else if (dashboardName == "Operator Dashboard" && roleId == 10) {
+          print('Navigating to Operator Dashboard');
+          context.push(Constant.operatorDashboardScreen);
+        }
+        else {
           print('Dashboard routing error');
         }
       } else {

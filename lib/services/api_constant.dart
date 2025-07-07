@@ -55,4 +55,7 @@ class ApiConstant {
   static const String systemPropertyList = "consultancy-system-property/listing";
   static const String createHoliday = "consultancy-holiday/save";
   static const String getHolidayList = "consultancy-holiday/listing";
+
+
+  static const String operatorDashboard = "operator/client-list";
 }

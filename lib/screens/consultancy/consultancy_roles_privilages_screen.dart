@@ -109,7 +109,7 @@ class _DesignationRoleScreenState extends ConsumerState<DesignationRoleScreen>
 
     final isLoading = staticSettingState.isLoading;
     print('isLoading $isLoading');
-    final designationList=staticSettingState.designationList;
+    final designationList=staticSettingState.designationList??[];
     final roleList=staticSettingState.roleList;
     print('designationList $designationList,$roleList');
 

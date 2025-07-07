@@ -1,10 +1,16 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:harris_j_system/providers/operator_provider.dart';
 import 'package:harris_j_system/screens/navigation/constant.dart';
+import 'package:harris_j_system/services/api_service.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
+import 'package:harris_j_system/widgets/custom_search_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,32 +68,37 @@ final List<Map<String, String>> heading = [
   {'label': 'Status', 'key': 'status'},
 ];
 
-class OperatorDashboardScreen extends StatefulWidget {
+class OperatorDashboardScreen extends ConsumerStatefulWidget {
   const OperatorDashboardScreen({super.key});
 
   @override
-  State<OperatorDashboardScreen> createState() =>
+  ConsumerState<OperatorDashboardScreen> createState() =>
       _OperatorDashboardScreenState();
 }
 
-class _OperatorDashboardScreenState extends State<OperatorDashboardScreen> {
+class _OperatorDashboardScreenState
+    extends ConsumerState<OperatorDashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final Map<String, double> timesheetData = {
-    'Submitted': 290,
-    'Approved': 240,
-    'Draft': 10,
-    'Rejected': 10,
-  };
-  int get totalTimesheets =>
-      timesheetData.values.fold(0, (sum, value) => sum + value.toInt());
+  Map<String, dynamic>? timesheetData;
+  Map<String, dynamic>? workLogData;
+  // int get totalTimesheets =>
+  //     timesheetData.values.fold(0, (sum, value) => sum + value.toInt());
   String _selectedPeriod = 'Monthly';
+
+  String? token;
+
+  String? _selectedClient;
+  String? _selectedClientId;
+
+  List<String> _clientList = [];
+  List<Map<String, dynamic>> _rawClientList = [];
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() {
-      setState(() {}); // Refresh UI on search input
-    });
+    getClientList();
   }
 
   @override
@@ -96,8 +107,55 @@ class _OperatorDashboardScreenState extends State<OperatorDashboardScreen> {
     super.dispose();
   }
 
+  getClientList() async {
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+
+    ApiService().operatorDashBoard(token!);
+
+    final client =
+        await ref.read(operatorProvider.notifier).getOperatorDashboard(token!);
+    print('client $client');
+
+    _rawClientList = (client['data'] != null && client['data'] is List)
+        ? List<Map<String, dynamic>>.from(client['data'])
+        : [];
+
+    _clientList = _rawClientList
+        .map<String>((item) => item['serving_client'].toString())
+        .toList();
+
+    log('_clientList$_rawClientList');
+
+    // ✅ Set _selectedClientId as the first client's ID if available
+    if (_rawClientList.isNotEmpty) {
+      _selectedClientId = _rawClientList[0]['id'].toString();
+      _selectedClient = _rawClientList[0]['serving_client'].toString();
+      timesheetData = _rawClientList[0]['timesheet_stats'];
+      workLogData=_rawClientList[0]['working_log'];
+      print(
+          '_selectedClientId11 $_selectedClientId,$_selectedClient,$timesheetData,$workLogData');
+
+      // ✅ Optionally fetch consultants for the first client
+    }
+
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    final operatorState = ref.watch(operatorProvider);
+
+    final isLoading = operatorState.isLoading;
+    final Map<String, dynamic> operatorDashboardData =
+        operatorState.dashboardData ?? {};
+    print('consultantStatedashj ${operatorState.dashboardData}');
+
+    final List<Widget> pages = [
+      _buildTimesheetCard(),
+      _buildTimesheetCard(),
+
+    ];
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -154,27 +212,31 @@ class _OperatorDashboardScreenState extends State<OperatorDashboardScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: CustomTextField(
-                  label: 'Search',
-                  hintText: 'Start typing or click to see clients/consultant',
-                  controller: _searchController,
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.all(14.0),
-                    child: SizedBox(
-                      height: 10,
-                      width: 10,
-                      child: SvgPicture.asset('assets/icons/search_icon.svg'),
-                    ),
-                  ),
-                  suffixIcon: const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: 30,
-                    color: Color(0xff8D91A0),
+              if (_rawClientList.isNotEmpty && _selectedClient != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                  child: CustomClientDropdown(
+                    clients: _rawClientList,
+                    initialClientName: _selectedClient,
+                    onChanged: (selectedName, selectedId) async {
+                      FocusScope.of(context).unfocus();
+                      final selectedClient = _rawClientList.firstWhere(
+                        (client) => client['id'].toString() == selectedId,
+                        orElse: () => {},
+                      );
+
+                      if (selectedClient.isNotEmpty) {
+                        setState(() {
+                          _selectedClient = selectedName;
+                          _selectedClientId = selectedId;
+                          timesheetData = selectedClient['timesheet_stats'];
+                        });
+
+                        // getDashBoardByClient();
+                      }
+                    },
                   ),
                 ),
-              ),
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -205,101 +267,17 @@ class _OperatorDashboardScreenState extends State<OperatorDashboardScreen> {
                       ),
                     ],
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
                     children: [
-                      // Left side: Info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Total Timesheets",
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Container(
-                              alignment: Alignment.center,
-                              height: 20,
-                              width: 95,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(4),
-                                color: const Color(0xffE5F1FF),
-                              ),
-                              child: Text(
-                                "$totalTimesheets",
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xff007BFF),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 40),
-                            LegendDot(
-                              color: const Color(0xff28A745),
-                              label:
-                                  "Submitted: ${timesheetData['Submitted']!.toInt()}",
-                            ),
-                            const SizedBox(height: 8),
-                            LegendDot(
-                              color: const Color(0xff007BFF),
-                              label:
-                                  "Approved: ${timesheetData['Approved']!.toInt()}",
-                            ),
-                            const SizedBox(height: 8),
-                            LegendDot(
-                              color: const Color(0xff8D91A0),
-                              label:
-                                  "Draft: ${timesheetData['Draft']!.toInt()}",
-                            ),
-                            const SizedBox(height: 8),
-                            LegendDot(
-                              color: const Color(0xffFF1901),
-                              label:
-                                  "Rejected: ${timesheetData['Rejected']!.toInt()}",
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Right side: Pie Chart
                       SizedBox(
-                        width: 120,
-                        child: PieChart(
-                          dataMap: {
-                            "Submitted": timesheetData['Submitted']!,
-                            " ": 5, // Spacer
-                            "Approved": timesheetData['Approved']!,
-                            "  ": 5, // Spacer
-                            "Draft": timesheetData['Draft']!,
-                            "   ": 5, // Spacer
-                            "Rejected": timesheetData['Rejected']!,
-                          },
-                          chartType: ChartType.disc,
-                          baseChartColor: Colors.grey[200]!,
-                          colorList: const [
-                            Color(0xFF28A745),
-                            Colors.transparent, // Spacer 1
-                            Color(0xFF007BFF),
-                            Colors.transparent, // Spacer 2
-                            Color(0xFF8D91A0),
-                            Colors.transparent, // Spacer 3
-                            Color(0xFFFF1901),
-                          ],
-                          chartRadius: 160,
-                          chartValuesOptions: const ChartValuesOptions(
-                            showChartValues: false,
-                          ),
-                          legendOptions: const LegendOptions(
-                            showLegends: false,
-                          ),
-                          centerText: '',
-                          ringStrokeWidth: 50,
-                        ),
+                        height: 180,
+                        child: PageView(controller: _pageController,
+                            onPageChanged: (index) {
+                              setState(() {
+                                _currentPage = index;
+                              });
+                            },
+                            children:pages),
                       ),
                     ],
                   ),
@@ -485,6 +463,96 @@ class _OperatorDashboardScreenState extends State<OperatorDashboardScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTimesheetCard(){
+    return    Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left side: Info
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Total Timesheets",
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                alignment: Alignment.center,
+                height: 20,
+                width: 95,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  color: const Color(0xffE5F1FF),
+                ),
+                child: Text(
+                  timesheetData!['Total Timesheets'].toString(),
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xff007BFF),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+              LegendDot(
+                color: const Color(0xff28A745),
+                label:
+                "Submitted: ${timesheetData!['Submitted']!.toInt()}",
+              ),
+              const SizedBox(height: 8),
+              LegendDot(
+                color: const Color(0xff007BFF),
+                label:
+                "Approved: ${timesheetData!['Approved']!.toInt()}",
+              ),
+              const SizedBox(height: 8),
+              LegendDot(
+                color: const Color(0xffFF1901),
+                label:
+                "Rejected: ${timesheetData!['Rejected']!.toInt()}",
+              ),
+            ],
+          ),
+        ),
+        // Right side: Pie Chart
+        SizedBox(
+          width: 120,
+          child: PieChart(
+            dataMap: {
+              "Submitted":
+              (timesheetData!['Submitted'] ?? 0).toDouble(),
+              "Approved":
+              (timesheetData!['Approved'] ?? 0).toDouble(),
+              "Rejected":
+              (timesheetData!['Rejected'] ?? 0).toDouble(),
+            },
+            chartType: ChartType.disc,
+            baseChartColor: Colors.grey[200]!,
+            colorList: const [
+              Color(0xFF28A745),
+              Color(0xFF007BFF),
+              Color(0xFFFF1901), // Rejected (red)
+            ],
+            chartRadius: 160,
+            chartValuesOptions: const ChartValuesOptions(
+              showChartValues: false,
+            ),
+            legendOptions: const LegendOptions(
+              showLegends: false,
+            ),
+            centerText: '',
+            ringStrokeWidth: 50,
+          ),
+        ),
+      ],
     );
   }
 

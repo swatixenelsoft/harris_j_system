@@ -19,7 +19,7 @@ class ApiService {
       print('login-data $email,$password');
       final response = await _dio.post(
         ApiConstant.login,
-        data: {"email": email, "password": "password"},
+        data: {"email": email, "password": password},
       );
       print('Response statusCode: ${response.statusCode}');
       print('Response data: ${response.data}');
@@ -1844,6 +1844,38 @@ Future<Map<String, dynamic>> getDesignation(
       final response = await _dio.post(
         ApiConstant.systemPropertyList,
         data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('eroro msg $e');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+
+  Future<Map<String, dynamic>> operatorDashBoard(String token) async
+  {
+    try {
+
+      print('formData $token');
+
+      final response = await _dio.post(
+        ApiConstant.operatorDashboard,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
