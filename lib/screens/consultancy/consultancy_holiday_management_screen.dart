@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:harris_j_system/providers/static_system_provider.dart';
 import 'package:harris_j_system/screens/consultancy/consultancy_detailed_holiday_screen.dart';
 import 'package:harris_j_system/screens/consultancy/create_holiday_profile_screen.dart';
@@ -30,13 +29,11 @@ class _HolidayManagementScreenState
   }
 
   Future<void> _loadHolidayList() async {
-    ref.read(staticSettingProvider.notifier).setLoading(true);
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token') ?? '';
     userId = prefs.getInt('userId')?.toString() ?? '';
     final notifier = ref.read(staticSettingProvider.notifier);
     await notifier.getHolidayList(userId: userId, token: token);
-    ref.read(staticSettingProvider.notifier).setLoading(false);
   }
 
   @override
@@ -95,12 +92,13 @@ class _HolidayManagementScreenState
                               token: token,
                               userId: userId,
                               onHolidayAdded: (json) {
+                                // Always refresh the holiday list after adding a holiday
+                                _loadHolidayList();
+                                // Close modal only for "Save"
                                 if (!json['isSaveAndAdd']) {
                                   Navigator.pop(context);
-                                  _loadHolidayList();
                                 }
                               },
-
                             ),
                           ),
                         );
@@ -160,7 +158,7 @@ class _HolidayManagementScreenState
                           );
                         },
                         child: Text(holiday['holiday_name'] ?? 'Unknown',
-                            style: GoogleFonts.montserrat(fontSize: 14)),
+                            style: GoogleFonts.montserrat(fontSize: 12)),
                       ),
                     ),
                     DataCell(
@@ -235,7 +233,7 @@ class _HolidayManagementScreenState
                                         },
                                         onSubmit: (updatedHoliday) async {
                                           Navigator.pop(context);
-                                          await _loadHolidayList(); // Refresh list
+                                          await _loadHolidayList();
                                         },
                                       ),
                                     ),

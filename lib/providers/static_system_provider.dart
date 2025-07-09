@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harris_j_system/services/api_service.dart';
 
 final staticSettingProvider =
-    StateNotifierProvider<StaticSettingNotifier, StaticSettingState>((ref) {
+StateNotifierProvider<StaticSettingNotifier, StaticSettingState>((ref) {
   return StaticSettingNotifier(ApiService());
 });
 
@@ -53,16 +53,16 @@ class StaticSettingNotifier extends StateNotifier<StaticSettingState> {
   }
 
   Future<Map<String, dynamic>> addLookup(
-    String consultancyId,
-    String propertyName,
-    String propertyDescription,
-    bool status,
-    String hexColor,
-    List lookupOptions,
-    String token,
-    String id,
-    String index,
-  ) async {
+      String consultancyId,
+      String propertyName,
+      String propertyDescription,
+      bool status,
+      String hexColor,
+      List lookupOptions,
+      String token,
+      String id,
+      String index,
+      ) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final addLookupResponse = await apiService.addLookUp(

@@ -170,7 +170,7 @@ class _DetailedHolidayScreenState extends ConsumerState<DetailedHolidayScreen> {
                             style: GoogleFonts.montserrat(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 10,
                             )),
                       ),
                       DataColumn(
@@ -178,7 +178,7 @@ class _DetailedHolidayScreenState extends ConsumerState<DetailedHolidayScreen> {
                             style: GoogleFonts.montserrat(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 10,
                             )),
                       ),
                       DataColumn(
@@ -186,17 +186,16 @@ class _DetailedHolidayScreenState extends ConsumerState<DetailedHolidayScreen> {
                             style: GoogleFonts.montserrat(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 10,
                             )),
                       ),
                     ],
                     rows: widget.childrenHoliday.asMap().entries.map((e) {
                       final holiday = e.value;
-
                       return DataRow(cells: [
                         DataCell(
                           Text(holiday['holiday_name'] ?? 'N/A',
-                              style: GoogleFonts.montserrat(fontSize: 12)),
+                              style: GoogleFonts.montserrat(fontSize: 10)),
                         ),
                         DataCell(
                           Container(
@@ -256,7 +255,7 @@ class _DetailedHolidayScreenState extends ConsumerState<DetailedHolidayScreen> {
                                               maxHeight: h * 0.8),
                                           child: EditHolidayForm(
                                             token: widget.token,
-                                            id: '',
+                                            id: holiday['id'].toString(),
                                             holidayData: {
                                               'id': holiday['id'],
                                               'name': holiday['holiday_name'],
@@ -295,7 +294,7 @@ class _DetailedHolidayScreenState extends ConsumerState<DetailedHolidayScreen> {
                           ),
                         ),
                       ]);
-                    }).toList(),
+                    }).toList(),//to list is created in span area by add holidays function directly
                   ),
                 ),
               ),
