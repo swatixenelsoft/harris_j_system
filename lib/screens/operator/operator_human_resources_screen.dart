@@ -358,7 +358,7 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
                 pinned: true,
                 floating: true,
                 delegate: FixedHeaderDelegate(
-                  height: 110 + calendarHeight,
+                  height: 120 + calendarHeight,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

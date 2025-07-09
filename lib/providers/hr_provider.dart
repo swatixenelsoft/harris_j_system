@@ -375,6 +375,8 @@ print('fullConsultants $fullConsultants');
 
 
   void getSelectedConsultantDetails(Map<String, dynamic> selectedConsultant) {
+    final rawData = selectedConsultant['data'];
+    final backdateData = (rawData is List && rawData.isEmpty) ? {} : (rawData ?? {});
     final remarks = selectedConsultant['remarks'] ?? [];
     final timesheetData = selectedConsultant['timesheet_data'] ?? [];
     final timesheetOverview = selectedConsultant['timesheet_overview'] ?? [];
@@ -392,6 +394,7 @@ print('fullConsultants $fullConsultants');
     // Update state
     state = state.copyWith(
       selectedConsultantData: {
+        'data': backdateData,
         'remarks': remarks,
         'timesheet_data': timesheetData,
         'timesheet_overview': timesheetOverview,
@@ -405,6 +408,7 @@ print('fullConsultants $fullConsultants');
     );
 
     print('Selected consultant data updated');
+    print('backdated $backdateData');
     print('remarks: ${remarks.length}');
     print('timesheet_data: ${timesheetData.length}');
     print('claim_tab: ${claimTab}');

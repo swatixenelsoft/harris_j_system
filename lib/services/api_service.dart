@@ -552,6 +552,44 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> backDatedClaims(String userId,String month,String year,String token) async
+  {
+    try {
+
+
+      FormData formData = FormData.fromMap({
+        'user_id':userId,
+        'month': month,
+        'year': year,
+      });
+      print('formDatabackdate $token,${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.backdatedClaimsData,
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+            // Add auth or other headers if needed
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('eroro msg $e');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
   Future<Map<String, dynamic>> fetchDashboardData(String token) async {
     try {
       final response = await _dio.get(
@@ -994,7 +1032,8 @@ class ApiService {
     String month,
     String year,
     String token,
-  ) async {
+  ) async
+  {
     try {
       FormData formData = FormData.fromMap({
         'client_id': clientId,
@@ -1891,6 +1930,49 @@ Future<Map<String, dynamic>> getDesignation(
       return response.data;
     } on DioException catch (e) {
       print('eroro msg $e');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+
+  Future<Map<String, dynamic>> getConsultantClaimsByClientOperator(
+      String clientId,
+      String month,
+      String year,
+      String token,
+      ) async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'client_id': clientId,
+        'month': month,
+        'year': year,
+      });
+      print('formData $token, ${formData.fields}');
+      final response = await _dio.post(
+        ApiConstant.operatorClaims,
+        data: formData,
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri},$month,$year');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
       if (e.response != null) {
         return e.response?.data ?? {'error': 'Unknown error'};
       } else {

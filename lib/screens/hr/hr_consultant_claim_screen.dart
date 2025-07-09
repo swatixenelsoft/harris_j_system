@@ -223,6 +223,7 @@ class _HrConsultantClaimScreenState
     final hrState = ref.watch(hrProvider);
 
     final List<dynamic> fullConsultantData = hrState.hrConsultantList ?? [];
+    final List<dynamic> claimsDetails =hrState.selectedConsultantData['claim_tab']??[];
     final isLoading = hrState.isLoading;
 
     return Scaffold(
@@ -254,7 +255,7 @@ class _HrConsultantClaimScreenState
                     pinned: true,
                     floating: true,
                     delegate: FixedHeaderDelegate(
-                      height: 135 + calendarHeight,
+                      height: 180 + calendarHeight,
                       customData: customData,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -286,6 +287,10 @@ class _HrConsultantClaimScreenState
                               customData: customData,
                               isFromClaimScreen: true,
                               isFromHrScreen: true,
+                              backDatedClaims: (hrState.selectedConsultantData['data'] is Map)
+                                  ? Map<String, dynamic>.from(hrState.selectedConsultantData['data'])
+                                  : {},
+                              claimsDetails:claimsDetails,
                               onMonthChanged: (month, year) async {
                                 setState(() {
                                   selectedMonth = month;
@@ -505,6 +510,7 @@ class _HrConsultantClaimScreenState
         tabsData: tabsData,
         hrState: hrState,
         isFromClaimScreen: true,
+        isFromHrScreen:true,
         selectedMonth: selectedMonth.toString(),
         selectedYear: selectedYear.toString(),
       ),

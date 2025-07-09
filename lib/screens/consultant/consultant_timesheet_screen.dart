@@ -488,7 +488,7 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
       );
     }
     final customData =
-        parseTimelineData(consultantState.consultantTimeSheet!['data']);
+        parseTimelineData(consultantState.consultantTimeSheet?['data']);
     print('selecte monhth and year $selectedMonth,$selectedYear');
     return Scaffold(
       body: SafeArea(

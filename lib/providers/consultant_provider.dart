@@ -32,6 +32,7 @@ class GetConsultantState {
   final List<dynamic>? claimSummaryData;
   final List<Map<String, dynamic>> claimSummaryTableData;
   final Map<dynamic, dynamic>? basicInfo;
+  final Map<String, dynamic>? backdatedClaims;
 
   GetConsultantState({
     this.isLoading = false,
@@ -53,6 +54,7 @@ class GetConsultantState {
     this.workingLogGraphData,
     this.claimSummaryData,
     this.basicInfo,
+    this.backdatedClaims,
     this.claimSummaryTableData = const [],
   });
 
@@ -75,8 +77,10 @@ class GetConsultantState {
     Map<String, dynamic>? consultantTimesheetRemark,
     Map<String, dynamic>? consultantData,
     Map<String, dynamic>? workingLogGraphData,
+    Map<String, dynamic>? backdatedClaims,
     List<dynamic>? claimSummaryData,
     List<Map<String, dynamic>>? claimSummaryTableData,
+
   }) {
     return GetConsultantState(
       isLoading: isLoading ?? this.isLoading,
@@ -98,6 +102,7 @@ class GetConsultantState {
           consultantTimesheetRemark ?? this.consultantTimesheetRemark,
       consultantData: consultantData ?? this.consultantData,
       workingLogGraphData: workingLogGraphData ?? this.workingLogGraphData,
+      backdatedClaims: backdatedClaims ?? this.backdatedClaims,
       claimSummaryData: claimSummaryData ?? this.claimSummaryData,
       claimSummaryTableData:
           claimSummaryTableData ?? this.claimSummaryTableData,
@@ -265,7 +270,8 @@ class GetConsultantNotifier extends StateNotifier<GetConsultantState> {
   }
 
   Future<Map<String, dynamic>> consultantClaimAndCopies(
-      String token, String month, String year) async {
+      String token, String month, String year) async
+  {
     try {
       print('token $token,$month,$year');
       final consultantClaimAndCopiesResponse =
@@ -535,6 +541,46 @@ class GetConsultantNotifier extends StateNotifier<GetConsultantState> {
       return {'status': false, 'message': errorMsg};
     }
   }
+
+  Future<Map<String, dynamic>> backDatedClaims(
+      String userId, String month, String year, String token,
+      ) async {
+    try {
+      print('tokenbackde $userId, $token, $month, $year');
+
+      final response = await apiService.backDatedClaims(userId, month, year, token);
+
+      final rawData = response['data'];
+
+      if (response['success'] == true && rawData != null) {
+        if (rawData is Map<String, dynamic>) {
+          final data = Map<String, dynamic>.from(rawData);
+
+          // ✅ Save to your provider state
+          state = state.copyWith(
+            backdatedClaims: data,
+          );
+
+          return data;
+        } else {
+          // data is not a Map — likely an empty list []
+          state = state.copyWith(
+            backdatedClaims: {}, // save empty map instead
+          );
+          return {};
+        }
+      } else {
+        state = state.copyWith(isLoading: false);
+        return {"error": "No data available"};
+      }
+    } catch (error) {
+      print("errortimesheetprovider ${error.toString()}");
+      state = state.copyWith(isLoading: false, error: error.toString());
+      return {"error": error.toString()};
+    }
+  }
+
+
 
   void setLoading(bool value) {
     state = state.copyWith(isLoading: value);

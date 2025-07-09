@@ -111,7 +111,6 @@ class _OperatorDashboardScreenState
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
 
-    ApiService().operatorDashBoard(token!);
 
     final client =
         await ref.read(operatorProvider.notifier).getOperatorDashboard(token!);

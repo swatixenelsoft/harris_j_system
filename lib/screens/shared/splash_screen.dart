@@ -64,7 +64,12 @@ class _SplashScreenState extends State<SplashScreen>
       context.go(Constant.consultancyDashBoardScreen);
     } else if (roleId == 8) {
       context.go(Constant.hrDashboardScreen);
-    } else {
+    }
+    else if(roleId==10){
+      context.go(Constant.operatorDashboardScreen);
+
+    }
+    else {
       context.go(Constant.onBoard);
     }
   }

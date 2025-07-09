@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/providers/consultant_provider.dart';
 import 'package:harris_j_system/screens/consultant/consultant_timesheet_screen.dart';
+import 'package:harris_j_system/screens/consultant/widget/claim_detail_screen.dart';
 import 'package:harris_j_system/ulits/common_function.dart';
 import 'package:harris_j_system/widgets/bottom_sheet_content.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
@@ -18,6 +19,8 @@ class CalendarScreen extends ConsumerStatefulWidget {
   final Map<DateTime, dynamic> customData;
   final bool isFromClaimScreen;
   final bool isFromHrScreen;
+  final List<dynamic>? claimsDetails;
+  final Map<String,dynamic>? backDatedClaims;
   final void Function(int month, int year)? onMonthChanged;
   final VoidCallback? onDataUpdated;
   final int selectedMonth;
@@ -29,8 +32,10 @@ class CalendarScreen extends ConsumerStatefulWidget {
     required this.customData,
     this.isFromClaimScreen = false,
     this.isFromHrScreen = false,
+    this.claimsDetails,
     this.onMonthChanged,
     this.onDataUpdated,
+    this.backDatedClaims,
     required this.selectedMonth,
     required this.selectedYear,
   });
@@ -147,7 +152,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     }
 
     if (widget.isFromClaimScreen) {
-      print('rehjdshfj');
+
       showBottomSheetContent('leave');
     } else {
       await showModalBottomSheet<Map<String, dynamic>>(
@@ -233,8 +238,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return (to.year - from.year) * 12 + (to.month - from.month);
   }
 
+
+
   @override
   Widget build(BuildContext context) {
+    print('rehjdshfj ${widget.claimsDetails}');
     List<DateTime> monthDays = CommonFunction().getDaysInMonth(_currentMonth);
     int weeksInMonth = (monthDays.length / 7).ceil();
 
@@ -314,7 +322,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 width: 100,
                 height: 29,
               ),
-              SizedBox(width: 5),
+              const SizedBox(width: 5),
               CustomButton(
                 svgAsset: 'assets/icons/hold.svg',
                 text: 'Hold',
@@ -323,7 +331,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 width: 65,
                 height: 29,
               ),
-              SizedBox(width: 5),
+              const SizedBox(width: 5),
               CustomButton(
                 svgAsset: 'assets/icons/rework.svg',
                 text: 'Rework',
@@ -332,22 +340,27 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 width: 85,
                 height: 29,
               ),
-              SizedBox(width: 5),
+              const SizedBox(width: 5),
             ],
           ),
         const SizedBox(height: 10),
         calenderView(monthDays),
       ],
     );
+
+
   }
 
   Widget calenderView(List<DateTime> monthDays) {
     print('customDatacalender ${widget.customData}');
+    print('backdatedClaim ${widget.backDatedClaims},${widget.selectedMonth}');
+    final backdatedClaims = widget.backDatedClaims as Map<String, dynamic>? ?? {};
+    print('blk1Map $backdatedClaims');
     return SizedBox(
-      height: widget.isFromClaimScreen
-          ? calculatedHeight + 15
-          : !widget.isFromHrScreen
-              ? calculatedHeight
+      height: widget.isFromClaimScreen && !widget.isFromHrScreen
+          ? calculatedHeight + 32
+          : widget.isFromHrScreen && widget.isFromClaimScreen
+              ? calculatedHeight +60
               : calculatedHeight,
       child: PageView.builder(
         controller: _pageController,
@@ -358,7 +371,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             children: [
               _buildWeekdayLabels(),
               _buildMonthlyCalender(monthDays),
-              if (widget.isFromClaimScreen && !widget.isFromHrScreen)
+              if (widget.isFromClaimScreen)
                 Column(
                   children: [
                     Container(
@@ -377,27 +390,72 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         ),
                       ),
                     ),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(7, (index) {
+                        final blockKey = 'Blk ${index + 1}';
+                        final blkMap = backdatedClaims[blockKey] as Map<String, dynamic>? ?? {};
+
+                        List<String> valuesList = [];
+                        if (blkMap.isNotEmpty) {
+                          // Sort keys numerically and get values
+                          final sortedKeys = blkMap.keys.toList()
+                            ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+                          valuesList = sortedKeys.map((k) => blkMap[k]?.toString() ?? '0').toList();
+                        }
+
                         return Expanded(
                           child: Container(
                             height: 50,
                             decoration: const BoxDecoration(
-                              color: Colors.white,
-                              // BorderSide(width: 1, color: Color(0xffE8E8E8)),
+                              color: Colors.white, // no background color change
                               border: Border(
-                                  bottom: BorderSide(
-                                      width: 1, color: Color(0xffE8E8E8)),
-                                  left: BorderSide(
-                                      width: 1, color: Color(0xffE8E8E8)),
-                                  right: BorderSide(
-                                      width: 1, color: Color(0xffE8E8E8))),
+                                bottom: BorderSide(width: 1, color: Color(0xffE8E8E8)),
+                                left: BorderSide(width: 1, color: Color(0xffE8E8E8)),
+                                right: BorderSide(width: 1, color: Color(0xffE8E8E8)),
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: blkMap.isNotEmpty
+                                ? RichText(
+                              text: TextSpan(
+                                children: List.generate(valuesList.length * 2 - 1, (i) {
+                                  if (i.isEven) {
+                                    // Number part
+                                    final numIndex = i ~/ 2;
+                                    final text = valuesList[numIndex];
+                                    // Assign colors for each number differently (cycle colors if needed)
+                                    final colors = [const Color(0xffB8E6D0), const Color(0xffE9BDBF), const Color(0xffFF9F2D)];
+                                    final color = colors[numIndex % colors.length];
+                                    return TextSpan(
+                                      text: text,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: color,
+                                      ),
+                                    );
+                                  } else {
+                                    // Comma separator
+                                    return const TextSpan(
+                                      text: ' ',
+                                      style: TextStyle(fontSize: 16, color: Colors.black),
+                                    );
+                                  }
+                                }),
+                              ),
+                            )
+                                : const Text(
+                              '', // empty if no data
+                              style: TextStyle(fontSize: 16),
                             ),
                           ),
                         );
                       }),
                     ),
+
+
                   ],
                 ),
             ],
@@ -523,6 +581,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       DateFormat('dd / MM / yyyy').format(date).toString();
 
                   bottomSheetWidget(context, dateRange);
+                }
+                else{
+                  print('in else');
+                  popupBottomSheetWidget(context, date,widget.selectedMonth.toString(),widget.selectedYear.toString());
                 }
               },
               child: Container(
@@ -673,4 +735,210 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       child: const SizedBox.shrink(), // or placeholder content
     );
   }
+
+
+  void popupBottomSheetWidget(
+      BuildContext context,
+      DateTime date,
+      String selectedMonth,
+      String selectedYear,
+      ) {
+    print('inside the popup ${widget.claimsDetails}');
+    final String dateStr = DateFormat('yyyy-MM-dd').format(date);
+
+    final matchedClaims = widget.claimsDetails
+        ?.map((claim) {
+      final entries = claim['entries'] as List<dynamic>;
+      final filteredEntries = entries
+          .where((entry) => entry['date'] == dateStr)
+          .toList();
+
+      if (filteredEntries.isNotEmpty) {
+        return {
+          'claim': claim,
+          'entries': filteredEntries,
+        };
+      }
+      return null;
+    })
+        .whereType<Map<String, dynamic>>()
+        .toList();
+
+    if (matchedClaims == null || matchedClaims.isEmpty) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (_, scrollController) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(10),
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Claims',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xff000000),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Image.asset('assets/icons/close.png', height: 25),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+
+                ...matchedClaims.map((item) {
+                  final claim = item['claim'];
+                  final entries = item['entries'];
+
+                  final totalAmount = entries.fold<double>(
+                    0.0,
+                        (double sum, dynamic entry) =>
+                    sum + (double.tryParse(entry['amount'].toString()) ?? 0.0),
+                  );
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Profile + Claim Info
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const CircleAvatar(
+                              radius: 24,
+                              backgroundImage: AssetImage("assets/images/profile.jpg"),
+                              backgroundColor: Colors.orange,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Bruce Lee",
+                                      style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                          color: const Color(0xff2A282F))),
+                                  Text("Employee Id : Emp14982",
+                                      style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 14,
+                                          color: const Color(0xffA8A6AC))),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text("Claim Form",
+                                    style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                        color: const Color(0xff2A282F))),
+                                Text(claim['claim_no'],
+                                    style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                        color: const Color(0xff2A282F))),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        Text(
+                          "Individual Claims ( ${claim['count'] ?? entries.length} )",
+                          style: GoogleFonts.montserrat(
+                              color: const Color(0xffFF1901),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14),
+                        ),
+                        const SizedBox(height: 6),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Total Amount : ₹${totalAmount.toStringAsFixed(2)}",
+                              style: GoogleFonts.montserrat(
+                                  color: const Color(0xff1D212D),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 0),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 13,
+                                    height: 13,
+                                    decoration: const BoxDecoration(
+                                        color: Color(0xff007BFF),
+                                        shape: BoxShape.circle),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(claim['status'] ?? '',
+                                      style: const TextStyle(color: Color(0xff007BFF))),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(
+                          color: Color.fromRGBO(0, 0, 0, 0.25),
+                          thickness: 1,
+                        ),
+
+                        // Show entry list
+                        ExpenseListView(
+                          isFromHrScreen:widget.isFromHrScreen,
+                          entries: entries,
+                          selectedMonth: selectedMonth,
+                          selectedYear: selectedYear,
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList()
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 }

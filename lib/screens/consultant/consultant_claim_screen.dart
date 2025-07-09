@@ -36,6 +36,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
   int activeIndex = 0;
   double calendarHeight = 350;
   String? token;
+  int? userId;
 
   List<String> iconData = [
     'assets/icons/icon1.svg',
@@ -62,6 +63,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
 
   Future<void> _getConsultantTimeSheet() async {
     final prefs = await SharedPreferences.getInstance();
+    userId=prefs.getInt('userId');
     token = prefs.getString('token');
     await ref.read(consultantProvider.notifier).consultantClaimSheet(token!);
     await ref.read(consultantProvider.notifier).consultantTimesheetRemarks(
@@ -76,6 +78,13 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
           selectedMonth.toString(),
           selectedYear.toString(),
         );
+
+    await ref.read(consultantProvider.notifier).backDatedClaims(
+      userId.toString(),
+      selectedMonth.toString(),
+      selectedYear.toString(),
+      token!
+    );
 
     // ✅ Now data is guaranteed to be present
     final consultantState = ref.read(consultantProvider);
@@ -147,10 +156,10 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
         Color color;
         switch ((expenseType ?? type)?.toLowerCase()) {
           case 'taxi':
-            color = const Color(0xffEBF9F1);
+            color = const Color(0xffB8E6D0);
             break;
           case 'dining':
-            color = const Color(0xffFBE7E8);
+            color = const Color(0xffE9BDBF);
             break;
           case 'others':
             color = const Color(0xffFF9F2D);
@@ -190,6 +199,12 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
 
   _refreshData() async {
     if (token != null) {
+      await ref.read(consultantProvider.notifier).backDatedClaims(
+          userId.toString(),
+          selectedMonth.toString(),
+          selectedYear.toString(),
+          token!
+      );
       await ref.watch(consultantProvider.notifier).consultantClaimSheet(
             token!,
           );
@@ -206,6 +221,8 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
             selectedMonth.toString(),
             selectedYear.toString(),
           );
+
+
     }
     setState(() {});
   }
@@ -380,6 +397,9 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
   @override
   Widget build(BuildContext context) {
     final consultantState = ref.watch(consultantProvider);
+    final List<dynamic> claimsDetails =consultantState.claimList??[];
+    print('consultantStatebackdate  ${consultantState.backdatedClaims}');
+
 
     if (consultantState.isLoading) {
       return const Scaffold(
@@ -426,8 +446,10 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
                 pinned: true,
                 floating: true,
                 delegate: FixedHeaderDelegate(
-                  height: 91 + calendarHeight, // Stepper (100) + Calendar
+                  height: 110 + calendarHeight, // Stepper (100) + Calendar
                   activeIndex: activeIndex,
+                  backDatedClaims:consultantState.backdatedClaims??{},
+                  claimsDetails:claimsDetails,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -457,12 +479,15 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
                           ],
                         ),
                         child: CalendarScreen(
+
                           selectedMonth: selectedMonth,
                           selectedYear: selectedYear,
                           onHeightCalculated:
                               _updateCalendarHeight, // Update dynamically
                           customData: customData,
                           isFromClaimScreen: true,
+                          backDatedClaims:consultantState.backdatedClaims,
+                          claimsDetails:claimsDetails,
                           onMonthChanged: (month, year) async {
                             setState(() {
                               selectedMonth = month;
@@ -821,11 +846,15 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   final double height;
   final int activeIndex;
+  final Map<String,dynamic> backDatedClaims;
+  final List<dynamic> claimsDetails;
 
   FixedHeaderDelegate({
     required this.child,
     required this.height,
     required this.activeIndex,
+    required this.backDatedClaims,
+    required this.claimsDetails,
   });
 
   @override
@@ -843,6 +872,8 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant FixedHeaderDelegate oldDelegate) {
     return height != oldDelegate.height ||
         activeIndex != oldDelegate.activeIndex ||
+        backDatedClaims !=oldDelegate.backDatedClaims ||
+        claimsDetails!=oldDelegate.claimsDetails ||
         oldDelegate.child.key != child.key;
   }
 }

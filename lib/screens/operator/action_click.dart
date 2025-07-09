@@ -50,7 +50,7 @@ class operatorActionPopup extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    consultant['name'] ?? 'Bruce Lee',
+                    consultant['consultant_info']['emp_name'] ?? '',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -58,7 +58,7 @@ class operatorActionPopup extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Emp14982',
+                    consultant['consultant_info']['emp_code']??'',
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -80,7 +80,7 @@ class operatorActionPopup extends StatelessWidget {
                     const Icon(Icons.circle, size: 8, color: Color(0xFF1F9254)),
                     const SizedBox(width: 4),
                     Text(
-                      "Active",
+                      consultant['consultant_info']['status']??'',
                       style: GoogleFonts.spaceGrotesk(
                         color: const Color(0xFF1F9254),
                         fontWeight: FontWeight.w500,
@@ -102,7 +102,7 @@ class operatorActionPopup extends StatelessWidget {
                   SvgPicture.asset('assets/icons/company_icon.svg'),
                   const SizedBox(width: 5),
                   Text(
-                    'Encore Films',
+                    consultant['consultant_info']['client_name']??'',
                     style: GoogleFonts.montserrat(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -128,7 +128,7 @@ class operatorActionPopup extends StatelessWidget {
                       ),
                     ),
                     TextSpan(
-                      text: '12 / 02 / 2022',
+                      text:  consultant['consultant_info']['joining_date']??'',
                       style: GoogleFonts.montserrat(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -141,7 +141,7 @@ class operatorActionPopup extends StatelessWidget {
             ],
           ),
           Text(
-            'Information Security Analyst',
+            consultant['consultant_info']['emp_code']??'',
             style: GoogleFonts.montserrat(
               fontSize: 11,
               fontWeight: FontWeight.w500,
@@ -167,7 +167,7 @@ class operatorActionPopup extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '+65 9876 4763',
+                    "${consultant['consultant_info']['mobile_number_code'] ?? ''} ${consultant['consultant_info']['mobile_number'] ?? ''}",
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -190,7 +190,7 @@ class operatorActionPopup extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'brucelee@gmail.com',
+                    consultant['consultant_info']['email']??'',
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -222,7 +222,7 @@ class operatorActionPopup extends StatelessWidget {
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.7,
                 child: Text(
-                  '101 Marlow Street, #12-05 Clife Parkview, Singapore - 059020',
+                  consultant['consultant_info']['address_by_user']??'',
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,

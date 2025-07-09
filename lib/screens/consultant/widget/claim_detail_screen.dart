@@ -13,11 +13,12 @@ import 'package:harris_j_system/widgets/bottom_sheet_content.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ExpenseListView extends ConsumerStatefulWidget {
-  const ExpenseListView({super.key,required this.entries,this.selectedMonth,this.selectedYear});
+  const ExpenseListView({super.key,required this.entries,this.selectedMonth,this.selectedYear,required this.isFromHrScreen});
 
   final List entries;
   final String? selectedMonth;
   final String? selectedYear;
+  final bool isFromHrScreen;
 
 
   @override
@@ -39,10 +40,10 @@ class _ExpenseListViewState extends ConsumerState<ExpenseListView> {
           return Padding(
             padding: const EdgeInsets.only(right: 12),
             child: expenseRow(
-              context :context,
+              context: context,
               expense: expense,
 
-              onEdit: ()  async{
+              onEdit: () async {
                 // Close the current bottom sheet
                 // Navigator.pop(context);
                 print('dggg');
@@ -60,7 +61,7 @@ class _ExpenseListViewState extends ConsumerState<ExpenseListView> {
                           selectedOption: "",
                           dateRange: expense['date'],
                           isFromClaimScreen: true,
-                          expense:expense
+                          expense: expense
                       );
                     });
                   },
@@ -70,11 +71,11 @@ class _ExpenseListViewState extends ConsumerState<ExpenseListView> {
 
                   //  Show success toast
                   ToastHelper.showSuccess(context,
-                     'Claim updated successfully!');
+                      'Claim updated successfully!');
                 }
                 print('result23 $result');
-                },
-              onDelete: () async{
+              },
+              onDelete: () async {
                 final prefs = await SharedPreferences.getInstance();
                 final token = prefs.getString('token');
                 print('token $token');
@@ -89,7 +90,8 @@ class _ExpenseListViewState extends ConsumerState<ExpenseListView> {
                               .notifier)
                           .deleteClaim(
                           expense[
-                          'id'],token!,widget.selectedMonth!,widget.selectedYear!);
+                          'id'], token!, widget.selectedMonth!,
+                          widget.selectedYear!);
                       print('deleteResponse $deleteResponse');
 
                       if (deleteResponse[
@@ -121,99 +123,102 @@ class _ExpenseListViewState extends ConsumerState<ExpenseListView> {
       ),
     );
   }
-}
 
 
 // Expense row widget
-Widget expenseRow({
-  required  context,
-  required  expense,
+  Widget expenseRow({
+    required context,
+    required expense,
 
-  required VoidCallback onEdit,
-  required VoidCallback onDelete,
-}) {
-  return Container(
-    width: 300,
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: const Color(0xFFF5F5F5),
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black12,
-          blurRadius: 4,
-          offset: Offset(0, 2),
-        )
+    required VoidCallback onEdit,
+    required VoidCallback onDelete,
+  }) {
+    return Container(
+      width: 300,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+      if(!widget.isFromHrScreen) Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          GestureDetector(
+            onTap: onEdit,
+            child: CustomIconContainer(
+                path: 'assets/icons/edit_pen.svg',
+                bgColor:
+                Color(0xffF5230C)),
+          ),
+          SizedBox(width: 10),
+          GestureDetector(
+            onTap: onDelete,
+            child: CustomIconContainer(
+                path: 'assets/icons/red_delete_icon.svg'),
+          ),
+
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(child: labelValue("Date & Time", expense['date'])),
+          const SizedBox(width: 20),
+          Expanded(child: labelValue("Expense Type", expense['expenseType'])),
+        ],
+      ),
+      const SizedBox(height: 10),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(child: labelValue("Amount", "\$${expense['amount']}")),
+          const SizedBox(width: 20),
+          Expanded(child: labelValue("Particulars", expense['particulars'])),
+        ],
+      ),
+      const SizedBox(height: 10),
+      labelValue("Remarks", expense['remarks']),
+
+      const SizedBox(height: 5),
+      Column(
+        children: [
+          SvgPicture.asset("assets/icons/addInvoice.svg", height: 40,),
+          const SizedBox(height: 4),
+          const Text("Add Invoice"),
+        ],
+      ),
       ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-         Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            GestureDetector(
-              onTap: onEdit,
-              child: CustomIconContainer(
-                  path: 'assets/icons/edit_pen.svg',
-                  bgColor:
-                  Color(0xffF5230C)),
-            ),
-            SizedBox(width: 10),
-            GestureDetector(
-              onTap: onDelete,
-              child: CustomIconContainer(
-                  path:  'assets/icons/red_delete_icon.svg'),
-            ),
+    ),);
 
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(child: labelValue("Date & Time", expense['date'])),
-            const SizedBox(width: 20),
-            Expanded(child: labelValue("Expense Type",expense['expenseType'] )),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(child: labelValue("Amount", "\$${expense['amount']}")),
-            const SizedBox(width: 20),
-            Expanded(child: labelValue("Particulars",expense['particulars'] )),
-          ],
-        ),
-        const SizedBox(height: 10),
-        labelValue("Remarks", expense['remarks']),
+  }
 
-        const SizedBox(height: 5),
-        Column(
-          children: [
-            SvgPicture.asset("assets/icons/addInvoice.svg",height: 40,),
-            const SizedBox(height: 4),
-            const Text("Add Invoice"),
-          ],
-        ),
-      ],
-    ),
-  );
+  Widget labelValue(String label, String value) {
+    return RichText(
+      text: TextSpan(
+        text: "$label\n",
+        style: GoogleFonts.montserrat(fontWeight: FontWeight.w700,
+            fontSize: 14,
+            color: const Color(0xff1D212D)),
+        children: [
+          TextSpan(
+            text: value,
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w500,
+                fontSize: 12,
+                color: const Color(0xff1D212D)),
 
-}
-
-Widget labelValue(String label, String value) {
-  return RichText(
-    text: TextSpan(
-      text: "$label\n",
-      style: GoogleFonts.montserrat(fontWeight: FontWeight.w700, fontSize: 14,color: const Color(0xff1D212D)),
-      children: [
-        TextSpan(
-          text: value,
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.w500, fontSize: 12,color: const Color(0xff1D212D)),
-
-        ),
-      ],
-    ),
-  );
+          ),
+        ],
+      ),
+    );
+  }
 }

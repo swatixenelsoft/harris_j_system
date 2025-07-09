@@ -6,18 +6,29 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/providers/consultant_provider.dart';
 import 'package:harris_j_system/providers/hr_provider.dart';
+import 'package:harris_j_system/providers/operator_provider.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 
 class RemarksSection extends StatelessWidget {
   final GetConsultantState? consultantState;
   final GetHrState? hrState;
+  final GetOperatorState? operatorState;
 
-  const RemarksSection({super.key, this.consultantState, this.hrState});
+  const RemarksSection({super.key, this.consultantState, this.hrState,this.operatorState});
+
+  List<dynamic> get _remarks {
+    if (consultantState != null) {
+      return consultantState!.consultantTimesheetRemark?['data'] ?? [];
+    } else if (hrState != null) {
+      return hrState!.selectedConsultantData['remarks'] ?? [];
+    } else if (operatorState != null) {
+      return operatorState!.selectedConsultantData['remarks'] ?? [];
+    }
+    return [];
+  }
 
   void _showPopup(BuildContext context) {
-    final remarks = consultantState == null
-        ? hrState?.selectedConsultantData['remarks'] ?? []
-        : consultantState?.consultantTimesheetRemark?['data'] ?? [];
+    final remarks =_remarks;
 
     print('Popup remarks: $remarks');
 
@@ -188,13 +199,7 @@ class RemarksSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final remarks;
-    if (consultantState == null) {
-      remarks = hrState?.selectedConsultantData['remarks'];
-    } else {
-      remarks = consultantState?.consultantTimesheetRemark?['data'];
-    }
-    print('remarks111 $remarks,${hrState?.selectedConsultantData['remarks']}');
+    final remarks=_remarks;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

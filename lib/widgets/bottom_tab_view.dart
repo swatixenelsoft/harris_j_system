@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/providers/consultant_provider.dart';
 import 'package:harris_j_system/providers/hr_provider.dart';
+import 'package:harris_j_system/providers/operator_provider.dart';
 import 'package:harris_j_system/screens/consultant/widget/claim_detail_screen.dart';
 import 'package:harris_j_system/ulits/common_function.dart';
 import 'package:harris_j_system/ulits/toast_helper.dart';
@@ -17,8 +18,10 @@ import 'package:timeline_tile/timeline_tile.dart';
 class BottomTabView extends StatefulWidget {
   final List<String> tabsData;
   final bool isFromClaimScreen;
+  final bool isFromHrScreen;
   final GetConsultantState? consultantState;
   final GetHrState? hrState;
+  final GetOperatorState? operatorState;
   final String? selectedMonth;
   final String? selectedYear;
 
@@ -26,8 +29,10 @@ class BottomTabView extends StatefulWidget {
     super.key,
     required this.tabsData,
     this.isFromClaimScreen = false,
+    this.isFromHrScreen = false,
     this.consultantState,
     this.hrState,
+    this.operatorState,
     this.selectedMonth,
     this.selectedYear,
   });
@@ -38,6 +43,12 @@ class BottomTabView extends StatefulWidget {
 
 class _BottomTabViewState extends State<BottomTabView> {
   int _selectedIndex = 0; // Track the selected tab index
+
+  Map<String, dynamic> get _selectedConsultantData {
+    return widget.hrState?.selectedConsultantData ??
+        widget.operatorState?.selectedConsultantData ??
+        {};
+  }
 
   void _showPopup(BuildContext context, String tabName) {
     late final List<dynamic> dataList;
@@ -50,12 +61,12 @@ class _BottomTabViewState extends State<BottomTabView> {
             : widget.consultantState?.claimList ?? [];
       } else {
         // HR + Claim Screen
-        final selectedData = widget.hrState?.selectedConsultantData ?? {};
         dataList = _selectedIndex == 1
-            ? selectedData['get_copies'] ?? []
-            : selectedData['claim_tab'] ?? [];
+            ? _selectedConsultantData['get_copies'] ?? []
+            : _selectedConsultantData['claim_tab'] ?? [];
       }
-    } else if (widget.consultantState != null) {
+    }
+    else if (widget.consultantState != null) {
       // Consultant normal screen
       switch (_selectedIndex) {
         case 0:
@@ -200,14 +211,12 @@ class _BottomTabViewState extends State<BottomTabView> {
     late final claimTab;
 
     if (widget.consultantState == null) {
-      final selectedData = widget.hrState?.selectedConsultantData ?? {};
-
-      timesheetOverview = selectedData['timesheet_overview'];
-      extraTimeLog = selectedData['extra_time_log'];
-      payOffLog = selectedData['pay_off_log'];
-      compOffLog = selectedData['comp_off_log'];
-      getCopies = selectedData['get_copies'];
-      claimTab = selectedData['claim_tab']; // ✅ for claims
+      timesheetOverview = _selectedConsultantData['timesheet_overview'];
+      extraTimeLog = _selectedConsultantData['extra_time_log'];
+      payOffLog = _selectedConsultantData['pay_off_log'];
+      compOffLog = _selectedConsultantData['comp_off_log'];
+      getCopies = _selectedConsultantData['get_copies'];
+      claimTab = _selectedConsultantData['claim_tab'];
     } else {
       timesheetOverview = widget.consultantState!.timesheetOverview;
       extraTimeLog = widget.consultantState!.extraTimeLog;
@@ -1231,8 +1240,8 @@ class _BottomTabViewState extends State<BottomTabView> {
                           const SizedBox(width: 5),
                           GestureDetector(
                             onTap: () async {
-                              log('te dssh ${remark['entries'].toString()}, ${widget.selectedMonth},${widget.selectedYear}');
-                              bottomSheetWidget(context, remark['entries'],
+                              log('selectedConsultantData ${widget.operatorState?.hrConsultantList}');
+                              bottomSheetWidget(context, remark['entries'],remark,
                                   widget.selectedMonth!, widget.selectedYear!);
                               // context.pop(true);
                             },
@@ -1361,8 +1370,9 @@ class _BottomTabViewState extends State<BottomTabView> {
     );
   }
 
-  void bottomSheetWidget(BuildContext context, List entries,
-      String selectedMonth, String selectedYear) {
+  void bottomSheetWidget(BuildContext context, List entries,remark,
+      String selectedMonth, String selectedYear)
+  {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1371,6 +1381,7 @@ class _BottomTabViewState extends State<BottomTabView> {
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.5),
       builder: (BuildContext context) {
+        print('entriessss $entries');
         return DraggableScrollableSheet(
           initialChildSize: 0.6,
           minChildSize: 0.4,
@@ -1444,7 +1455,7 @@ class _BottomTabViewState extends State<BottomTabView> {
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
                                   color: const Color(0xff2A282F))),
-                          Text("#CLF08982",
+                          Text(remark['claim_no'],
                               style: GoogleFonts.inter(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
@@ -1457,7 +1468,7 @@ class _BottomTabViewState extends State<BottomTabView> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
-                    "Individual Claims ( 03 )",
+                    "Individual Claims ( ${remark['count']} )",
                     style: GoogleFonts.montserrat(
                         color: const Color(0xffFF1901),
                         fontWeight: FontWeight.w700,
@@ -1470,7 +1481,11 @@ class _BottomTabViewState extends State<BottomTabView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Total Amount : \$800.38",
+                        "Total Amount : \$${entries.fold<double>(
+                          0.0,
+                              (double sum, dynamic entry) =>
+                          sum + (double.tryParse(entry['amount'].toString()) ?? 0.0),
+                        )}",
                         style: GoogleFonts.montserrat(
                             color: const Color(0xff1D212D),
                             fontWeight: FontWeight.w700,
@@ -1504,7 +1519,7 @@ class _BottomTabViewState extends State<BottomTabView> {
                                   shape: BoxShape.circle),
                             ),
                             const SizedBox(width: 5),
-                            const Text("Draft",
+                             Text(remark['status'],
                                 style: TextStyle(color: Color(0xff007BFF))),
                           ],
                         ),
@@ -1518,6 +1533,7 @@ class _BottomTabViewState extends State<BottomTabView> {
                 ),
                 ExpenseListView(
                     entries: entries,
+                    isFromHrScreen:widget.isFromHrScreen,
                     selectedMonth: selectedMonth,
                     selectedYear: selectedYear),
               ],

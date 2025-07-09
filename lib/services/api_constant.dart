@@ -28,6 +28,8 @@ class ApiConstant {
   static const String getClaimAndCopies =
       "consultant/get-claim-and-get-copies-tab";
   static const String deleteClaim = "consultant/delete-claim";
+  static const String backdatedClaimsData = "consultant/backdated-claims-data";
+
 
   static const String addConsultant = "hr/add-consultant";
   static const String clientList = "hr/client-list";
@@ -58,4 +60,6 @@ class ApiConstant {
 
 
   static const String operatorDashboard = "operator/client-list";
+  static const String operatorClaims = "operator/claimtab-api";
+
 }
