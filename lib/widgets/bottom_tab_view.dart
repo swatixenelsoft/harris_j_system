@@ -43,7 +43,6 @@ class BottomTabView extends StatefulWidget {
   @override
   State<BottomTabView> createState() => _BottomTabViewState();
 }
-
 class _BottomTabViewState extends State<BottomTabView> {
   int _selectedIndex = 0; // Track the selected tab index
 
@@ -53,10 +52,8 @@ class _BottomTabViewState extends State<BottomTabView> {
         widget.financeState?.selectedConsultantData ??
         {};
   }
-
   void _showPopup(BuildContext context, String tabName) {
     late final List<dynamic> dataList;
-
     if (widget.isFromClaimScreen) {
       if (widget.consultantState != null) {
         // Consultant + Claim Screen

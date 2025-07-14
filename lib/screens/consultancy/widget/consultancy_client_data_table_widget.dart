@@ -106,7 +106,6 @@ class GenericDataSource extends DataGridSource {
             ),
           );
         }
-
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           alignment:
