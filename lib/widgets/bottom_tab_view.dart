@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/providers/consultant_provider.dart';
+import 'package:harris_j_system/providers/finance_provider.dart';
 import 'package:harris_j_system/providers/hr_provider.dart';
 import 'package:harris_j_system/providers/operator_provider.dart';
 import 'package:harris_j_system/screens/consultant/widget/claim_detail_screen.dart';
@@ -22,6 +23,7 @@ class BottomTabView extends StatefulWidget {
   final GetConsultantState? consultantState;
   final GetHrState? hrState;
   final GetOperatorState? operatorState;
+  final GetFinanceState? financeState;
   final String? selectedMonth;
   final String? selectedYear;
 
@@ -33,6 +35,7 @@ class BottomTabView extends StatefulWidget {
     this.consultantState,
     this.hrState,
     this.operatorState,
+    this.financeState,
     this.selectedMonth,
     this.selectedYear,
   });
@@ -47,6 +50,7 @@ class _BottomTabViewState extends State<BottomTabView> {
   Map<String, dynamic> get _selectedConsultantData {
     return widget.hrState?.selectedConsultantData ??
         widget.operatorState?.selectedConsultantData ??
+        widget.financeState?.selectedConsultantData ??
         {};
   }
 

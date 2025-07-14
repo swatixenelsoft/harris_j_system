@@ -323,6 +323,7 @@ class _HrConsultantClaimScreenState
                               customData: customData,
                               isFromClaimScreen: true,
                               isFromHrScreen: true,
+                                isGoodToGo:true,
                               backDatedClaims: (hrState
                                       .selectedConsultantData['data'] is Map)
                                   ? Map<String, dynamic>.from(

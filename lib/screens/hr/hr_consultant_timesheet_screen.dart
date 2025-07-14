@@ -195,7 +195,7 @@ class _HrConsultantTimeSheetScreenState
     final status = ref.read(hrProvider).selectedConsultantData['status'];
     print('claimsDetails $status');
 
-    if(mounted){
+    if (mounted) {
       setState(() {
         switch (status) {
           case null:
@@ -221,7 +221,6 @@ class _HrConsultantTimeSheetScreenState
         }
       });
     }
-
   }
 
   @override
@@ -234,7 +233,6 @@ class _HrConsultantTimeSheetScreenState
 
   Map<DateTime, CalendarData> parseTimelineData(List<dynamic> apiResponse) {
     final Map<DateTime, CalendarData> data = {};
-
 
     if ((apiResponse).isNotEmpty) {
       final days = apiResponse;
@@ -296,8 +294,6 @@ class _HrConsultantTimeSheetScreenState
     final List<dynamic> fullConsultantData = hrState.hrConsultantList ?? [];
     final isLoading = hrState.isLoading;
     print('loader is ${hrState.isLoading}');
-
-
 
     print(
         'Rebuilding UI with timesheet: ${hrState.selectedConsultantData['timesheet_data']?.length},${hrState.selectedConsultantData['remarks']?.length}');
@@ -363,6 +359,7 @@ class _HrConsultantTimeSheetScreenState
                               onHeightCalculated: _updateCalendarHeight,
                               customData: customData,
                               isFromHrScreen: true,
+                              isGoodToGo: true,
                               onMonthChanged: (month, year) async {
                                 setState(() {
                                   selectedMonth = month;
@@ -442,87 +439,90 @@ class _HrConsultantTimeSheetScreenState
                     _selectedClientId = selectedId;
                     _selectedRowIndex = -1;
                     customData = {};
-                    activeIndex=-1;
+                    activeIndex = -1;
                   });
                   await getConsultantTimesheetByClient();
-                await updateActiveIndexFromStatus();
+                  await updateActiveIndexFromStatus();
                 },
               ),
             ),
           const SizedBox(height: 10),
           SizedBox(
-            height: fullConsultantList.isEmpty?50:200,
-            child:
-            fullConsultantList.isEmpty?
-            const Center(
-              child: Text(
-                "No Consultant Found",
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            )
-                :SfDataGrid(
-              source: GenericDataSource(
-                data:
-                    fullConsultantList.map<Map<String, dynamic>>((consultant) {
-                  final consultantInfo = consultant['consultant_info'] ?? {};
-                  final workLog = consultant['work_log'] ?? {};
-                  return {
-                    'emp_name': consultantInfo['emp_name'] ?? '',
-                    'working_hours': consultantInfo['working_hours'] ?? '',
-                    'logged_hours': workLog['logged_hours'] ?? 0,
-                    'full_data': consultant, // include full object for actions
-                  };
-                }).toList(),
-                columns: ['emp_name', 'working_hours', 'actions'],
-                onZoomTap: (rowData) {
-                  _showConsultancyPopup(context, rowData['full_data']);
-                },
-                selectedIndex: _selectedRowIndex,
-              ),
-              columnWidthMode: ColumnWidthMode.fill,
-              headerRowHeight: 38,
-              rowHeight: 52,
-              onCellTap: (details) async{
-                final index = details.rowColumnIndex.rowIndex - 1;
-                if (index < 0 || index >= fullConsultantList.length) return;
+            height: fullConsultantList.isEmpty ? 50 : 200,
+            child: fullConsultantList.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No Consultant Found",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  )
+                : SfDataGrid(
+                    source: GenericDataSource(
+                      data: fullConsultantList
+                          .map<Map<String, dynamic>>((consultant) {
+                        final consultantInfo =
+                            consultant['consultant_info'] ?? {};
+                        final workLog = consultant['work_log'] ?? {};
+                        return {
+                          'emp_name': consultantInfo['emp_name'] ?? '',
+                          'working_hours':
+                              consultantInfo['working_hours'] ?? '',
+                          'logged_hours': workLog['logged_hours'] ?? 0,
+                          'full_data':
+                              consultant, // include full object for actions
+                        };
+                      }).toList(),
+                      columns: ['emp_name', 'working_hours', 'actions'],
+                      onZoomTap: (rowData) {
+                        _showConsultancyPopup(context, rowData['full_data']);
+                      },
+                      selectedIndex: _selectedRowIndex,
+                    ),
+                    columnWidthMode: ColumnWidthMode.fill,
+                    headerRowHeight: 38,
+                    rowHeight: 52,
+                    onCellTap: (details) async {
+                      final index = details.rowColumnIndex.rowIndex - 1;
+                      if (index < 0 || index >= fullConsultantList.length)
+                        return;
 
-                final selectedData = fullConsultantList[index];
+                      final selectedData = fullConsultantList[index];
 
-                ref
-                    .read(hrProvider.notifier)
-                    .getSelectedConsultantDetails(selectedData);
+                      ref
+                          .read(hrProvider.notifier)
+                          .getSelectedConsultantDetails(selectedData);
 
-                setState(() {
-                  _selectedRowIndex = index;
-                  selectedFullData = selectedData;
-                  customData = parseTimelineData(
-                    selectedData['timesheet_data'] ?? [],
-                  );
-                });
-                await updateActiveIndexFromStatus();
-              },
-              columns: [
-                GridColumn(
-                  columnName: 'emp_name',
-                  width: 120,
-                  label: _buildHeaderCell('Name'),
-                ),
-                GridColumn(
-                  columnName: 'working_hours',
-                  width: 120,
-                  label: _buildHeaderCell('Hours Logged'),
-                ),
-                GridColumn(
-                  columnName: 'actions',
-                  label:
-                      _buildHeaderCell('Actions', alignment: Alignment.center),
-                ),
-              ],
-            ),
+                      setState(() {
+                        _selectedRowIndex = index;
+                        selectedFullData = selectedData;
+                        customData = parseTimelineData(
+                          selectedData['timesheet_data'] ?? [],
+                        );
+                      });
+                      await updateActiveIndexFromStatus();
+                    },
+                    columns: [
+                      GridColumn(
+                        columnName: 'emp_name',
+                        width: 120,
+                        label: _buildHeaderCell('Name'),
+                      ),
+                      GridColumn(
+                        columnName: 'working_hours',
+                        width: 120,
+                        label: _buildHeaderCell('Hours Logged'),
+                      ),
+                      GridColumn(
+                        columnName: 'actions',
+                        label: _buildHeaderCell('Actions',
+                            alignment: Alignment.center),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -623,7 +623,6 @@ class _HrConsultantTimeSheetScreenState
       ],
     );
   }
-
 
   Widget _stepperUI(
       BuildContext context, List<String> svgIcons, int activeIndex) {

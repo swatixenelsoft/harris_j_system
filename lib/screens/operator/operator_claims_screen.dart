@@ -325,6 +325,7 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
                               customData: customData,
                               isFromClaimScreen: true,
                               isFromHrScreen: true,
+                              isGoodToGo:true,
                               claimsDetails: claimsDetails,
                               backDatedClaims: (operatorState
                                       .selectedConsultantData['data'] is Map)

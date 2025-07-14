@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/providers/consultant_provider.dart';
+import 'package:harris_j_system/providers/finance_provider.dart';
 import 'package:harris_j_system/providers/hr_provider.dart';
 import 'package:harris_j_system/providers/operator_provider.dart';
 import 'package:timeline_tile/timeline_tile.dart';
@@ -13,8 +14,9 @@ class RemarksSection extends StatelessWidget {
   final GetConsultantState? consultantState;
   final GetHrState? hrState;
   final GetOperatorState? operatorState;
+  final GetFinanceState? financeState;
 
-  const RemarksSection({super.key, this.consultantState, this.hrState,this.operatorState});
+  const RemarksSection({super.key, this.consultantState, this.hrState,this.operatorState,this.financeState});
 
   List<dynamic> get _remarks {
     if (consultantState != null) {
@@ -23,6 +25,9 @@ class RemarksSection extends StatelessWidget {
       return hrState!.selectedConsultantData['remarks'] ?? [];
     } else if (operatorState != null) {
       return operatorState!.selectedConsultantData['remarks'] ?? [];
+    }
+    else if (financeState != null) {
+      return financeState!.selectedConsultantData['remarks'] ?? [];
     }
     return [];
   }

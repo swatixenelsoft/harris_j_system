@@ -20,6 +20,7 @@ class CalendarScreen extends ConsumerStatefulWidget {
   final Map<DateTime, dynamic> customData;
   final bool isFromClaimScreen;
   final bool isFromHrScreen;
+  final bool isGoodToGo;
   final List<dynamic>? claimsDetails;
   final Map<String,dynamic>? backDatedClaims;
   final void Function(int month, int year)? onMonthChanged;
@@ -33,6 +34,7 @@ class CalendarScreen extends ConsumerStatefulWidget {
     required this.customData,
     this.isFromClaimScreen = false,
     this.isFromHrScreen = false,
+    this.isGoodToGo = false,
     this.claimsDetails,
     this.onMonthChanged,
     this.onDataUpdated,
@@ -309,8 +311,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ],
           ),
         ),
-        if (widget.isFromHrScreen) const SizedBox(height: 10),
-        if (widget.isFromHrScreen)
+        if (widget.isGoodToGo) const SizedBox(height: 10),
+        if (widget.isGoodToGo)
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [

@@ -388,6 +388,7 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
                           onHeightCalculated: _updateCalendarHeight,
                           customData: customData,
                           isFromHrScreen: true,
+                          isGoodToGo:true,
                           onMonthChanged: (month, year) {
                             print('onMonthChanged $month,$year');
                             ref
