@@ -70,7 +70,6 @@ class ApiService {
           },
         ),
       );
-
       print('response $response');
       return response.data;
     } on DioException catch (e) {
@@ -81,10 +80,8 @@ class ApiService {
       }
     }
   }
-
   Future<Map<String, dynamic>> fetchState(String country, String token) async {
     print(ApiConstant.countries + country);
-
     try {
       final response = await _dio.get(
         ApiConstant.states + country,
@@ -1980,4 +1977,47 @@ Future<Map<String, dynamic>> getDesignation(
       }
     }
   }
+
+  Future<Map<String, dynamic>> getConsultantTimesheetByClientOperator(
+      String clientId,
+      String month,
+      String year,
+      String token,
+      ) async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'client_id': clientId,
+        'month': month,
+        'year': year,
+      });
+      print('formData $token, ${formData.fields}');
+      final response = await _dio.post(
+        ApiConstant.operatorHumanResource,
+        data: formData,
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri},$month,$year');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
 }

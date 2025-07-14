@@ -61,5 +61,6 @@ class ApiConstant {
 
   static const String operatorDashboard = "operator/client-list";
   static const String operatorClaims = "operator/claimtab-api";
+  static const String operatorHumanResource = "operator/hrtab-api";
 
 }

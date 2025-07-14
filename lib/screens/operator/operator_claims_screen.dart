@@ -677,7 +677,6 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
     );
   }
 }
-
 class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   final double height;
@@ -695,13 +694,11 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return SizedBox(height: height, child: child);
   }
-
   @override
   bool shouldRebuild(covariant FixedHeaderDelegate oldDelegate) {
     return height != oldDelegate.height || customData != oldDelegate.customData;
   }
 }
-
 class CalendarData {
   final Widget widget;
   final String type;

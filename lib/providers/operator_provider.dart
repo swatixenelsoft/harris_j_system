@@ -164,6 +164,79 @@ class GetOperatorNotifier extends StateNotifier<GetOperatorState> {
     }
   }
 
+  Future<void> getConsultantTimesheetByClient(
+      String clientId,
+      String month,
+      String year,
+      String token, {
+        Map<String, dynamic>? previouslySelectedConsultant,
+      }) async {
+    state = state.copyWith(error: null);
+
+    try {
+      final response = await apiService.getConsultantTimesheetByClientOperator(
+          clientId, month, year, token);
+      final bool status = response['status'] ?? false;
+
+      if (status) {
+        final List<dynamic> consultants = response['data'] ?? [];
+
+        final List<Map<String, dynamic>> flattenedConsultantClaimsList =
+        consultants.map<Map<String, dynamic>>((consultant) {
+          final Map<String, dynamic> consultantInfo =
+          Map<String, dynamic>.from(consultant['consultant_info'] ?? {});
+          consultant.forEach((key, value) {
+            if (key != 'consultant_info') {
+              consultantInfo[key] = value;
+            }
+          });
+          return consultantInfo;
+        }).toList();
+
+        final List<Map<String, dynamic>> fullConsultantsClaim =
+        consultants.whereType<Map<String, dynamic>>().toList();
+
+        state = state.copyWith(
+          consultantList: flattenedConsultantClaimsList,
+          hrConsultantList: fullConsultantsClaim,
+          selectedConsultantData: {}, // Reset for safety
+        );
+
+        print('previouslySelectedConsultant $previouslySelectedConsultant');
+        print('previouslySelectedConsultant33 $month');
+        // ✅ Match selected consultant again after refresh
+        if (previouslySelectedConsultant != null) {
+          final selectedEmpId =
+          previouslySelectedConsultant['consultant_info']?['user_id'];
+          print('selectedEmpId $selectedEmpId');
+          if (selectedEmpId != null) {
+            final updatedConsultant = fullConsultantsClaim.firstWhere(
+                  (e) => e['consultant_info']?['user_id'] == selectedEmpId,
+              orElse: () => {},
+            );
+
+            print('updatedConsultant ${updatedConsultant['timesheet_data']}');
+
+            if (updatedConsultant.isNotEmpty) {
+              getSelectedConsultantDetails(updatedConsultant);
+            }
+          }
+        }
+      } else {
+        state = state.copyWith(
+          error: response['message'] ?? 'Failed to fetch consultants',
+          consultantList: [],
+          hrConsultantList: [],
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
   void getSelectedConsultantDetails(Map<String, dynamic> selectedConsultant) {
     // ✅ Only convert [] to {} for 'data'
     final rawData = selectedConsultant['data'];
