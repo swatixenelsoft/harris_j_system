@@ -149,7 +149,6 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
     final isLoading = consultantState.isLoading;
     final Map<String, dynamic> dashboardData =
         consultantState.dashboardData ?? {};
-    print('consultantStatedashj ${consultantState.dashboardData}');
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(children: [

@@ -22,7 +22,8 @@ class HumanResourcesScreen extends ConsumerStatefulWidget {
   const HumanResourcesScreen({super.key});
 
   @override
-  ConsumerState<HumanResourcesScreen> createState() => _HumanResourcesScreenState();
+  ConsumerState<HumanResourcesScreen> createState() =>
+      _HumanResourcesScreenState();
 }
 
 class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
@@ -69,7 +70,8 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
 
-    final client = await ref.read(operatorProvider.notifier).getOperatorDashboard(token!);
+    final client =
+        await ref.read(operatorProvider.notifier).getOperatorDashboard(token!);
     _rawClientList = (client['data'] != null && client['data'] is List)
         ? List<Map<String, dynamic>>.from(client['data'])
         : [];
@@ -85,11 +87,11 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
   getConsultantClaimsByClient() async {
     if (_selectedClientId != null && token != null) {
       await ref.read(operatorProvider.notifier).getConsultantTimesheetByClient(
-        _selectedClientId!,
-        selectedMonth.toString().padLeft(2, '0'),
-        selectedYear.toString(),
-        token!,
-      );
+            _selectedClientId!,
+            selectedMonth.toString().padLeft(2, '0'),
+            selectedYear.toString(),
+            token!,
+          );
     }
   }
 
@@ -102,13 +104,17 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
     await getConsultantClaimsByClient();
     // Select first consultant by default
     final hrState = ref.read(operatorProvider);
-    if (hrState.hrConsultantList != null && hrState.hrConsultantList!.isNotEmpty) {
+    if (hrState.hrConsultantList != null &&
+        hrState.hrConsultantList!.isNotEmpty) {
       setState(() {
         _selectedRowIndex = 0;
         selectedFullData = hrState.hrConsultantList![0];
-        customData = parseTimelineData(selectedFullData['timesheet_data'] ?? []);
+        customData =
+            parseTimelineData(selectedFullData['timesheet_data'] ?? []);
       });
-      ref.read(operatorProvider.notifier).getSelectedConsultantDetails(selectedFullData);
+      ref
+          .read(operatorProvider.notifier)
+          .getSelectedConsultantDetails(selectedFullData);
     }
     ref.read(operatorProvider.notifier).setLoading(false);
   }
@@ -149,7 +155,8 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
             ),
             type: 'leave',
           );
-        } else if (details.containsKey('workingHours') && details['workingHours'] != null) {
+        } else if (details.containsKey('workingHours') &&
+            details['workingHours'] != null) {
           final workingHours = details['workingHours'].toString();
           data[dateKey] = CalendarData(
             widget: Text(
@@ -171,14 +178,15 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
   void _refreshData() async {
     if (token != null && _selectedClientId != null) {
       await ref.read(operatorProvider.notifier).getConsultantTimesheetByClient(
-        _selectedClientId!,
-        selectedMonth.toString().padLeft(2, '0'),
-        selectedYear.toString(),
-        token!,
-        previouslySelectedConsultant: selectedFullData,
-      );
+            _selectedClientId!,
+            selectedMonth.toString().padLeft(2, '0'),
+            selectedYear.toString(),
+            token!,
+            previouslySelectedConsultant: selectedFullData,
+          );
       final hrState = ref.read(operatorProvider);
-      final updatedClaims = hrState.selectedConsultantData['timesheet_data'] ?? [];
+      final updatedClaims =
+          hrState.selectedConsultantData['timesheet_data'] ?? [];
       setState(() {
         customData = parseTimelineData(updatedClaims);
       });
@@ -188,7 +196,8 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
   @override
   Widget build(BuildContext context) {
     final operatorState = ref.watch(operatorProvider);
-    final List<dynamic> fullConsultantData = operatorState.hrConsultantList ?? [];
+    final List<dynamic> fullConsultantData =
+        operatorState.hrConsultantList ?? [];
     final isLoading = operatorState.isLoading;
 
     return Scaffold(
@@ -196,126 +205,134 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
         child: isLoading
             ? CustomLoader()
             : NestedScrollView(
-          physics: const ClampingScrollPhysics(),
-          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-            return <Widget>[
-              SliverAppBar(
-                automaticallyImplyLeading: false,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: CustomAppBar(
-                    showBackButton: false,
-                    image: 'assets/icons/cons_logo.png',
-                    onProfilePressed: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.clear();
-                      context.pushReplacement(Constant.login);
-                    },
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(child: _buildHeaderContent(fullConsultantData)),
-              SliverPersistentHeader(
-                pinned: true,
-                floating: true,
-                delegate: FixedHeaderDelegate(
-                  height: 130 + calendarHeight,
-                  customData: customData,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                        width: double.infinity,
-                        color: const Color(0xffF5F5F5),
-                        child: _stepperUI(context, iconData, activeIndex),
-                      ),
-                      const SizedBox(height: 5),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 7,
-                              spreadRadius: 1,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: CalendarScreen(
-                          selectedMonth: selectedMonth,
-                          selectedYear: selectedYear,
-                          onHeightCalculated: _updateCalendarHeight,
-                          customData: customData,
-                          isFromHrScreen: true,
-                          onMonthChanged: (month, year) async {
-                            setState(() {
-                              selectedMonth = month;
-                              selectedYear = year;
-                            });
-                            _refreshData();
+                physics: const ClampingScrollPhysics(),
+                headerSliverBuilder:
+                    (BuildContext context, bool innerBoxIsScrolled) {
+                  return <Widget>[
+                    SliverAppBar(
+                      automaticallyImplyLeading: false,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: CustomAppBar(
+                          showBackButton: false,
+                          image: 'assets/icons/cons_logo.png',
+                          onProfilePressed: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.clear();
+                            context.pushReplacement(Constant.login);
                           },
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ];
-          },
-          body: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: [
-                const SizedBox(height: 10),
-                // Use provider-based RemarksSection
-                Container(
-                  height: 200,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: containerBoxDecoration(Colors.white, const Offset(0, 0)),
-                  child: RemarksSection(
-                    operatorState: operatorState,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                // Use provider-based BottomTabView
-                Container(
-                  height: 260,
-                  decoration: containerBoxDecoration(null, const Offset(2, 4)),
-                  child: Stack(
-                    children: [
-                      BottomTabView(
-                        tabsData: tabsData,
-                        operatorState: operatorState,
-                        isFromHrScreen: true,
-                        selectedMonth: selectedMonth.toString(),
-                        selectedYear: selectedYear.toString(),
-                      ),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Container(
-                          width: 40.0,
-                          height: 50,
-                          color: Colors.white,
-                          child: const Center(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.arrow_back_ios_rounded, size: 20, color: Colors.black),
-                                Icon(Icons.arrow_forward_ios_rounded, size: 20, color: Colors.black),
-                              ],
+                    ),
+                    SliverToBoxAdapter(
+                        child: _buildHeaderContent(fullConsultantData)),
+                    SliverPersistentHeader(
+                      pinned: true,
+                      floating: true,
+                      delegate: FixedHeaderDelegate(
+                        height: 130 + calendarHeight,
+                        customData: customData,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 5),
+                              width: double.infinity,
+                              color: const Color(0xffF5F5F5),
+                              child: _stepperUI(context, iconData, activeIndex),
                             ),
-                          ),
+                            const SizedBox(height: 5),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 7,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: CalendarScreen(
+                                selectedMonth: selectedMonth,
+                                selectedYear: selectedYear,
+                                onHeightCalculated: _updateCalendarHeight,
+                                customData: customData,
+                                isFromHrScreen: true,
+                                onMonthChanged: (month, year) async {
+                                  setState(() {
+                                    selectedMonth = month;
+                                    selectedYear = year;
+                                  });
+                                  _refreshData();
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ];
+                },
+                body: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      // Use provider-based RemarksSection
+                      Container(
+                        height: 200,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        decoration: containerBoxDecoration(
+                            Colors.white, const Offset(0, 0)),
+                        child: RemarksSection(
+                          operatorState: operatorState,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      // Use provider-based BottomTabView
+                      Container(
+                        height: 260,
+                        decoration:
+                            containerBoxDecoration(null, const Offset(2, 4)),
+                        child: Stack(
+                          children: [
+                            BottomTabView(
+                              tabsData: tabsData,
+                              operatorState: operatorState,
+                              isFromHrScreen: true,
+                              selectedMonth: selectedMonth.toString(),
+                              selectedYear: selectedYear.toString(),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                width: 40.0,
+                                height: 50,
+                                color: Colors.white,
+                                child: const Center(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.arrow_back_ios_rounded,
+                                          size: 20, color: Colors.black),
+                                      Icon(Icons.arrow_forward_ios_rounded,
+                                          size: 20, color: Colors.black),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
+              ),
       ),
     );
   }
@@ -386,24 +403,30 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
                 if (index < 0 || index >= consultancies.length) return;
 
                 final selectedData = consultancies[index];
-                ref.read(operatorProvider.notifier).getSelectedConsultantDetails(selectedData);
+                ref
+                    .read(operatorProvider.notifier)
+                    .getSelectedConsultantDetails(selectedData);
 
                 setState(() {
                   _selectedRowIndex = index;
                   selectedFullData = selectedData;
-                  customData = parseTimelineData(selectedData['timesheet_data'] ?? []);
+                  customData =
+                      parseTimelineData(selectedData['timesheet_data'] ?? []);
                 });
               },
               columns: [
                 GridColumn(
                   columnName: 'emp_name',
                   width: 110,
-                  label: _buildHeaderCell('Name', iconPath: 'assets/icons/search_o.svg'),
+                  label: _buildHeaderCell('Name',
+                      iconPath: 'assets/icons/search_o.svg'),
                 ),
                 GridColumn(
                   columnName: 'status',
                   width: 80,
-                  label: _buildHeaderCell('Queue', iconPath: 'assets/icons/queue.svg', alignment: Alignment.center),
+                  label: _buildHeaderCell('Queue',
+                      iconPath: 'assets/icons/queue.svg',
+                      alignment: Alignment.center),
                 ),
               ],
             ),
@@ -413,11 +436,14 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
     );
   }
 
-  Widget _buildHeaderCell(String title, {String? iconPath, Alignment alignment = Alignment.centerLeft}) {
+  Widget _buildHeaderCell(String title,
+      {String? iconPath, Alignment alignment = Alignment.centerLeft}) {
     return Align(
       alignment: alignment,
       child: Row(
-        mainAxisAlignment: alignment == Alignment.center ? MainAxisAlignment.center : MainAxisAlignment.start,
+        mainAxisAlignment: alignment == Alignment.center
+            ? MainAxisAlignment.center
+            : MainAxisAlignment.start,
         children: [
           Text(
             title,
@@ -458,7 +484,8 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
     );
   }
 
-  BoxDecoration containerBoxDecoration([Color? color, Offset shadowOffset = const Offset(0, 2)]) {
+  BoxDecoration containerBoxDecoration(
+      [Color? color, Offset shadowOffset = const Offset(0, 2)]) {
     return BoxDecoration(
       color: color,
       borderRadius: BorderRadius.circular(3),
@@ -472,7 +499,8 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
     );
   }
 
-  Widget _stepperUI(BuildContext context, List<String> svgIcons, int activeIndex) {
+  Widget _stepperUI(
+      BuildContext context, List<String> svgIcons, int activeIndex) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(svgIcons.length, (index) {
@@ -531,7 +559,8 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double height;
   final dynamic customData;
 
-  FixedHeaderDelegate({required this.child, required this.height, required this.customData});
+  FixedHeaderDelegate(
+      {required this.child, required this.height, required this.customData});
 
   @override
   double get minExtent => height;
@@ -539,7 +568,8 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return SizedBox(height: height, child: child);
   }
 

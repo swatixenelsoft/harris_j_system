@@ -62,7 +62,8 @@ class _OperatorClaimScreenState extends ConsumerState<FinanceClaimScreen> {
   }
 
   void _showConsultancyPopup(
-      BuildContext context, Map<String, dynamic> consultancy) {
+      BuildContext context, Map<String, dynamic> consultancy)
+  {
     showModalBottomSheet(
       context: context,
       isScrollControlled: false,

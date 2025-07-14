@@ -80,6 +80,7 @@ class ApiService {
       }
     }
   }
+
   Future<Map<String, dynamic>> fetchState(String country, String token) async {
     print(ApiConstant.countries + country);
     try {
@@ -549,13 +550,11 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> backDatedClaims(String userId,String month,String year,String token) async
-  {
+  Future<Map<String, dynamic>> backDatedClaims(
+      String userId, String month, String year, String token) async {
     try {
-
-
       FormData formData = FormData.fromMap({
-        'user_id':userId,
+        'user_id': userId,
         'month': month,
         'year': year,
       });
@@ -1029,8 +1028,7 @@ class ApiService {
     String month,
     String year,
     String token,
-  ) async
-  {
+  ) async {
     try {
       FormData formData = FormData.fromMap({
         'client_id': clientId,
@@ -1530,16 +1528,16 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> addLookUp(
-      String consultancyId,
-      String propertyName,
-      String propertyDescription,
-      bool status,
-      String hexColor,
-      List lookupOptions,
-      String token,
-      String id,
-      String index,
-      ) async {
+    String consultancyId,
+    String propertyName,
+    String propertyDescription,
+    bool status,
+    String hexColor,
+    List lookupOptions,
+    String token,
+    String id,
+    String index,
+  ) async {
     try {
       FormData formData = FormData.fromMap({
         'consultancy_id': consultancyId,
@@ -1550,7 +1548,6 @@ class ApiService {
         'lookup_options': lookupOptions,
         if (id != "") 'id': id,
         if (index != "") 'lookup_option_index': index,
-
       });
       print('formData $token, ${formData.fields}');
 
@@ -1616,6 +1613,7 @@ class ApiService {
       }
     }
   }
+
   Future<Map<String, dynamic>> createHoliday({
     required String consultancyId,
     required String holidayProfileName,
@@ -1629,8 +1627,7 @@ class ApiService {
     required String childHolidayValidUpto,
     required int childHolidayStatus,
     required String token,
-  })  async
-  {
+  }) async {
     try {
       FormData formData = FormData.fromMap({
         'consultancy_id': consultancyId,
@@ -1664,13 +1661,13 @@ class ApiService {
     } on DioException catch (e) {
       print('erro ${e.toString()}');
       if (e.response != null) {
-        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+        return e.response?.data ??
+            {'success': false, 'message': 'Unknown error'};
       } else {
         return {'success': false, 'message': 'No response from server'};
       }
     }
   }
-
 
   Future<Map<String, dynamic>> addHoliday({
     required String consultancyId,
@@ -1681,8 +1678,7 @@ class ApiService {
     required int holidayProfileStatus,
     required String parentId,
     required String token,
-  })  async
-  {
+  }) async {
     try {
       FormData formData = FormData.fromMap({
         'consultancy_id': consultancyId,
@@ -1691,7 +1687,7 @@ class ApiService {
         'days_count': daysCount,
         'valid_upto': validUpto,
         'status': holidayProfileStatus,
-       'parent_id':parentId,
+        'parent_id': parentId,
       });
 
       print('formData $token, ${formData.fields}');
@@ -1712,7 +1708,8 @@ class ApiService {
     } on DioException catch (e) {
       print('erro ${e.toString()}');
       if (e.response != null) {
-        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+        return e.response?.data ??
+            {'success': false, 'message': 'Unknown error'};
       } else {
         return {'success': false, 'message': 'No response from server'};
       }
@@ -1720,7 +1717,6 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> editHoliday({
-
     required String holidayProfileName,
     required String holidayProfileDate,
     required int daysCount,
@@ -1728,17 +1724,15 @@ class ApiService {
     required int holidayProfileStatus,
     required String id,
     required String token,
-  })  async
-  {
+  }) async {
     try {
       FormData formData = FormData.fromMap({
-
         'holiday_name': holidayProfileName,
         'holiday_date': holidayProfileDate,
         'days_count': daysCount,
         'valid_upto': validUpto,
         'status': holidayProfileStatus,
-        'id':id,
+        'id': id,
       });
 
       print('formData $token, ${formData.fields}');
@@ -1759,19 +1753,18 @@ class ApiService {
     } on DioException catch (e) {
       print('erro ${e.toString()}');
       if (e.response != null) {
-        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+        return e.response?.data ??
+            {'success': false, 'message': 'Unknown error'};
       } else {
         return {'success': false, 'message': 'No response from server'};
       }
     }
   }
 
-
   Future<Map<String, dynamic>> getHolidayList(
-      String userId,
-      String token,
-      ) async {
-
+    String userId,
+    String token,
+  ) async {
     try {
       FormData formData = FormData.fromMap({
         'user_id': userId,
@@ -1779,7 +1772,7 @@ class ApiService {
       print('formData $token, ${formData.fields}');
       final response = await _dio.post(
         ApiConstant.getHolidayList, // make sure this constant is correct
-        data:formData,
+        data: formData,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -1792,20 +1785,17 @@ class ApiService {
       return response.data;
     } on DioException catch (e) {
       if (e.response != null) {
-        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+        return e.response?.data ??
+            {'success': false, 'message': 'Unknown error'};
       } else {
         return {'success': false, 'message': 'No response from server'};
       }
     }
   }
 
-
-
-Future<Map<String, dynamic>> getDesignation(
-       String userId, String token) async
-  {
+  Future<Map<String, dynamic>> getDesignation(
+      String userId, String token) async {
     try {
-
       final formData = FormData.fromMap({'user_id': userId});
       print('formData $token, ${formData.fields}');
 
@@ -1835,11 +1825,8 @@ Future<Map<String, dynamic>> getDesignation(
     }
   }
 
-  Future<Map<String, dynamic>> getRole(
-      String userId, String token) async
-  {
+  Future<Map<String, dynamic>> getRole(String userId, String token) async {
     try {
-
       final formData = FormData.fromMap({'user_id': userId});
       print('formData $token, ${formData.fields}');
 
@@ -1870,10 +1857,8 @@ Future<Map<String, dynamic>> getDesignation(
   }
 
   Future<Map<String, dynamic>> getSystemPropertyList(
-      String userId, String token) async
-  {
+      String userId, String token) async {
     try {
-
       final formData = FormData.fromMap({'user_id': userId});
       print('formData $token, ${formData.fields}');
 
@@ -1903,11 +1888,8 @@ Future<Map<String, dynamic>> getDesignation(
     }
   }
 
-
-  Future<Map<String, dynamic>> operatorDashBoard(String token) async
-  {
+  Future<Map<String, dynamic>> operatorDashBoard(String token) async {
     try {
-
       print('formData $token');
 
       final response = await _dio.post(
@@ -1935,14 +1917,12 @@ Future<Map<String, dynamic>> getDesignation(
     }
   }
 
-
   Future<Map<String, dynamic>> getConsultantClaimsByClientOperator(
-      String clientId,
-      String month,
-      String year,
-      String token,
-      ) async
-  {
+    String clientId,
+    String month,
+    String year,
+    String token,
+  ) async {
     try {
       FormData formData = FormData.fromMap({
         'client_id': clientId,
@@ -1979,12 +1959,11 @@ Future<Map<String, dynamic>> getDesignation(
   }
 
   Future<Map<String, dynamic>> getConsultantTimesheetByClientOperator(
-      String clientId,
-      String month,
-      String year,
-      String token,
-      ) async
-  {
+    String clientId,
+    String month,
+    String year,
+    String token,
+  ) async {
     try {
       FormData formData = FormData.fromMap({
         'client_id': clientId,
@@ -2020,4 +1999,35 @@ Future<Map<String, dynamic>> getDesignation(
     }
   }
 
+  Future<Map<String, dynamic>> getFinanceClientList(
+    String token,
+  ) async {
+    try {
+      print('formData $token');
+      final response = await _dio.post(
+        ApiConstant.financeClientList,
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
 }

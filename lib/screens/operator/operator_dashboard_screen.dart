@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:developer';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +11,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/providers/operator_provider.dart';
 import 'package:harris_j_system/screens/navigation/constant.dart';
 import 'package:harris_j_system/services/api_service.dart';
+import 'package:harris_j_system/ulits/custom_loader.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
+import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_search_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:pie_chart/pie_chart.dart';
@@ -89,6 +93,8 @@ class _OperatorDashboardScreenState
 
   String? _selectedClient;
   String? _selectedClientId;
+  bool showInfoSections = true;
+  Timer? _hideDashboardTimer;
 
   List<String> _clientList = [];
   List<Map<String, dynamic>> _rawClientList = [];
@@ -99,6 +105,30 @@ class _OperatorDashboardScreenState
   void initState() {
     super.initState();
     getClientList();
+    _startHideDashboardTimer();
+  }
+
+
+  void _startHideDashboardTimer() {
+    _hideDashboardTimer?.cancel();
+    _hideDashboardTimer = Timer(const Duration(seconds: 5), () {
+      setState(() {
+        showInfoSections = false;
+      });
+    });
+  }
+
+  void _onDashboardHoldStart() {
+    _hideDashboardTimer?.cancel();
+    setState(() {
+      showInfoSections = true;
+    });
+  }
+
+  void _onDashboardHoldEnd() {
+    setState(() {
+      showInfoSections = false;
+    });
   }
 
   @override
@@ -110,7 +140,6 @@ class _OperatorDashboardScreenState
   getClientList() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
-
 
     final client =
         await ref.read(operatorProvider.notifier).getOperatorDashboard(token!);
@@ -131,7 +160,7 @@ class _OperatorDashboardScreenState
       _selectedClientId = _rawClientList[0]['id'].toString();
       _selectedClient = _rawClientList[0]['serving_client'].toString();
       timesheetData = _rawClientList[0]['timesheet_stats'];
-      workLogData=_rawClientList[0]['working_log'];
+      workLogData = _rawClientList[0]['working_log'];
       print(
           '_selectedClientId11 $_selectedClientId,$_selectedClient,$timesheetData,$workLogData');
 
@@ -153,320 +182,381 @@ class _OperatorDashboardScreenState
     final List<Widget> pages = [
       _buildTimesheetCard(),
       _buildTimesheetCard(),
-
     ];
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // App Bar
-              CustomAppBar(
-                showBackButton: false,
-                showProfileIcon: true,
-                image: 'assets/icons/cons_logo.png',
-                onProfilePressed: () async {
-                  try {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.clear();
-                    if (context.mounted) {
-                      context.pushReplacement(Constant.login);
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error logging out: $e')),
-                      );
-                    }
-                  }
-                },
-              ),
-              // User Greeting & Button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  "Hi Operator",
-                  style: GoogleFonts.montserrat(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xff5A5A5A),
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: double.infinity,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    "Turn-in-rate: 90/100",
-                    style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.end,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              if (_rawClientList.isNotEmpty && _selectedClient != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: CustomClientDropdown(
-                    clients: _rawClientList,
-                    initialClientName: _selectedClient,
-                    onChanged: (selectedName, selectedId) async {
-                      FocusScope.of(context).unfocus();
-                      final selectedClient = _rawClientList.firstWhere(
-                        (client) => client['id'].toString() == selectedId,
-                        orElse: () => {},
-                      );
-
-                      if (selectedClient.isNotEmpty) {
-                        setState(() {
-                          _selectedClient = selectedName;
-                          _selectedClientId = selectedId;
-                          timesheetData = selectedClient['timesheet_stats'];
-                        });
-
-                        // getDashBoardByClient();
+      body: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // App Bar
+                  CustomAppBar(
+                    showBackButton: false,
+                    showProfileIcon: true,
+                    image: 'assets/icons/cons_logo.png',
+                    onProfilePressed: () async {
+                      try {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.clear();
+                        if (context.mounted) {
+                          context.pushReplacement(Constant.login);
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error logging out: $e')),
+                          );
+                        }
                       }
                     },
                   ),
-                ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'My Dashboard',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  height: 216,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 15,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: 180,
-                        child: PageView(controller: _pageController,
-                            onPageChanged: (index) {
-                              setState(() {
-                                _currentPage = index;
-                              });
-                            },
-                            children:pages),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Total Activity",
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: Colors.black,
-                      ),
-                    ),
-                    Container(
-                      height: 40,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xffE8E6EA)),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedPeriod,
-                          icon: const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: Color(0xff8D91A0),
-                            size: 25,
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'Monthly',
-                              child: Text(
-                                'Monthly',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xff8D91A0),
-                                ),
-                              ),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Weekly',
-                              child: Text(
-                                'Weekly',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xff8D91A0),
-                                ),
-                              ),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() {
-                                _selectedPeriod = value;
-                              });
-                            }
+
+                  SizedBox(height: showInfoSections ? 24 : 10),
+
+                  // User Greeting & Button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Hi Bruce Lee",
+                            style: GoogleFonts.montserrat(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xff5A5A5A))),
+                        CustomButton(
+                          text: "View Dashboard",
+                          onPressed: () {
+                            setState(() {
+                              showInfoSections = !showInfoSections;
+                            });
                           },
+                          height: 38,
+                          width: 151,
+                          isOutlined: true,
+                          borderRadius: 8,
+                          textStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w500,fontSize: 12,),
+                          icon: showInfoSections
+                              ? Icons.keyboard_arrow_up_sharp
+                              : Icons.keyboard_arrow_down_sharp,
                         ),
+
+                      ],
+                    ),
+                  ),
+
+                  if (showInfoSections) ...[
+                    SizedBox(height: 10),
+                    GestureDetector(
+                      onLongPressStart: (_) => _onDashboardHoldStart(),
+                      onLongPressEnd: (_) => _onDashboardHoldEnd(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Text(
+                                "Turn-in-rate: 90/100",
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xff000000),
+                                ),
+                                textAlign: TextAlign.end,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          if (_rawClientList.isNotEmpty && _selectedClient != null)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                              child: CustomClientDropdown(
+                                clients: _rawClientList,
+                                initialClientName: _selectedClient,
+                                onChanged: (selectedName, selectedId) async {
+                                  FocusScope.of(context).unfocus();
+                                  final selectedClient = _rawClientList.firstWhere(
+                                        (client) => client['id'].toString() == selectedId,
+                                    orElse: () => {},
+                                  );
+                      
+                                  if (selectedClient.isNotEmpty) {
+                                    setState(() {
+                                      _selectedClient = selectedName;
+                                      _selectedClientId = selectedId;
+                                      timesheetData =
+                                      selectedClient['timesheet_stats'];
+                                    });
+                      
+                                    // getDashBoardByClient();
+                                  }
+                                },
+                              ),
+                            ),
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Text(
+                              'My Dashboard',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Container(
+                              height: 216,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 15,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 180,
+                                    child: PageView(
+                                        controller: _pageController,
+                                        onPageChanged: (index) {
+                                          setState(() {
+                                            _currentPage = index;
+                                          });
+                                        },
+                                        children: pages),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Total Activity",
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                Container(
+                                  height: 40,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    border:
+                                    Border.all(color: const Color(0xffE8E6EA)),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: _selectedPeriod,
+                                      icon: const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Color(0xff8D91A0),
+                                        size: 25,
+                                      ),
+                                      items:  [
+                                        DropdownMenuItem(
+                                          value: 'Monthly',
+                                          child: Text(
+                                            'Monthly',
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                              color: const Color(0xff8D91A0),
+                                            ),
+                                          ),
+                                        ),
+                                        DropdownMenuItem(
+                                          value: 'Weekly',
+                                          child: Text(
+                                            'Weekly',
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                              color: const Color(0xff8D91A0),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                      onChanged: (value) {
+                                        if (value != null) {
+                                          setState(() {
+                                            _selectedPeriod = value;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          consultancyCard(
+                            count: "200",
+                            label: "Total Manual Review",
+                            iconPath: 'assets/icons/operator1.svg',
+                          ),
+                          const SizedBox(height: 16),
+                          consultancyCard(
+                            count: "200",
+                            label: "Total Auto Approved Timesheets",
+                            iconPath: 'assets/icons/operator2.svg',
+                          ),
+                          const SizedBox(height: 16),
+                          consultancyCard(
+                            count: "200",
+                            label: "Total Draft For Submission For The Day",
+                            iconPath: 'assets/icons/operator3.svg',
+                          ),
+                      
+                        ],
+                      ),
+                    )
+
+                  ],
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: SizedBox(
+                      height: MediaQuery.sizeOf(context).height * 0.9,
+                      child: MasonryGridView.builder(
+                        itemCount: 4, // Adjusted to match defined cards
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        gridDelegate:
+                            const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                        ),
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        itemBuilder: (context, index) {
+                          Widget card;
+                          switch (index) {
+                            case 0:
+                              card = GestureDetector(
+                                onTap: () {
+                                  context.push(Constant.humanResourcesScreen);
+                                },
+                                child: BottomCard(
+                                  title: "Human Resources",
+                                  bgColor:
+                                      const Color.fromRGBO(255, 25, 1, 0.09),
+                                  textColor: Colors.black,
+                                  image: 'assets/images/gridView6.png',
+                                  index: index,
+                                ),
+                              );
+                              break;
+                            case 1:
+                              card = GestureDetector(
+                                onTap: () {
+                                  context.push(Constant.operatorClaimScreen);
+                                },
+                                child: BottomCard(
+                                  title: "Claims",
+                                  lightRed: true,
+                                  bgColor:
+                                      const Color.fromRGBO(255, 219, 181, 1),
+                                  textColor: const Color(0xff5A5A5A),
+                                  image: 'assets/images/gridView7.png',
+                                  index: index,
+                                ),
+                              );
+                              break;
+                            case 2:
+                              card = GestureDetector(
+                                onTap: () {
+                                  context.push(Constant.operatorReportScreen);
+                                },
+                                child: BottomCard(
+                                  title: "Reports",
+                                  white: true,
+                                  bgColor:
+                                      const Color.fromRGBO(246, 246, 246, 1),
+                                  textColor: const Color(0xff5A5A5A),
+                                  image: 'assets/images/gridView8.png',
+                                  index: index,
+                                ),
+                              );
+                              break;
+                            case 3:
+                              card = GestureDetector(
+                                onTap: () {
+                                  context.push(Constant.operatorFeedbackScreen);
+                                },
+                                child: BottomCard(
+                                  title: "Feedback",
+                                  orange: true,
+                                  bgColor:
+                                      const Color.fromRGBO(229, 241, 255, 1),
+                                  textColor: const Color(0xff5A5A5A),
+                                  image: 'assets/images/gridView9.png',
+                                  index: index,
+                                ),
+                              );
+                              break;
+
+                            default:
+                              card = const SizedBox.shrink();
+                          }
+                          if (index == 1) {
+                            return Container(
+                              margin: const EdgeInsets.only(top: 20),
+                              child: card,
+                            );
+                          }
+                          return card;
+                        },
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              consultancyCard(
-                count: "200",
-                label: "Total Manual Review",
-                iconPath: 'assets/icons/operator1.svg',
-              ),
-              const SizedBox(height: 16),
-              consultancyCard(
-                count: "200",
-                label: "Total Auto Approved Timesheets",
-                iconPath: 'assets/icons/operator2.svg',
-              ),
-              const SizedBox(height: 16),
-              consultancyCard(
-                count: "200",
-                label: "Total Draft For Submission For The Day",
-                iconPath: 'assets/icons/operator3.svg',
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: SizedBox(
-                  height: MediaQuery.sizeOf(context).height * 0.8,
-                  child: MasonryGridView.builder(
-                    itemCount: 5, // Adjusted to match defined cards
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    gridDelegate:
-                        const SliverSimpleGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                    ),
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    itemBuilder: (context, index) {
-                      Widget card;
-                      switch (index) {
-                        case 0:
-                          card = GestureDetector(
-                            onTap: () {
-                              context.push(Constant.humanResourcesScreen);
-                            },
-                            child: BottomCard(
-                              title: "Human Resources",
-                              bgColor: const Color.fromRGBO(255, 25, 1, 0.09),
-                              textColor: Colors.black,
-                              image: 'assets/images/gridView6.png',
-                              index: index,
-                            ),
-                          );
-                          break;
-                        case 1:
-                          card = GestureDetector(
-                            onTap: () {
-                              context.push(Constant.operatorClaimScreen);
-                            },
-                            child: BottomCard(
-                              title: "Claims",
-                              lightRed: true,
-                              bgColor: const Color.fromRGBO(255, 219, 181, 1),
-                              textColor: const Color(0xff5A5A5A),
-                              image: 'assets/images/gridView7.png',
-                              index: index,
-                            ),
-                          );
-                          break;
-                        case 2:
-                          card = GestureDetector(
-                            onTap: () {
-                              context.push(Constant.operatorReportScreen);
-                            },
-                            child: BottomCard(
-                              title: "Reports",
-                              white: true,
-                              bgColor: const Color.fromRGBO(246, 246, 246, 1),
-                              textColor: const Color(0xff5A5A5A),
-                              image: 'assets/images/gridView8.png',
-                              index: index,
-                            ),
-                          );
-                          break;
-                        case 3:
-                          card = GestureDetector(
-                            onTap: () {
-                              context.push(Constant.operatorFeedbackScreen);
-                            },
-                            child: BottomCard(
-                              title: "Feedback",
-                              orange: true,
-                              bgColor: const Color.fromRGBO(229, 241, 255, 1),
-                              textColor: const Color(0xff5A5A5A),
-                              image: 'assets/images/gridView9.png',
-                              index: index,
-                            ),
-                          );
-                          break;
-
-                        default:
-                          card = const SizedBox.shrink();
-                      }
-                      if (index == 1) {
-                        return Container(
-                          margin: const EdgeInsets.only(top: 20),
-                          child: card,
-                        );
-                      }
-                      return card;
-                    },
+            ),
+          ),
+          if (isLoading)
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
+                child: Container(
+                  color: Colors.black.withOpacity(0.2),
+                  alignment: Alignment.center,
+                  child: const CustomLoader(
+                    color: Color(0xffFF1901),
+                    size: 35,
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildTimesheetCard(){
-    return    Row(
+  Widget _buildTimesheetCard() {
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Left side: Info
@@ -503,20 +593,17 @@ class _OperatorDashboardScreenState
               const SizedBox(height: 40),
               LegendDot(
                 color: const Color(0xff28A745),
-                label:
-                "Submitted: ${timesheetData!['Submitted']!.toInt()}",
+                label: "Submitted: ${timesheetData!['Submitted']!.toInt()}",
               ),
               const SizedBox(height: 8),
               LegendDot(
                 color: const Color(0xff007BFF),
-                label:
-                "Approved: ${timesheetData!['Approved']!.toInt()}",
+                label: "Approved: ${timesheetData!['Approved']!.toInt()}",
               ),
               const SizedBox(height: 8),
               LegendDot(
                 color: const Color(0xffFF1901),
-                label:
-                "Rejected: ${timesheetData!['Rejected']!.toInt()}",
+                label: "Rejected: ${timesheetData!['Rejected']!.toInt()}",
               ),
             ],
           ),
@@ -526,12 +613,9 @@ class _OperatorDashboardScreenState
           width: 120,
           child: PieChart(
             dataMap: {
-              "Submitted":
-              (timesheetData!['Submitted'] ?? 0).toDouble(),
-              "Approved":
-              (timesheetData!['Approved'] ?? 0).toDouble(),
-              "Rejected":
-              (timesheetData!['Rejected'] ?? 0).toDouble(),
+              "Submitted": (timesheetData!['Submitted'] ?? 0).toDouble(),
+              "Approved": (timesheetData!['Approved'] ?? 0).toDouble(),
+              "Rejected": (timesheetData!['Rejected'] ?? 0).toDouble(),
             },
             chartType: ChartType.disc,
             baseChartColor: Colors.grey[200]!,

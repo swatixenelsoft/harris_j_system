@@ -30,7 +30,7 @@ class OperatorClaimScreen extends ConsumerStatefulWidget {
 }
 
 class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
-  int activeIndex = 0;
+  int activeIndex = -1;
   int? _selectedRowIndex;
   double calendarHeight = 350;
   String? token;
@@ -52,19 +52,12 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
     'assets/icons/icon2.svg',
     'assets/icons/icon3.svg',
     'assets/icons/icon4.svg',
-    'assets/icons/icon4.svg',
     'assets/icons/icon5.svg',
     'assets/icons/icon7.svg',
   ];
+
   final List<String> tabsData = ["Claims", "Get Copies"];
-  List<Map<String, dynamic>> consultanciesData = [
-    {'name': 'Bruce Lee', 'loggedHours': '0/160', 'actions': {}},
-    {'name': 'Bruce Lee', 'loggedHours': '0/160', 'actions': {}},
-    {'name': 'Bruce Lee', 'loggedHours': '0/160', 'actions': {}},
-    {'name': 'Bruce Lee', 'loggedHours': '0/160', 'actions': {}},
-    {'name': 'Bruce Lee', 'loggedHours': '0/160', 'actions': {}},
-    {'name': 'Bruce Lee', 'loggedHours': '0/160', 'actions': {}},
-  ];
+
   void _updateCalendarHeight(double newHeight) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -77,8 +70,7 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
   }
 
   void _showConsultancyPopup(
-      BuildContext context, Map<String, dynamic> consultancy)
-  {
+      BuildContext context, Map<String, dynamic> consultancy) {
     print('consultancy $consultancy');
     showModalBottomSheet(
       context: context,
@@ -110,9 +102,8 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
 
-
     final client =
-    await ref.read(operatorProvider.notifier).getOperatorDashboard(token!);
+        await ref.read(operatorProvider.notifier).getOperatorDashboard(token!);
     print('client $client');
 
     _rawClientList = (client['data'] != null && client['data'] is List)
@@ -130,8 +121,7 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
       _selectedClientId = _rawClientList[0]['id'].toString();
       _selectedClient = _rawClientList[0]['serving_client'].toString();
 
-      print(
-          '_selectedClientId11 $_selectedClientId,$_selectedClient');
+      print('_selectedClientId11 $_selectedClientId,$_selectedClient');
 
       // ✅ Optionally fetch consultants for the first client
     }
@@ -153,9 +143,41 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
     ref.read(operatorProvider.notifier).setLoading(true);
     await getClientList();
     await getConsultantClaimsByClient();
+    await updateActiveIndexFromStatus();
     ref.read(operatorProvider.notifier).setLoading(false);
   }
 
+  updateActiveIndexFromStatus() {
+    final status = ref.read(operatorProvider).selectedConsultantData['status'];
+    print('claimsDetails $status');
+
+    if (mounted) {
+      setState(() {
+        switch (status) {
+          case null:
+            activeIndex = -1;
+            break;
+          case 'Draft':
+            activeIndex = 0;
+            break;
+          case 'Submitted':
+            activeIndex = 1;
+            break;
+          case 'Rejected':
+            activeIndex = 3;
+            break;
+          case 'Approved':
+            activeIndex = 4;
+            break;
+          case 'Rework':
+            activeIndex = 5;
+            break;
+          default:
+            activeIndex = -1; // fallback if status is unknown
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -164,8 +186,7 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
   }
 
   Map<DateTime, List<Map<String, dynamic>>> parseTimelineData(
-      List<dynamic> json)
-  {
+      List<dynamic> json) {
     final Map<DateTime, List<Map<String, dynamic>>> data = {};
 
     for (var item in json) {
@@ -202,35 +223,32 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
         'id': id,
       });
     }
-    print('data claims $data');
-
-
     return data;
   }
 
-  void _refreshData() async {
+  Future<void> _refreshData() async {
     print('selectedMonth $selectedMonth');
 
     if (token != null) {
       await ref.read(operatorProvider.notifier).getConsultantClaimsByClient(
-        _selectedClientId!,
-        selectedMonth.toString().padLeft(2, '0'),
-        selectedYear.toString(),
-        token!,
-        previouslySelectedConsultant: selectedFullData,
-      );
+            _selectedClientId!,
+            selectedMonth.toString().padLeft(2, '0'),
+            selectedYear.toString(),
+            token!,
+            previouslySelectedConsultant: selectedFullData,
+          );
 
       // ✅ Now re-read the updated provider state
       final hrState = ref.read(operatorProvider);
       final updatedClaims = hrState.selectedConsultantData['claims'] ?? [];
-
-      print('updatedClaims $updatedClaims');
 
       final newParsedData = parseTimelineData(updatedClaims);
 
       setState(() {
         customData = newParsedData;
       });
+
+      await updateActiveIndexFromStatus();
 
       print('✅ Updated customData for month $selectedMonth => $customData');
     }
@@ -239,104 +257,109 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
   @override
   Widget build(BuildContext context) {
     final operatorState = ref.watch(operatorProvider);
-    final List<dynamic> fullConsultantData = operatorState.hrConsultantList ?? [];
-    final List<dynamic> claimsDetails =operatorState.selectedConsultantData['claim_tab']??[];
+    final List<dynamic> fullConsultantData =
+        operatorState.hrConsultantList ?? [];
+    final List<dynamic> claimsDetails =
+        operatorState.selectedConsultantData['claim_tab'] ?? [];
     final isLoading = operatorState.isLoading;
-    log('claimsDetails $claimsDetails');
 
     return Scaffold(
       body: Stack(
         children: [
           SafeArea(
-          child: NestedScrollView(
-            physics: const ClampingScrollPhysics(),
-            headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-              return <Widget>[
-                SliverAppBar(
-                  automaticallyImplyLeading: false,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: CustomAppBar(
-                      showBackButton: false,
-                      image: 'assets/icons/cons_logo.png',
-                      onProfilePressed: () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.clear();
-                        context.pushReplacement(Constant.login);
-                      },
+            child: NestedScrollView(
+              physics: const ClampingScrollPhysics(),
+              headerSliverBuilder:
+                  (BuildContext context, bool innerBoxIsScrolled) {
+                return <Widget>[
+                  SliverAppBar(
+                    automaticallyImplyLeading: false,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: CustomAppBar(
+                        showBackButton: false,
+                        image: 'assets/icons/cons_logo.png',
+                        onProfilePressed: () async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.clear();
+                          context.pushReplacement(Constant.login);
+                        },
+                      ),
                     ),
                   ),
-                ),
-                SliverToBoxAdapter(child: _buildHeaderContent(fullConsultantData)),
-                SliverPersistentHeader(
-                  pinned: true,
-                  floating: true,
-                  delegate: FixedHeaderDelegate(
-                    height: 180 + calendarHeight,
-                    customData: customData,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 5, vertical: 5),
-                          width: double.infinity,
-                          color: const Color(0xffF5F5F5),
-                          child: _stepperUI(context, iconData, activeIndex),
-                        ),
-                        const SizedBox(height: 5),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 7,
-                                spreadRadius: 1,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
+                  SliverToBoxAdapter(
+                      child: _buildHeaderContent(fullConsultantData)),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    floating: true,
+                    delegate: FixedHeaderDelegate(
+                      height: 180 + calendarHeight,
+                      activeIndex: activeIndex,
+                      customData: customData,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 5),
+                            width: double.infinity,
+                            color: const Color(0xffF5F5F5),
+                            child: _stepperUI(context, iconData, activeIndex),
                           ),
-                          child: CalendarScreen(
-                            selectedMonth: selectedMonth,
-                            selectedYear: selectedYear,
-                            onHeightCalculated: _updateCalendarHeight,
-                            customData: customData,
-                            isFromClaimScreen: true,
-                            isFromHrScreen: true,
-                            claimsDetails:claimsDetails,
-                            backDatedClaims: (operatorState.selectedConsultantData['data'] is Map)
-                                ? Map<String, dynamic>.from(operatorState.selectedConsultantData['data'])
-                                : {},
-                            onMonthChanged: (month, year) async {
-                              setState(() {
-                                selectedMonth = month;
-                                selectedYear = year;
-                              });
-                              _refreshData();
-                            },
+                          const SizedBox(height: 5),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 7,
+                                  spreadRadius: 1,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: CalendarScreen(
+                              selectedMonth: selectedMonth,
+                              selectedYear: selectedYear,
+                              onHeightCalculated: _updateCalendarHeight,
+                              customData: customData,
+                              isFromClaimScreen: true,
+                              isFromHrScreen: true,
+                              claimsDetails: claimsDetails,
+                              backDatedClaims: (operatorState
+                                      .selectedConsultantData['data'] is Map)
+                                  ? Map<String, dynamic>.from(operatorState
+                                      .selectedConsultantData['data'])
+                                  : {},
+                              onMonthChanged: (month, year) async {
+                                setState(() {
+                                  selectedMonth = month;
+                                  selectedYear = year;
+                                });
+                                _refreshData();
+                              },
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
+                ];
+              },
+              body: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    _buildRemarksSection(operatorState),
+                    const SizedBox(height: 10),
+                    _buildBottomTabView(tabsData, operatorState),
+                    const SizedBox(height: 30),
+                  ],
                 ),
-              ];
-            },
-            body: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  _buildRemarksSection(operatorState),
-                  const SizedBox(height: 10),
-                  _buildBottomTabView(tabsData, operatorState),
-                  const SizedBox(height: 30),
-                ],
               ),
             ),
           ),
-        ),
-
           if (isLoading)
             Positioned.fill(
               child: BackdropFilter(
@@ -357,19 +380,6 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
   }
 
   Widget _buildHeaderContent(List<dynamic> consultancies) {
-    // Get screen width using MediaQuery
-    final double screenWidth = MediaQuery.of(context).size.width;
-
-    // Define proportional column widths based on screen width
-    final double nameWidth = screenWidth * 0.25; // 25% of screen width
-    final double queueWidth = screenWidth * 0.20; // 15% of screen width
-    final double submittedWidth = screenWidth * 0.25; // 20% of screen width
-    final double claimNoWidth = screenWidth * 0.25; // 20% of screen width
-    final double numClaimsWidth = screenWidth * 0.4; // 25% of screen width
-    final double totalAmountWidth = screenWidth * 0.30; // 20% of screen width
-    final double actionWidth = screenWidth * 0.15; // 15% of screen width
-
-
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 15),
       decoration: BoxDecoration(
@@ -396,7 +406,7 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
                 onChanged: (selectedName, selectedId) async {
                   FocusScope.of(context).unfocus();
                   final selectedClient = _rawClientList.firstWhere(
-                        (client) => client['id'].toString() == selectedId,
+                    (client) => client['id'].toString() == selectedId,
                     orElse: () => {},
                   );
 
@@ -404,113 +414,148 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
                     setState(() {
                       _selectedClient = selectedName;
                       _selectedClientId = selectedId;
+                      _selectedRowIndex = -1;
+                      customData = {};
+                      activeIndex = -1;
                     });
 
                     print('_selectedClientId $_selectedClientId');
-                    // getDashBoardByClient();
+                    await getConsultantClaimsByClient();
+                    await updateActiveIndexFromStatus();
                   }
                 },
               ),
             ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 200,
-            child: SfDataGrid(
-              source: GenericDataSource(
-                data: consultancies.map<Map<String, dynamic>>((consultant) {
-                  final consultantInfo = consultant['consultant_info'] ?? {};
-                  print('consultantInfo $consultantInfo');
-                  return {
-                    'emp_name': consultantInfo['emp_name'] ?? 'N/A',
-                    'status': consultantInfo['status'],
-                    'submitted': consultantInfo['joining_date'] ?? '',
-                    'claim_no': consultantInfo['claim_no'] ?? 'N/A',
-                    'number_of_claims': '${consultantInfo['number_of_claims'] ?? '0'}',
-                    'total_amount': '\$${consultantInfo['total_amount'] ?? '0'}',
-                    'full_data': consultant,
-                  };
-                }).toList(),
-                columns: [
-                  'emp_name',
-                  'status',
-                  'submitted',
-                  'claim_no',
-                  'number_of_claims',
-                  'total_amount',
-                  'actions',
-                ],
-                onZoomTap: (rowData) {
-                  _showConsultancyPopup(context, rowData['full_data']);
-                },
-                selectedIndex: _selectedRowIndex,
-              ),
-              columnWidthMode: ColumnWidthMode.auto,
-              headerRowHeight: 40,
-              rowHeight: 52,
-              selectionMode: SelectionMode.single,
-              onCellTap: (details) {
-                final index = details.rowColumnIndex.rowIndex - 1;
-                if (index < 0 || index >= consultancies.length) return;
+            height: consultancies.isEmpty ? 50 : 200,
+            child: consultancies.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No Consultant Found",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  )
+                : SfDataGrid(
+                    source: GenericDataSource(
+                      data:
+                          consultancies.map<Map<String, dynamic>>((consultant) {
+                        final consultantInfo =
+                            consultant['consultant_info'] ?? {};
+                        print('consultantInfo $consultantInfo');
+                        return {
+                          'emp_name': consultantInfo['emp_name'] ?? 'N/A',
+                          'status': consultantInfo['status'],
+                          'submitted': consultantInfo['joining_date'] ?? '',
+                          'claim_no': consultantInfo['claim_no'] ?? 'N/A',
+                          'number_of_claims':
+                              '${consultantInfo['number_of_claims'] ?? '0'}',
+                          'total_amount':
+                              '\$${consultantInfo['total_amount'] ?? '0'}',
+                          'full_data': consultant,
+                        };
+                      }).toList(),
+                      columns: [
+                        'emp_name',
+                        'status',
+                        'submitted',
+                        'claim_no',
+                        'number_of_claims',
+                        'total_amount',
+                        'actions',
+                      ],
+                      onZoomTap: (rowData) {
+                        _showConsultancyPopup(context, rowData['full_data']);
+                      },
+                      selectedIndex: _selectedRowIndex,
+                    ),
+                    columnWidthMode: ColumnWidthMode.auto,
+                    headerRowHeight: 40,
+                    rowHeight: 52,
+                    selectionMode: SelectionMode.single,
+                    onCellTap: (details) async {
+                      final index = details.rowColumnIndex.rowIndex - 1;
+                      if (index < 0 || index >= consultancies.length) return;
 
-                final selectedData = consultancies[index];
-                ref.read(operatorProvider.notifier).getSelectedConsultantDetails(selectedData);
+                      final selectedData = consultancies[index];
+                      ref
+                          .read(operatorProvider.notifier)
+                          .getSelectedConsultantDetails(selectedData);
 
-                setState(() {
-                  _selectedRowIndex = index;
-                  selectedFullData = selectedData;
-                  customData = parseTimelineData(selectedData['claims'] ?? []);
-                });
-              },
-              columns: [
-                GridColumn(
-                  columnName: 'emp_name',
-                  width: 110,
-                  label: _buildHeaderCell('Name', iconPath: 'assets/icons/search_o.svg'),
-                ),
-                GridColumn(
-                  columnName: 'status',
-                  width: 80,
-                  label: _buildHeaderCell('Queue', iconPath: 'assets/icons/queue.svg', alignment: Alignment.center),
-                ),
-                GridColumn(
-                  columnName: 'submitted',
-                  width: 100,
-                  label: _buildHeaderCell('Submitted', iconPath: 'assets/icons/hrs.svg'),
-                ),
-                GridColumn(
-                  columnName: 'claim_no',
-                  width: 80,
-                  label: _buildHeaderCell('Claim No', iconPath: 'assets/icons/hrs.svg'),
-                ),
-                GridColumn(
-                  columnName: 'number_of_claims',
-                  width: 130,
-                  label: _buildHeaderCell('Number of Claims', iconPath: 'assets/icons/hrs.svg', alignment: Alignment.center),
-                ),
-                GridColumn(
-                  columnName: 'total_amount',
-                  width: 110,
-                  label: _buildHeaderCell('Total Amount', iconPath: 'assets/icons/hrs.svg', alignment: Alignment.center),
-                ),
-                GridColumn(
-                  columnName: 'actions',
-                  width: 80,
-                  label: _buildHeaderCell('Action', alignment: Alignment.center),
-                ),
-              ],
-            ),
+                      setState(() {
+                        _selectedRowIndex = index;
+                        selectedFullData = selectedData;
+                        customData =
+                            parseTimelineData(selectedData['claims'] ?? []);
+                      });
+                      await updateActiveIndexFromStatus();
+                    },
+                    columns: [
+                      GridColumn(
+                        columnName: 'emp_name',
+                        width: 110,
+                        label: _buildHeaderCell('Name',
+                            iconPath: 'assets/icons/search_o.svg'),
+                      ),
+                      GridColumn(
+                        columnName: 'status',
+                        width: 80,
+                        label: _buildHeaderCell('Queue',
+                            iconPath: 'assets/icons/queue.svg',
+                            alignment: Alignment.center),
+                      ),
+                      GridColumn(
+                        columnName: 'submitted',
+                        width: 100,
+                        label: _buildHeaderCell('Submitted',
+                            iconPath: 'assets/icons/hrs.svg'),
+                      ),
+                      GridColumn(
+                        columnName: 'claim_no',
+                        width: 80,
+                        label: _buildHeaderCell('Claim No',
+                            iconPath: 'assets/icons/hrs.svg'),
+                      ),
+                      GridColumn(
+                        columnName: 'number_of_claims',
+                        width: 130,
+                        label: _buildHeaderCell('Number of Claims',
+                            iconPath: 'assets/icons/hrs.svg',
+                            alignment: Alignment.center),
+                      ),
+                      GridColumn(
+                        columnName: 'total_amount',
+                        width: 110,
+                        label: _buildHeaderCell('Total Amount',
+                            iconPath: 'assets/icons/hrs.svg',
+                            alignment: Alignment.center),
+                      ),
+                      GridColumn(
+                        columnName: 'actions',
+                        width: 80,
+                        label: _buildHeaderCell('Action',
+                            alignment: Alignment.center),
+                      ),
+                    ],
+                  ),
           ),
-
         ],
       ),
     );
   }
 
-  Widget _buildHeaderCell(String title, {String? iconPath, Alignment alignment = Alignment.centerLeft}) {
+  Widget _buildHeaderCell(String title,
+      {String? iconPath, Alignment alignment = Alignment.centerLeft}) {
     return Align(
       alignment: alignment,
       child: Row(
-        mainAxisAlignment: alignment == Alignment.center ? MainAxisAlignment.center : MainAxisAlignment.start,
+        mainAxisAlignment: alignment == Alignment.center
+            ? MainAxisAlignment.center
+            : MainAxisAlignment.start,
         children: [
           Text(
             title,
@@ -521,7 +566,7 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
             ),
           ),
           if (iconPath != null) ...[
-             SizedBox(width:title=='Name'?40 :6),
+            SizedBox(width: title == 'Name' ? 40 : 6),
             SvgPicture.asset(iconPath, width: 15, height: 15),
           ],
         ],
@@ -542,7 +587,6 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
         return const Color.fromRGBO(0, 123, 255, 1); // blue (default)
     }
   }
-
 
   Widget _buildHeaderActions() {
     return Row(
@@ -585,7 +629,8 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
     );
   }
 
-  Widget _buildBottomTabView(List<String> tabsData,GetOperatorState operatorState) {
+  Widget _buildBottomTabView(
+      List<String> tabsData, GetOperatorState operatorState) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10),
       height: 414,
@@ -595,14 +640,15 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
         Border.all(width: 1, color: const Color(0xffE8E8E8)),
         BorderRadius.circular(12),
       ),
-     child: BottomTabView(
-      tabsData: tabsData,
-      operatorState: operatorState,
-      isFromClaimScreen: true,
-         isFromHrScreen:true,
-      selectedMonth: selectedMonth.toString(),
-      selectedYear: selectedYear.toString(),
-    ),);
+      child: BottomTabView(
+        tabsData: tabsData,
+        operatorState: operatorState,
+        isFromClaimScreen: true,
+        isFromHrScreen: true,
+        selectedMonth: selectedMonth.toString(),
+        selectedYear: selectedYear.toString(),
+      ),
+    );
   }
 
   BoxDecoration _containerBoxDecoration([
@@ -627,36 +673,80 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
 
   Widget _stepperUI(
       BuildContext context, List<String> svgIcons, int activeIndex) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(svgIcons.length, (index) {
-        bool isSelected = index == activeIndex;
-        return Row(
-          children: [
-            if (index != 0)
-              const SizedBox(
-                width: 28,
-                child: Divider(
-                  color: Color(0xffA1AEBE),
-                  thickness: 2,
-                  endIndent: 2,
-                  indent: 2,
+    print('Rendering stepper with activeIndex: $activeIndex');
+
+    return KeyedSubtree(
+      key: ValueKey(activeIndex),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(svgIcons.length, (index) {
+          Color backgroundColor = Colors.white;
+          Color borderColor = const Color(0xffA1AEBE);
+          Color iconColor = Colors.black;
+
+          if (index < activeIndex) {
+            // ✅ Completed step
+            backgroundColor = const Color(0xFF007BFF); // Blue
+            borderColor = const Color(0xFF007BFF);
+            iconColor = Colors.white;
+          } else if (index == activeIndex) {
+            // ✅ Active step
+            switch (index) {
+              case 1:
+                backgroundColor = const Color(0xFFFFC107); // Yellow
+                borderColor = const Color(0xFFFFC107);
+                iconColor = Colors.white;
+                break;
+              case 4:
+                backgroundColor = const Color(0xFF28A745); // Green
+                borderColor = const Color(0xFF28A745);
+                iconColor = Colors.white;
+                break;
+              case 5:
+                backgroundColor = const Color(0xFFDA6536); // Orange
+                borderColor = const Color(0xFFDA6536);
+                iconColor = Colors.white;
+                break;
+              case 3:
+                backgroundColor = Colors.red.shade400; // Red
+                borderColor = Colors.red.shade400;
+                iconColor = Colors.white;
+                break;
+              case 0:
+                backgroundColor = Colors.blue;
+                borderColor = Colors.blue;
+                iconColor = Colors.white;
+                break;
+              default:
+                backgroundColor = Colors.blue;
+                borderColor = Colors.blue;
+                iconColor = Colors.white;
+            }
+          }
+          // else => upcoming step: remains white
+
+          return Row(
+            children: [
+              if (index != 0)
+                SizedBox(
+                  width: 38,
+                  child: Divider(
+                    color: index <= activeIndex
+                        ? Colors.blue
+                        : const Color(0xffA1AEBE),
+                    thickness: 2,
+                    endIndent: 2,
+                    indent: 2,
+                  ),
                 ),
-              ),
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  activeIndex = index;
-                });
-              },
-              child: Container(
+              Container(
                 alignment: Alignment.center,
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.blue : Colors.white,
+                  color: backgroundColor,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? Colors.blue : const Color(0xffA1AEBE),
+                    color: borderColor,
                     width: 1.5,
                   ),
                 ),
@@ -665,15 +755,15 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
                   height: 12,
                   width: 8,
                   colorFilter: ColorFilter.mode(
-                    isSelected ? Colors.white : Colors.black,
+                    iconColor,
                     BlendMode.srcIn,
                   ),
                 ),
               ),
-            ),
-          ],
-        );
-      }),
+            ],
+          );
+        }),
+      ),
     );
   }
 }
@@ -681,8 +771,13 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   final double height;
   final dynamic customData;
+  final int activeIndex;
 
-  FixedHeaderDelegate({required this.child, required this.height,  required this.customData,});
+  FixedHeaderDelegate(
+      {required this.child,
+      required this.height,
+      required this.customData,
+      required this.activeIndex});
 
   @override
   double get minExtent => height;
@@ -696,7 +791,10 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
   @override
   bool shouldRebuild(covariant FixedHeaderDelegate oldDelegate) {
-    return height != oldDelegate.height || customData != oldDelegate.customData;
+    return height != oldDelegate.height ||
+        customData != oldDelegate.customData ||
+        activeIndex != oldDelegate.activeIndex ||
+        oldDelegate.child.key != child.key;
   }
 }
 class CalendarData {

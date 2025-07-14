@@ -119,6 +119,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           print('Navigating to Operator Dashboard');
           context.push(Constant.operatorDashboardScreen);
         }
+        else if (dashboardName == "Finance Dashboard" && roleId == 9) {
+          print('Navigating to Finance Dashboard');
+          context.push(Constant.financeDashboardScreen);
+        }
         else {
           print('Dashboard routing error');
         }

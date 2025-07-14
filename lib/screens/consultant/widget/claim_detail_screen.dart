@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/providers/consultant_provider.dart';
 import 'package:harris_j_system/screens/bom/bom_add_consultancy_screen.dart';
+import 'package:harris_j_system/services/api_constant.dart';
 import 'package:harris_j_system/ulits/common_function.dart';
 import 'package:harris_j_system/ulits/custom_icon_container.dart';
 import 'package:harris_j_system/ulits/delete_pop_up.dart';
@@ -26,8 +27,29 @@ class ExpenseListView extends ConsumerStatefulWidget {
 }
 
 class _ExpenseListViewState extends ConsumerState<ExpenseListView> {
+
+  Future<void> _getConsultantTimeSheet() async {
+    final prefs = await SharedPreferences.getInstance();
+
+   final token = prefs.getString('token');
+    await ref.read(consultantProvider.notifier).consultantClaimSheet(token!);
+    await ref.read(consultantProvider.notifier).consultantTimesheetRemarks(
+      ApiConstant.getClaimRemarks,
+      token,
+     widget. selectedMonth.toString(),
+      widget.  selectedYear.toString(),
+    );
+
+    await ref.read(consultantProvider.notifier).consultantClaimAndCopies(
+      token,
+      widget.   selectedMonth.toString(),
+      widget.  selectedYear.toString(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+
     return SizedBox(
       height: 260, // Adjust height based on your design
       child: ListView.separated(
@@ -67,6 +89,7 @@ class _ExpenseListViewState extends ConsumerState<ExpenseListView> {
                   },
                 );
                 if (result!['success']) {
+                  await _getConsultantTimeSheet();
                   context.pop(true);
 
                   //  Show success toast
@@ -97,6 +120,7 @@ class _ExpenseListViewState extends ConsumerState<ExpenseListView> {
                       if (deleteResponse[
                       'success'] ==
                           true) {
+                        await _getConsultantTimeSheet();
                         ToastHelper
                             .showSuccess(
                           context,
