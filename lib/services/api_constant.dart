@@ -55,14 +55,13 @@ class ApiConstant {
   static const String designationList = "consultancy-designation/listing";
   static const String roleList = "consultancy-role/listing";
   static const String systemPropertyList = "consultancy-system-property/listing";
-  static const String createHoliday = "consultancy-holiday/save";
+ static const String createHoliday = "consultancy-holiday/save";
   static const String getHolidayList = "consultancy-holiday/listing";
 
 
   static const String operatorDashboard = "operator/client-list";
   static const String operatorClaims = "operator/claimtab-api";
   static const String operatorHumanResource = "operator/hrtab-api";
-
 
   static const String financeClientList = "finance/client-list";
   static const String consultantClaimsListFinanceTab =
