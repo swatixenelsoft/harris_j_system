@@ -7,6 +7,7 @@ import 'package:harris_j_system/providers/consultant_provider.dart';
 import 'package:harris_j_system/screens/consultant/consultant_timesheet_screen.dart';
 import 'package:harris_j_system/screens/consultant/widget/claim_detail_screen.dart';
 import 'package:harris_j_system/ulits/common_function.dart';
+import 'package:harris_j_system/ulits/toast_helper.dart';
 import 'package:harris_j_system/widgets/bottom_sheet_content.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_month_year.dart';
@@ -242,7 +243,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('rehjdshfj ${widget.claimsDetails}');
     List<DateTime> monthDays = CommonFunction().getDaysInMonth(_currentMonth);
     int weeksInMonth = (monthDays.length / 7).ceil();
 
@@ -573,20 +573,31 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
             return GestureDetector(
               onTap: () {
-                print('ghfj ${widget.customData[date]}');
+                final now = DateTime.now();
+                final today = DateTime(now.year, now.month, now.day);
+                final tappedDate = DateTime(date.year, date.month, date.day);
+
+                if (tappedDate.isAfter(today)) {
+                  // Disable tap for future dates
+                  print('Future date tapped: $tappedDate');
+                  ToastHelper.showError(context, "You can't edit the future data");
+                  return;
+                }
+
+                print('Tapped date is today or in the past: $tappedDate');
                 if (!widget.isFromHrScreen &&
                     consultantState.isEditable &&
                     isFromCurrentMonth) {
                   String dateRange =
-                      DateFormat('dd / MM / yyyy').format(date).toString();
-
+                  DateFormat('dd / MM / yyyy').format(date).toString();
                   bottomSheetWidget(context, dateRange);
-                }
-                else{
-                  print('in else');
-                  popupBottomSheetWidget(context, date,widget.selectedMonth.toString(),widget.selectedYear.toString());
+                } else {
+                  popupBottomSheetWidget(context, date,
+                      widget.selectedMonth.toString(),
+                      widget.selectedYear.toString());
                 }
               },
+
               child: Container(
                 padding: const EdgeInsets.only(top: 6, left: 10),
                 decoration: BoxDecoration(

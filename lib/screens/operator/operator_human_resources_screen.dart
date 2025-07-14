@@ -28,7 +28,7 @@ class HumanResourcesScreen extends ConsumerStatefulWidget {
 }
 
 class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
-  int activeIndex = 0;
+  int activeIndex = -1;
   double calendarHeight = 350;
   String? token;
   TextEditingController _searchController = TextEditingController();

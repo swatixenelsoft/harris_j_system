@@ -919,7 +919,8 @@ class ApiService {
 
   Future<Map<String, dynamic>> getClientList(
     String token,
-  ) async {
+  ) async
+  {
     try {
       print('formData $token');
       final response = await _dio.post(
@@ -1965,6 +1966,40 @@ Future<Map<String, dynamic>> getDesignation(
       );
 
       print('Request URL: ${response.requestOptions.uri},$month,$year');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+
+  Future<Map<String, dynamic>> getFinanceClientList(
+      String token,
+      ) async
+  {
+    try {
+      print('formData $token');
+      final response = await _dio.post(
+        ApiConstant.financeClientList,
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
       print('Response statusCode: ${response.statusCode}');
       print('Response data: ${response.data}');
 

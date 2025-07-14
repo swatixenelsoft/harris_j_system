@@ -200,6 +200,7 @@ class RemarksSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final remarks=_remarks;
+    print('remarks $remarks');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,11 +299,13 @@ class RemarksSection extends StatelessWidget {
                                   width: 2,
                                 ),
                               ),
-                              child: const CircleAvatar(
-                                backgroundImage:
-                                    AssetImage("assets/images/profile.jpg"),
+                              child: CircleAvatar(
                                 radius: 12,
+                                backgroundImage: (remark['avatar'] != null && remark['avatar'].toString().isNotEmpty)
+                                    ? NetworkImage(remark['avatar'])
+                                    : AssetImage('assets/images/profile.jpg') as ImageProvider,
                               ),
+
                             ),
                             const SizedBox(width: 8),
                             Text(

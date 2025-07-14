@@ -227,7 +227,6 @@ class _BottomTabViewState extends State<BottomTabView> {
           .claimList; // ✅ add this to your model if not present
     }
 
-    print('remarks111 $claimTab');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -327,7 +326,6 @@ class _BottomTabViewState extends State<BottomTabView> {
                       padding: EdgeInsets.zero,
                       physics: const NeverScrollableScrollPhysics(),
                       itemBuilder: (context, index) {
-                        print('widget.consultantState!.claimList ${claimTab}');
                         return _buildClaimItem(claimTab[index]);
                       },
                     ),
@@ -1147,7 +1145,6 @@ class _BottomTabViewState extends State<BottomTabView> {
   }
 
   Widget _buildClaimItem(Map<String, dynamic> remark) {
-    print('remark11 $remark');
     return TimelineTile(
       alignment: TimelineAlign.start,
       beforeLineStyle: const LineStyle(thickness: 2, color: Colors.white),

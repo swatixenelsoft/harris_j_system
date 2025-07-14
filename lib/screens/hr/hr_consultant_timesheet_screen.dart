@@ -34,7 +34,7 @@ class HrConsultantTimeSheetScreen extends ConsumerStatefulWidget {
 
 class _HrConsultantTimeSheetScreenState
     extends ConsumerState<HrConsultantTimeSheetScreen> {
-  int activeIndex = 0;
+  int activeIndex = -1;
   double calendarHeight = 350;
   String? token;
 
@@ -54,7 +54,6 @@ class _HrConsultantTimeSheetScreenState
     'assets/icons/icon1.svg',
     'assets/icons/icon2.svg',
     'assets/icons/icon3.svg',
-    'assets/icons/icon4.svg',
     'assets/icons/icon4.svg',
     'assets/icons/icon5.svg',
     'assets/icons/icon7.svg',
@@ -160,10 +159,11 @@ class _HrConsultantTimeSheetScreenState
     ref.read(hrProvider.notifier).setLoading(true);
     await getClientList();
     await getConsultantTimesheetByClient();
+    await updateActiveIndexFromStatus();
     ref.read(hrProvider.notifier).setLoading(false);
   }
 
-  void _refreshData() async {
+  Future<void> _refreshData() async {
     print('selectedMonth $selectedMonth');
 
     if (token != null) {
@@ -180,16 +180,48 @@ class _HrConsultantTimeSheetScreenState
       final updatedClaims =
           hrState.selectedConsultantData['timesheet_data'] ?? [];
 
-      print('updatedClaims $updatedClaims');
-
       final newParsedData = parseTimelineData(updatedClaims);
 
       setState(() {
         customData = newParsedData;
       });
+      await updateActiveIndexFromStatus();
 
       print('✅ Updated customData for month $selectedMonth => $customData');
     }
+  }
+
+  updateActiveIndexFromStatus() {
+    final status = ref.read(hrProvider).selectedConsultantData['status'];
+    print('claimsDetails $status');
+
+    if(mounted){
+      setState(() {
+        switch (status) {
+          case null:
+            activeIndex = -1;
+            break;
+          case 'Draft':
+            activeIndex = 0;
+            break;
+          case 'Submitted':
+            activeIndex = 1;
+            break;
+          case 'Rejected':
+            activeIndex = 3;
+            break;
+          case 'Approved':
+            activeIndex = 4;
+            break;
+          case 'Rework':
+            activeIndex = 5;
+            break;
+          default:
+            activeIndex = -1; // fallback if status is unknown
+        }
+      });
+    }
+
   }
 
   @override
@@ -203,17 +235,14 @@ class _HrConsultantTimeSheetScreenState
   Map<DateTime, CalendarData> parseTimelineData(List<dynamic> apiResponse) {
     final Map<DateTime, CalendarData> data = {};
 
-    print('apiResponse $apiResponse,$selectedMonth');
 
     if ((apiResponse).isNotEmpty) {
       final days = apiResponse;
 
       for (var dayData in days) {
         final details = dayData['record'] ?? {};
-        print('details $details');
         final dateStr = details['applyOnCell']; // e.g., "05 / 05 / 2025"
         if (dateStr == null) continue;
-        print('dateStr $dateStr');
         final parts = dateStr.split(' / ');
         final day = int.tryParse(parts[0] ?? '');
         final month = int.tryParse(parts[1] ?? '');
@@ -247,7 +276,9 @@ class _HrConsultantTimeSheetScreenState
               style: GoogleFonts.montserrat(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xff000000),
+                color: int.parse(workingHours) != 8
+                    ? const Color(0xffFF1901)
+                    : const Color(0xff000000),
               ),
             ),
             type: 'work',
@@ -265,6 +296,7 @@ class _HrConsultantTimeSheetScreenState
     final List<dynamic> fullConsultantData = hrState.hrConsultantList ?? [];
     final isLoading = hrState.isLoading;
     print('loader is ${hrState.isLoading}');
+
 
 
     print(
@@ -410,15 +442,29 @@ class _HrConsultantTimeSheetScreenState
                     _selectedClientId = selectedId;
                     _selectedRowIndex = -1;
                     customData = {};
+                    activeIndex=-1;
                   });
                   await getConsultantTimesheetByClient();
+                await updateActiveIndexFromStatus();
                 },
               ),
             ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 200,
-            child: SfDataGrid(
+            height: fullConsultantList.isEmpty?50:200,
+            child:
+            fullConsultantList.isEmpty?
+            const Center(
+              child: Text(
+                "No Consultant Found",
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )
+                :SfDataGrid(
               source: GenericDataSource(
                 data:
                     fullConsultantList.map<Map<String, dynamic>>((consultant) {
@@ -440,7 +486,7 @@ class _HrConsultantTimeSheetScreenState
               columnWidthMode: ColumnWidthMode.fill,
               headerRowHeight: 38,
               rowHeight: 52,
-              onCellTap: (details) {
+              onCellTap: (details) async{
                 final index = details.rowColumnIndex.rowIndex - 1;
                 if (index < 0 || index >= fullConsultantList.length) return;
 
@@ -457,6 +503,7 @@ class _HrConsultantTimeSheetScreenState
                     selectedData['timesheet_data'] ?? [],
                   );
                 });
+                await updateActiveIndexFromStatus();
               },
               columns: [
                 GridColumn(
@@ -577,45 +624,83 @@ class _HrConsultantTimeSheetScreenState
     );
   }
 
+
   Widget _stepperUI(
       BuildContext context, List<String> svgIcons, int activeIndex) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center, // Align items in the center
-      children: List.generate(svgIcons.length, (index) {
-        bool isSelected = index == activeIndex;
+    print('Rendering stepper with activeIndex: $activeIndex');
 
-        return Row(
-          children: [
-            // Add a divider before each step except the first one
-            if (index != 0)
-              const SizedBox(
-                width: 28, // Adjust width as needed
-                child: Divider(
-                  color: Color(0xffA1AEBE),
-                  thickness: 2,
-                  endIndent: 2,
-                  indent: 2,
+    return KeyedSubtree(
+      key: ValueKey(activeIndex),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(svgIcons.length, (index) {
+          Color backgroundColor = Colors.white;
+          Color borderColor = const Color(0xffA1AEBE);
+          Color iconColor = Colors.black;
+
+          if (index < activeIndex) {
+            // ✅ Completed step
+            backgroundColor = const Color(0xFF007BFF); // Blue
+            borderColor = const Color(0xFF007BFF);
+            iconColor = Colors.white;
+          } else if (index == activeIndex) {
+            // ✅ Active step
+            switch (index) {
+              case 1:
+                backgroundColor = const Color(0xFFFFC107); // Yellow
+                borderColor = const Color(0xFFFFC107);
+                iconColor = Colors.white;
+                break;
+              case 4:
+                backgroundColor = const Color(0xFF28A745); // Green
+                borderColor = const Color(0xFF28A745);
+                iconColor = Colors.white;
+                break;
+              case 5:
+                backgroundColor = const Color(0xFFDA6536); // Orange
+                borderColor = const Color(0xFFDA6536);
+                iconColor = Colors.white;
+                break;
+              case 3:
+                backgroundColor = Colors.red.shade400; // Red
+                borderColor = Colors.red.shade400;
+                iconColor = Colors.white;
+                break;
+              case 0:
+                backgroundColor = Colors.blue;
+                borderColor = Colors.blue;
+                iconColor = Colors.white;
+                break;
+              default:
+                backgroundColor = Colors.blue;
+                borderColor = Colors.blue;
+                iconColor = Colors.white;
+            }
+          }
+          // else => upcoming step: remains white
+
+          return Row(
+            children: [
+              if (index != 0)
+                SizedBox(
+                  width: 38,
+                  child: Divider(
+                    color: index <= activeIndex
+                        ? Colors.blue
+                        : const Color(0xffA1AEBE),
+                    thickness: 2,
+                    endIndent: 2,
+                    indent: 2,
+                  ),
                 ),
-              ),
-            GestureDetector(
-              onTap: () {
-// setState(() {
-//   isSelected=index==activeIndex;
-// });
-              },
-              child: Container(
+              Container(
                 alignment: Alignment.center,
-                padding: const EdgeInsets.all(5), // Padding inside the circle
+                padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.blue
-                      : Colors.white, // Change background color if selected
+                  color: backgroundColor,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected
-                        ? Colors.blue
-                        : const Color(
-                            0xffA1AEBE), // Change border color if selected
+                    color: borderColor,
                     width: 1.5,
                   ),
                 ),
@@ -624,17 +709,15 @@ class _HrConsultantTimeSheetScreenState
                   height: 12,
                   width: 8,
                   colorFilter: ColorFilter.mode(
-                    isSelected
-                        ? Colors.white
-                        : Colors.black, // Change icon color if selected
+                    iconColor,
                     BlendMode.srcIn,
                   ),
                 ),
               ),
-            ),
-          ],
-        );
-      }),
+            ],
+          );
+        }),
+      ),
     );
   }
 }

@@ -746,7 +746,8 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
   }
 
   Widget _stepperUI(
-      BuildContext context, List<String> svgIcons, int activeIndex) {
+      BuildContext context, List<String> svgIcons, int activeIndex)
+  {
     print('Rendering stepper with activeIndex: $activeIndex');
 
     return KeyedSubtree(

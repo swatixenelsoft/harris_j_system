@@ -34,7 +34,7 @@ class HrConsultantClaimScreen extends ConsumerStatefulWidget {
 
 class _HrConsultantClaimScreenState
     extends ConsumerState<HrConsultantClaimScreen> {
-  int activeIndex = 0;
+  int activeIndex = -1;
   double calendarHeight = 350;
   String? token;
   String? _selectedClient;
@@ -53,7 +53,6 @@ class _HrConsultantClaimScreenState
     'assets/icons/icon1.svg',
     'assets/icons/icon2.svg',
     'assets/icons/icon3.svg',
-    'assets/icons/icon4.svg',
     'assets/icons/icon4.svg',
     'assets/icons/icon5.svg',
     'assets/icons/icon7.svg',
@@ -137,10 +136,10 @@ class _HrConsultantClaimScreenState
     ref.read(hrProvider.notifier).setLoading(true);
     await getClientList();
     await getConsultantClaimsByClient();
+    await updateActiveIndexFromStatus();
     ref.read(hrProvider.notifier).setLoading(false);
   }
-
-  void _refreshData() async {
+  Future<void> _refreshData() async {
     print('selectedMonth $selectedMonth');
 
     if (token != null) {
@@ -155,14 +154,16 @@ class _HrConsultantClaimScreenState
       // ✅ Now re-read the updated provider state
       final hrState = ref.read(hrProvider);
       final updatedClaims = hrState.selectedConsultantData['claims'] ?? [];
+      final status= hrState.selectedConsultantData['status'];
 
-      print('updatedClaims $updatedClaims');
+      print('updatedClaims ,$status');
 
       final newParsedData = parseTimelineData(updatedClaims);
 
       setState(() {
         customData = newParsedData;
       });
+      await updateActiveIndexFromStatus();
 
       print('✅ Updated customData for month $selectedMonth => $customData');
     }
@@ -174,6 +175,39 @@ class _HrConsultantClaimScreenState
     Future.microtask(() {
       fetchData();
     });
+  }
+
+  updateActiveIndexFromStatus() {
+    final status = ref.read(hrProvider).selectedConsultantData['status'];
+    print('claimsDetails $status');
+
+    if(mounted){
+      setState(() {
+        switch (status) {
+          case null:
+            activeIndex = -1;
+            break;
+          case 'Draft':
+            activeIndex = 0;
+            break;
+          case 'Submitted':
+            activeIndex = 1;
+            break;
+          case 'Rejected':
+            activeIndex = 3;
+            break;
+          case 'Approved':
+            activeIndex = 4;
+            break;
+          case 'Rework':
+            activeIndex = 5;
+            break;
+          default:
+            activeIndex = -1; // fallback if status is unknown
+        }
+      });
+    }
+
   }
 
   Map<DateTime, List<Map<String, dynamic>>> parseTimelineData(
@@ -223,7 +257,8 @@ class _HrConsultantClaimScreenState
     final hrState = ref.watch(hrProvider);
 
     final List<dynamic> fullConsultantData = hrState.hrConsultantList ?? [];
-    final List<dynamic> claimsDetails =hrState.selectedConsultantData['claim_tab']??[];
+    final List<dynamic> claimsDetails =
+        hrState.selectedConsultantData['claim_tab'] ?? [];
     final isLoading = hrState.isLoading;
 
     return Scaffold(
@@ -256,6 +291,7 @@ class _HrConsultantClaimScreenState
                     floating: true,
                     delegate: FixedHeaderDelegate(
                       height: 180 + calendarHeight,
+                      activeIndex: activeIndex,
                       customData: customData,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -287,16 +323,19 @@ class _HrConsultantClaimScreenState
                               customData: customData,
                               isFromClaimScreen: true,
                               isFromHrScreen: true,
-                              backDatedClaims: (hrState.selectedConsultantData['data'] is Map)
-                                  ? Map<String, dynamic>.from(hrState.selectedConsultantData['data'])
+                              backDatedClaims: (hrState
+                                      .selectedConsultantData['data'] is Map)
+                                  ? Map<String, dynamic>.from(
+                                      hrState.selectedConsultantData['data'])
                                   : {},
-                              claimsDetails:claimsDetails,
+                              claimsDetails: claimsDetails,
                               onMonthChanged: (month, year) async {
                                 setState(() {
                                   selectedMonth = month;
                                   selectedYear = year;
                                 });
                                 _refreshData();
+
                               },
                             ),
                           ),
@@ -369,71 +408,89 @@ class _HrConsultantClaimScreenState
                     _selectedClientId = selectedId;
                     _selectedRowIndex = -1;
                     customData = {};
+                    activeIndex=-1;
                   });
                   await getConsultantClaimsByClient();
+                  await updateActiveIndexFromStatus();
                 },
               ),
             ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 200,
-            child: SfDataGrid(
-              source: GenericDataSource(
-                data: consultancies.map<Map<String, dynamic>>((consultant) {
-                  final consultantInfo = consultant['consultant_info'] ?? {};
-                  final workLog = consultant['work_log'] ?? {};
-                  return {
-                    'emp_name': consultantInfo['emp_name'] ?? '',
-                    'working_hours': consultantInfo['working_hours'] ?? '',
-                    'logged_hours': workLog['logged_hours'] ?? 0,
-                    'full_data': consultant, // include full object for actions
-                  };
-                }).toList(),
-                columns: ['emp_name', 'working_hours', 'actions'],
-                onZoomTap: (rowData) {
-                  _showConsultancyPopup(context, rowData['full_data']);
-                },
-                selectedIndex: _selectedRowIndex,
-              ),
-              columnWidthMode: ColumnWidthMode.fill,
-              headerRowHeight: 38,
-              rowHeight: 52,
-              onCellTap: (details) {
-                final index = details.rowColumnIndex.rowIndex - 1;
-                if (index < 0 || index >= consultancies.length) return;
+            height: consultancies.isEmpty ? 50 : 200,
+            child: consultancies.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No Consultant Found",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  )
+                : SfDataGrid(
+                    source: GenericDataSource(
+                      data:
+                          consultancies.map<Map<String, dynamic>>((consultant) {
+                        final consultantInfo =
+                            consultant['consultant_info'] ?? {};
+                        final workLog = consultant['work_log'] ?? {};
+                        return {
+                          'emp_name': consultantInfo['emp_name'] ?? '',
+                          'working_hours':
+                              consultantInfo['working_hours'] ?? '',
+                          'logged_hours': workLog['logged_hours'] ?? 0,
+                          'full_data':
+                              consultant, // include full object for actions
+                        };
+                      }).toList(),
+                      columns: ['emp_name', 'working_hours', 'actions'],
+                      onZoomTap: (rowData) {
+                        _showConsultancyPopup(context, rowData['full_data']);
+                      },
+                      selectedIndex: _selectedRowIndex,
+                    ),
+                    columnWidthMode: ColumnWidthMode.fill,
+                    headerRowHeight: 38,
+                    rowHeight: 52,
+                    onCellTap: (details) async {
+                      final index = details.rowColumnIndex.rowIndex - 1;
+                      if (index < 0 || index >= consultancies.length) return;
 
-                final selectedData = consultancies[index];
+                      final selectedData = consultancies[index];
 
-                ref
-                    .read(hrProvider.notifier)
-                    .getSelectedConsultantDetails(selectedData);
+                   await   ref
+                          .read(hrProvider.notifier)
+                          .getSelectedConsultantDetails(selectedData);
 
-                setState(() {
-                  _selectedRowIndex = index;
-                  selectedFullData = selectedData;
-                  customData = parseTimelineData(
-                    selectedData['claims'] ?? [],
-                  );
-                });
-              },
-              columns: [
-                GridColumn(
-                  columnName: 'emp_name',
-                  width: 120,
-                  label: _buildHeaderCell('Name'),
-                ),
-                GridColumn(
-                  columnName: 'working_hours',
-                  width: 120,
-                  label: _buildHeaderCell('Hours Logged'),
-                ),
-                GridColumn(
-                  columnName: 'actions',
-                  label:
-                      _buildHeaderCell('Actions', alignment: Alignment.center),
-                ),
-              ],
-            ),
+                      setState(() {
+                        _selectedRowIndex = index;
+                        selectedFullData = selectedData;
+                        customData = parseTimelineData(
+                          selectedData['claims'] ?? [],
+                        );
+                      });
+                      await updateActiveIndexFromStatus();
+                    },
+                    columns: [
+                      GridColumn(
+                        columnName: 'emp_name',
+                        width: 120,
+                        label: _buildHeaderCell('Name'),
+                      ),
+                      GridColumn(
+                        columnName: 'working_hours',
+                        width: 120,
+                        label: _buildHeaderCell('Hours Logged'),
+                      ),
+                      GridColumn(
+                        columnName: 'actions',
+                        label: _buildHeaderCell('Actions',
+                            alignment: Alignment.center),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -510,7 +567,7 @@ class _HrConsultantClaimScreenState
         tabsData: tabsData,
         hrState: hrState,
         isFromClaimScreen: true,
-        isFromHrScreen:true,
+        isFromHrScreen: true,
         selectedMonth: selectedMonth.toString(),
         selectedYear: selectedYear.toString(),
       ),
@@ -538,43 +595,80 @@ class _HrConsultantClaimScreenState
 
   Widget _stepperUI(
       BuildContext context, List<String> svgIcons, int activeIndex) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center, // Align items in the center
-      children: List.generate(svgIcons.length, (index) {
-        bool isSelected = index == activeIndex;
+    print('Rendering stepper with activeIndex: $activeIndex');
 
-        return Row(
-          children: [
-            // Add a divider before each step except the first one
-            if (index != 0)
-              const SizedBox(
-                width: 28, // Adjust width as needed
-                child: Divider(
-                  color: Color(0xffA1AEBE),
-                  thickness: 2,
-                  endIndent: 2,
-                  indent: 2,
+    return KeyedSubtree(
+      key: ValueKey(activeIndex),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(svgIcons.length, (index) {
+          Color backgroundColor = Colors.white;
+          Color borderColor = const Color(0xffA1AEBE);
+          Color iconColor = Colors.black;
+
+          if (index < activeIndex) {
+            // ✅ Completed step
+            backgroundColor = const Color(0xFF007BFF); // Blue
+            borderColor = const Color(0xFF007BFF);
+            iconColor = Colors.white;
+          } else if (index == activeIndex) {
+            // ✅ Active step
+            switch (index) {
+              case 1:
+                backgroundColor = const Color(0xFFFFC107); // Yellow
+                borderColor = const Color(0xFFFFC107);
+                iconColor = Colors.white;
+                break;
+              case 4:
+                backgroundColor = const Color(0xFF28A745); // Green
+                borderColor = const Color(0xFF28A745);
+                iconColor = Colors.white;
+                break;
+              case 5:
+                backgroundColor = const Color(0xFFDA6536); // Orange
+                borderColor = const Color(0xFFDA6536);
+                iconColor = Colors.white;
+                break;
+              case 3:
+                backgroundColor = Colors.red.shade400; // Red
+                borderColor = Colors.red.shade400;
+                iconColor = Colors.white;
+                break;
+              case 0:
+                backgroundColor = Colors.blue;
+                borderColor = Colors.blue;
+                iconColor = Colors.white;
+                break;
+              default:
+                backgroundColor = Colors.blue;
+                borderColor = Colors.blue;
+                iconColor = Colors.white;
+            }
+          }
+          // else => upcoming step: remains white
+
+          return Row(
+            children: [
+              if (index != 0)
+                SizedBox(
+                  width: 38,
+                  child: Divider(
+                    color: index <= activeIndex
+                        ? Colors.blue
+                        : const Color(0xffA1AEBE),
+                    thickness: 2,
+                    endIndent: 2,
+                    indent: 2,
+                  ),
                 ),
-              ),
-            GestureDetector(
-              onTap: () {
-// setState(() {
-//   isSelected=index==activeIndex;
-// });
-              },
-              child: Container(
+              Container(
                 alignment: Alignment.center,
-                padding: const EdgeInsets.all(5), // Padding inside the circle
+                padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.blue
-                      : Colors.white, // Change background color if selected
+                  color: backgroundColor,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected
-                        ? Colors.blue
-                        : const Color(
-                            0xffA1AEBE), // Change border color if selected
+                    color: borderColor,
                     width: 1.5,
                   ),
                 ),
@@ -583,17 +677,15 @@ class _HrConsultantClaimScreenState
                   height: 12,
                   width: 8,
                   colorFilter: ColorFilter.mode(
-                    isSelected
-                        ? Colors.white
-                        : Colors.black, // Change icon color if selected
+                    iconColor,
                     BlendMode.srcIn,
                   ),
                 ),
               ),
-            ),
-          ],
-        );
-      }),
+            ],
+          );
+        }),
+      ),
     );
   }
 }
@@ -602,11 +694,13 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   final double height;
   final dynamic customData;
+  final int activeIndex;
 
   FixedHeaderDelegate({
     required this.child,
     required this.height,
     required this.customData,
+    required this.activeIndex,
   });
 
   @override
@@ -623,7 +717,10 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant FixedHeaderDelegate oldDelegate) {
-    return height != oldDelegate.height || customData != oldDelegate.customData;
+    return height != oldDelegate.height ||
+        customData != oldDelegate.customData ||
+        activeIndex != oldDelegate.activeIndex ||
+        oldDelegate.child.key != child.key;
   }
 }
 
