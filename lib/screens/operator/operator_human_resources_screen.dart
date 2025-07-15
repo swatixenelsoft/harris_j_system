@@ -195,6 +195,13 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+// Use a percentage of screen height, e.g., 20%
+    final headerBaseHeight = screenHeight * 0.11;
+
+// Add calendarHeight
+    final headerHeight = headerBaseHeight + calendarHeight;
     final operatorState = ref.watch(operatorProvider);
     final List<dynamic> fullConsultantData =
         operatorState.hrConsultantList ?? [];
@@ -229,7 +236,7 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
                       pinned: true,
                       floating: true,
                       delegate: FixedHeaderDelegate(
-                        height: 130 + calendarHeight,
+                        height: headerHeight,
                         customData: customData,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,

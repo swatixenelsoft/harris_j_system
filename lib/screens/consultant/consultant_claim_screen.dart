@@ -396,6 +396,14 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+// Use a percentage of screen height, e.g., 20%
+    final headerBaseHeight = screenHeight * 0.15;
+
+// Add calendarHeight
+    final headerHeight = headerBaseHeight + calendarHeight;
+
     final consultantState = ref.watch(consultantProvider);
     final List<dynamic> claimsDetails =consultantState.claimList??[];
     print('consultantStatebackdate  ${consultantState.backdatedClaims}');
@@ -446,7 +454,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
                 pinned: true,
                 floating: true,
                 delegate: FixedHeaderDelegate(
-                  height: 110 + calendarHeight, // Stepper (100) + Calendar
+                  height: headerHeight, // Stepper (100) + Calendar
                   activeIndex: activeIndex,
                   backDatedClaims:consultantState.backdatedClaims??{},
                   claimsDetails:claimsDetails,

@@ -256,6 +256,13 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+// Use a percentage of screen height, e.g., 20%
+    final headerBaseHeight = screenHeight * 0.24;
+
+// Add calendarHeight
+    final headerHeight = headerBaseHeight + calendarHeight;
     final operatorState = ref.watch(operatorProvider);
     final List<dynamic> fullConsultantData =
         operatorState.hrConsultantList ?? [];
@@ -292,7 +299,7 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
                     pinned: true,
                     floating: true,
                     delegate: FixedHeaderDelegate(
-                      height: 180 + calendarHeight,
+                      height: headerHeight,
                       activeIndex: activeIndex,
                       customData: customData,
                       child: Column(
