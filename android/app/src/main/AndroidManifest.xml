@@ -17,7 +17,7 @@
     <application
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:label="harris_j_system"
+        android:label="Harris J"
         android:requestLegacyExternalStorage="true"
         >
         <activity
