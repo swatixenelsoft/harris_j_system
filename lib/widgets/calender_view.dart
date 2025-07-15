@@ -248,33 +248,39 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     List<DateTime> monthDays = CommonFunction().getDaysInMonth(_currentMonth);
     int weeksInMonth = (monthDays.length / 7).ceil();
 
+    final screenHeight = MediaQuery.of(context).size.height;
+
     // ✅ Base height for regular rows
-    calculatedHeight = weeksInMonth == 6 ? 370.0 : 313.0;
+    calculatedHeight = weeksInMonth == 6 ? screenHeight*0.37 : screenHeight*0.313;
 
     // ✅ Adjust for claim screen's extra row
     if (widget.isFromClaimScreen && !widget.isFromHrScreen) {
       if (weeksInMonth == 6) {
-        calculatedHeight += 85.0; // Add height for extra row (7 items)
+        calculatedHeight +=screenHeight*0.234; // Add height for extra row (7 items)
       } else if (weeksInMonth == 5) {
-        calculatedHeight += 80.0; // Slightly less if only 5 weeks
+        calculatedHeight += screenHeight*0.215; // Slightly less if only 5 weeks
       }
-    } else if (widget.isFromClaimScreen && widget.isFromHrScreen) {
+    }
+
+    else if (widget.isFromClaimScreen && widget.isFromHrScreen) {
       if (weeksInMonth == 6) {
-        calculatedHeight += 0; // Add height for extra row (7 items)
+        calculatedHeight += screenHeight*0.197; // Add height for extra row (7 items)
       } else if (weeksInMonth == 5) {
-        calculatedHeight += 0; // Slightly less if only 5 weeks
+        calculatedHeight += screenHeight*0.177; // Slightly less if only 5 weeks
       }
-    } else if (!widget.isFromClaimScreen && widget.isFromHrScreen) {
+    }
+    else if (!widget.isFromClaimScreen && widget.isFromHrScreen) {
       if (weeksInMonth == 6) {
-        calculatedHeight += 15; // Add height for extra row (7 items)
+        calculatedHeight += screenHeight*0.141; // Add height for extra row (7 items)
       } else if (weeksInMonth == 5) {
-        calculatedHeight += 15; // Slightly less if only 5 weeks
+        calculatedHeight += screenHeight*0.123; // Slightly less if only 5 weeks
       }
-    } else if (!widget.isFromClaimScreen && !widget.isFromHrScreen) {
+    }
+    else if (!widget.isFromClaimScreen && !widget.isFromHrScreen) {
       if (weeksInMonth == 6) {
-        calculatedHeight += 15; // Add height for extra row (7 items)
+        calculatedHeight += screenHeight*0.14; // Add height for extra row (7 items)
       } else if (weeksInMonth == 5) {
-        calculatedHeight += 15; // Slightly less if only 5 weeks
+        calculatedHeight += screenHeight*0.123; // Slightly less if only 5 weeks
       }
     }
 

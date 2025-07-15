@@ -195,6 +195,13 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+// Use a percentage of screen height, e.g., 20%
+    final headerBaseHeight = screenHeight * 0.11;
+
+// Add calendarHeight
+    final headerHeight = headerBaseHeight + calendarHeight;
     final operatorState = ref.watch(operatorProvider);
     final List<dynamic> fullConsultantData =
         operatorState.hrConsultantList ?? [];
@@ -229,7 +236,7 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
                       pinned: true,
                       floating: true,
                       delegate: FixedHeaderDelegate(
-                        height: 130 + calendarHeight,
+                        height: headerHeight,
                         customData: customData,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -383,15 +390,27 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
                   return {
                     'emp_name': consultantInfo['emp_name'] ?? 'N/A',
                     'status': consultantInfo['status'],
+                    'loggedHours': consultant['loggedHours'] ?? '0/160',
+                    'loggedTimeOff': consultant['loggedTimeOff'] ?? '5/3/4',
+                    'alOverview': consultant['alOverview'] ?? '12/2',
+                    'mlOverview': consultant['mlOverview'] ?? '8/2',
+                    'pdoOverview': consultant['pdoOverview'] ?? '3/2',
+                    'ulOverview': consultant['ulOverview'] ?? '15',
                   };
                 }).toList(),
                 columns: [
                   'emp_name',
                   'status',
+                  'loggedHours',
+                  'loggedTimeOff',
+                  'alOverview',
+                  'mlOverview',
+                  'pdoOverview',
+                  'ulOverview',
                 ],
                 selectedIndex: _selectedRowIndex,
                 onZoomTap: (rowData) {
-                  // Optionally show consultant popup
+                  // Handle popup
                 },
               ),
               columnWidthMode: ColumnWidthMode.auto,
@@ -403,34 +422,59 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
                 if (index < 0 || index >= consultancies.length) return;
 
                 final selectedData = consultancies[index];
-                ref
-                    .read(operatorProvider.notifier)
-                    .getSelectedConsultantDetails(selectedData);
+                ref.read(operatorProvider.notifier).getSelectedConsultantDetails(selectedData);
 
                 setState(() {
                   _selectedRowIndex = index;
                   selectedFullData = selectedData;
-                  customData =
-                      parseTimelineData(selectedData['timesheet_data'] ?? []);
+                  customData = parseTimelineData(selectedData['timesheet_data'] ?? []);
                 });
               },
               columns: [
                 GridColumn(
                   columnName: 'emp_name',
                   width: 110,
-                  label: _buildHeaderCell('Name',
-                      iconPath: 'assets/icons/search_o.svg'),
+                  label: _buildHeaderCell('Name', iconPath: 'assets/icons/search_o.svg'),
                 ),
                 GridColumn(
                   columnName: 'status',
                   width: 80,
-                  label: _buildHeaderCell('Queue',
-                      iconPath: 'assets/icons/queue.svg',
-                      alignment: Alignment.center),
+                  label: _buildHeaderCell('Queue', iconPath: 'assets/icons/queue.svg', alignment: Alignment.center),
+                ),
+                GridColumn(
+                  columnName: 'loggedHours',
+                  width: 110,
+                  label: _buildHeaderCell('Hrs LGD/FCst', iconPath: 'assets/icons/hrs.svg'),
+                ),
+                GridColumn(
+                  columnName: 'loggedTimeOff',
+                  width: 130,
+                  label: _buildHeaderCell('Logged Time Off', iconPath: 'assets/icons/hrs.svg'),
+                ),
+                GridColumn(
+                  columnName: 'alOverview',
+                  width: 110,
+                  label: _buildHeaderCell('AL OVERVIEW', iconPath: 'assets/icons/hrs.svg'),
+                ),
+                GridColumn(
+                  columnName: 'mlOverview',
+                  width: 110,
+                  label: _buildHeaderCell('ML OVERVIEW', iconPath: 'assets/icons/hrs.svg'),
+                ),
+                GridColumn(
+                  columnName: 'pdoOverview',
+                  width: 120,
+                  label: _buildHeaderCell('PDO OVERVIEW', iconPath: 'assets/icons/hrs.svg'),
+                ),
+                GridColumn(
+                  columnName: 'ulOverview',
+                  width: 110,
+                  label: _buildHeaderCell('UL OVERVIEW', iconPath: 'assets/icons/hrs.svg'),
                 ),
               ],
             ),
-          ),
+          )
+
         ],
       ),
     );
@@ -461,7 +505,6 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
       ),
     );
   }
-
   Widget _buildHeaderActions() {
     return Row(
       children: [
@@ -483,7 +526,6 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
       ],
     );
   }
-
   BoxDecoration containerBoxDecoration(
       [Color? color, Offset shadowOffset = const Offset(0, 2)]) {
     return BoxDecoration(
@@ -558,10 +600,8 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   final double height;
   final dynamic customData;
-
   FixedHeaderDelegate(
       {required this.child, required this.height, required this.customData});
-
   @override
   double get minExtent => height;
   @override
@@ -578,10 +618,8 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
     return height != oldDelegate.height || customData != oldDelegate.customData;
   }
 }
-
 class CalendarData {
   final Widget widget;
   final String type;
-
   CalendarData({required this.widget, required this.type});
 }

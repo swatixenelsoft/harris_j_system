@@ -476,6 +476,13 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+// Use a percentage of screen height, e.g., 20%
+    final headerBaseHeight = screenHeight * 0.11;
+
+// Add calendarHeight
+    final headerHeight = headerBaseHeight + calendarHeight;
     final consultantState = ref.watch(consultantProvider);
 
     if (consultantState.isLoading) {
@@ -515,7 +522,7 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
                 pinned: true,
                 floating: true,
                 delegate: FixedHeaderDelegate(
-                  height: 80 + calendarHeight,
+                  height:headerHeight,
                   activeIndex: activeIndex,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
