@@ -448,27 +448,27 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
                 ),
                 GridColumn(
                   columnName: 'loggedTimeOff',
-                  width: 120,
+                  width: 130,
                   label: _buildHeaderCell('Logged Time Off', iconPath: 'assets/icons/hrs.svg'),
                 ),
                 GridColumn(
                   columnName: 'alOverview',
-                  width: 100,
+                  width: 110,
                   label: _buildHeaderCell('AL OVERVIEW', iconPath: 'assets/icons/hrs.svg'),
                 ),
                 GridColumn(
                   columnName: 'mlOverview',
-                  width: 100,
+                  width: 110,
                   label: _buildHeaderCell('ML OVERVIEW', iconPath: 'assets/icons/hrs.svg'),
                 ),
                 GridColumn(
                   columnName: 'pdoOverview',
-                  width: 110,
+                  width: 120,
                   label: _buildHeaderCell('PDO OVERVIEW', iconPath: 'assets/icons/hrs.svg'),
                 ),
                 GridColumn(
                   columnName: 'ulOverview',
-                  width: 100,
+                  width: 110,
                   label: _buildHeaderCell('UL OVERVIEW', iconPath: 'assets/icons/hrs.svg'),
                 ),
               ],
