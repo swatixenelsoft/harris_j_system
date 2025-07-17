@@ -302,14 +302,13 @@ class _FinanceClaimsInvoiceScreenState
   Widget _contactCard({
     required String label,
     required String name,
-    required String phone,
-    required String email,
+    required String address,
+    required String location,
   }) {
     return Container(
-      height: 100,
-      width: MediaQuery.of(context).size.width,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFFAFAFA),
+
         borderRadius: BorderRadius.circular(6),
         boxShadow: const [
           BoxShadow(
@@ -323,10 +322,13 @@ class _FinanceClaimsInvoiceScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Top Label
+          // Top Red Label - now full width
           Container(
-            width: 160,
+            width: 250, // make it stretch full width
             height: 30,
-            alignment: Alignment.center,
+            padding: const EdgeInsets.only(left: 20), // label text padding from left
+            alignment: Alignment.centerLeft, // align text to the left
             decoration: const BoxDecoration(
               color: Color(0xffFF1901),
               borderRadius: BorderRadius.only(
@@ -343,48 +345,79 @@ class _FinanceClaimsInvoiceScreenState
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Text(
-              name,
-              style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                color: Colors.black,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+
+          // Gray background for name, address and location
+          Container(
+            width: double.infinity,
+            color: const Color(0xFFFAFAFA),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Name
+                Text(
+                  name,
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 12),
+
+                // Address Row
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SvgPicture.asset('assets/icons/phone_icon.svg'),
-                    const SizedBox(width: 4),
-                    Text(
-                      phone,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2, right: 10),
+                      child: SvgPicture.asset(
+                        'assets/icons/address_invoice.svg',
+                        width: 24,
+                        height: 24,
                       ),
-                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Expanded(
+                      child: Text(
+                        address,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        softWrap: true,
+                        maxLines: 3,
+                      ),
                     ),
                   ],
                 ),
+
+                const SizedBox(height: 10),
+
+                // Location Row
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SvgPicture.asset('assets/icons/mail_icon.svg'),
-                    const SizedBox(width: 4),
-                    Text(
-                      email,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2, right: 10),
+                      child: SvgPicture.asset(
+                        'assets/icons/location_invoice.svg',
+                        width: 24,
+                        height: 24,
                       ),
-                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Expanded(
+                      child: Text(
+                        location,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        softWrap: true,
+                        maxLines: 3,
+                      ),
                     ),
                   ],
                 ),
@@ -395,6 +428,7 @@ class _FinanceClaimsInvoiceScreenState
       ),
     );
   }
+
 
   Widget _buildRemarksSection() {
     return Container(
@@ -823,12 +857,16 @@ class _FinanceClaimsInvoiceScreenState
                                     isScrollControlled: true,
                                     backgroundColor: Colors.white,
                                     shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                      borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(20)),
                                     ),
                                     builder: (context) {
                                       return Padding(
                                         padding: EdgeInsets.only(
-                                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                                          bottom:
+                                          MediaQuery.of(context)
+                                              .viewInsets
+                                              .bottom,
                                         ),
                                         child: const EditInvoiceDetailDialog(),
                                       );
@@ -863,7 +901,7 @@ class _FinanceClaimsInvoiceScreenState
                       const SizedBox(height: 16),
                       GridView.builder(
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 8,
                           mainAxisSpacing: 8,
@@ -878,7 +916,7 @@ class _FinanceClaimsInvoiceScreenState
                             count: item['count'] ?? '0',
                             label: item['label'] ?? 'Unknown',
                             iconPath:
-                                item['iconPath'] ?? 'assets/icons/default.svg',
+                            item['iconPath'] ?? 'assets/icons/default.svg',
                           );
                         },
                       ),
@@ -887,7 +925,6 @@ class _FinanceClaimsInvoiceScreenState
                 ),
               ),
               const SizedBox(height: 16),
-              // Compose button placed here
               const SizedBox(height: 12),
               if (areContactsVisible) ...[
                 Padding(
@@ -898,8 +935,9 @@ class _FinanceClaimsInvoiceScreenState
                       _contactCard(
                         label: 'Billing To',
                         name: 'Alfonso Mango',
-                        phone: '+65 7863 4563',
-                        email: 'sales877@gmail.com',
+                        address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
+                            'Tamil Nadu, India',
+                        location: 'X5JX+HX Chennai, Tamil Nadu',
                       ),
                     ],
                   ),
@@ -910,8 +948,9 @@ class _FinanceClaimsInvoiceScreenState
                   child: _contactCard(
                     label: 'Shipping To',
                     name: 'Abram Culhane',
-                    phone: '+65 8963 9863',
-                    email: 'sales98@gmail.com',
+                    address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
+                        'Tamil Nadu, India',
+                    location: 'X5JX+HX Chennai, Tamil Nadu',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -921,7 +960,6 @@ class _FinanceClaimsInvoiceScreenState
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: _buildRemarksSection(),
               ),
-
             ],
           ),
         ),

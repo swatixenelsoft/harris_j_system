@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:harris_j_system/screens/finance/finance_attached_files_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_customized_template_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_invoice_preview_2_screen.dart';
-import 'package:harris_j_system/screens/finance/finance_invoice_preview_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_schedule_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_terms_and_condition_screen.dart';
 import 'package:harris_j_system/screens/finance/invoice_model_screen.dart'; // Import for InvoiceItem
@@ -32,9 +31,10 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
   List<InvoiceItem> invoiceItems = [
     InvoiceItem(name: 'Resource 1', fee: 100.0),
     InvoiceItem(name: 'Resource 2', fee: 100.0),
-    InvoiceItem(name: 'Resource 3', fee: 100.0),
+    InvoiceItem(name: 'Resource 3', fee: 200.0),
     InvoiceItem(name: 'Resource 4', fee: 100.0),
-    InvoiceItem(name: 'Resource 5', fee: 100.0),
+    InvoiceItem(name: 'Resource 5', fee: 200.0),
+    InvoiceItem(name: 'Resource 6', fee: 200.0),
   ]; // Initial invoice items
 
   @override
@@ -52,8 +52,8 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
   double get subtotal {
     double sum = 0.0;
     for (var controller in feeControllers) {
-      sum += double.tryParse(controller.text) ?? 0.0;
-    }
+      sum += double.tryParse(controller.text) ??0.0;
+  }
     return sum;
   }
 
@@ -149,7 +149,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
               ],
             ),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 10),
           // Email Fields
           _buildLineField(
               label: 'From:', controller: _fromController, showPen: false),
@@ -159,7 +159,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
               label: 'CC:', controller: _ccController, showPen: true),
           _buildLineField(
               label: 'Subject:', controller: _subjectController, showPen: true),
-          const SizedBox(height: 10),
+          const SizedBox(height: 5),
           // Attached Files Section
           ElevatedButton(
             onPressed: () {
@@ -366,8 +366,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
             ),
           ),
           // Invoice Section
-          const SizedBox(height: 20),
-
+          const SizedBox(height: 1),
           // Terms and Conditions Checkbox
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -423,9 +422,12 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
                     ),
                   ),
                 ),
+
               ],
             ),
+
           ),
+          SizedBox(height: 150,),
           // Action Buttons
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -515,7 +517,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
     required bool showPen,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 5, left: 8, right: 8),
+      padding: const EdgeInsets.only(bottom: 2, left: 8, right: 8), // Reduced bottom padding
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -554,7 +556,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
           const Divider(
             color: Color(0xFFE8E8E8),
             thickness: 1,
-            height: 10,
+            height: 6, // Reduced divider height
           ),
         ],
       ),

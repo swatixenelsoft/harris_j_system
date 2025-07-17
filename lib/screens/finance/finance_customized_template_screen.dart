@@ -34,7 +34,7 @@ class CustomizeTemplateDialog extends StatelessWidget {
               mainAxisSize: MainAxisSize.min, // Minimum height for dialog
               crossAxisAlignment: CrossAxisAlignment.stretch, // Stretch content horizontally
               children: [
-// Header with curved top corners
+                // Header with curved top corners
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 20),
@@ -173,6 +173,8 @@ class CustomizeTemplateDialog extends StatelessWidget {
                         ),
                         SizedBox(height: screenHeight * 0.03),
 // Image Upload Section
+                        // Image Upload Section
+                        // Image Upload Section
                         Container(
                           padding: EdgeInsets.all(screenWidth * 0.04),
                           color: const Color.fromRGBO(141, 145, 160, 0.1),
@@ -187,9 +189,30 @@ class CustomizeTemplateDialog extends StatelessWidget {
                                 ),
                               ),
                               SizedBox(height: screenHeight * 0.01),
-                              Text(
-                                'Contact harrisjs.info@harrrisjs.com to get more information for uploading company template',
-                                style: GoogleFonts.montserrat(fontSize: screenWidth * 0.03),
+                              RichText(
+                                text: TextSpan(
+                                  text: 'Contact ',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: screenWidth * 0.03,
+                                    color: Colors.black, // Default text color
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: 'harrisjs.info@harrrisjs.com',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: screenWidth * 0.03,
+                                        color: const Color(0xff007BFF), // Blue color for email
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: ' to get more information for uploading company template',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: screenWidth * 0.03,
+                                        color: Colors.black, // Default text color
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                               SizedBox(height: screenHeight * 0.02),
                               Container(
@@ -212,11 +235,29 @@ class CustomizeTemplateDialog extends StatelessWidget {
                                 ),
                               ),
                               SizedBox(height: screenHeight * 0.005),
-                              Text(
-                                '*Allow to upload file PNG,JPG (Max.file size: 1MB)',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: screenWidth * 0.025,
-                                  color: Colors.grey,
+                              RichText(
+                                text: TextSpan(
+                                  text: '*Allow to upload file ',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: screenWidth * 0.025,
+                                    color: Colors.grey, // Default grey color
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: 'PNG,JPG',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: screenWidth * 0.025,
+                                        color: const Color(0xff007BFF), // Blue color for PNG,JPG
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: ' (Max.file size: 1MB)',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: screenWidth * 0.025,
+                                        color: Colors.grey, // Default grey color
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
