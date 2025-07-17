@@ -8,6 +8,7 @@ import 'package:harris_j_system/screens/finance/finance_invoice_preview_2_screen
 import 'package:harris_j_system/screens/finance/finance_invoice_preview_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_schedule_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_terms_and_condition_screen.dart';
+import 'package:harris_j_system/screens/finance/invoice_model_screen.dart'; // Import for InvoiceItem
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,6 +25,40 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
   final TextEditingController _toController = TextEditingController();
   final TextEditingController _ccController = TextEditingController();
   final TextEditingController _subjectController = TextEditingController();
+  List<TextEditingController> nameControllers = [];
+  List<TextEditingController> feeControllers = [];
+  late TextEditingController taxController;
+  double taxPercentage = 4.0; // Default tax percentage
+  List<InvoiceItem> invoiceItems = [
+    InvoiceItem(name: 'Resource 1', fee: 100.0),
+    InvoiceItem(name: 'Resource 2', fee: 100.0),
+    InvoiceItem(name: 'Resource 3', fee: 100.0),
+    InvoiceItem(name: 'Resource 4', fee: 100.0),
+    InvoiceItem(name: 'Resource 5', fee: 100.0),
+  ]; // Initial invoice items
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers for invoice items
+    for (var item in invoiceItems) {
+      nameControllers.add(TextEditingController(text: item.name));
+      feeControllers.add(
+          TextEditingController(text: item.fee.toStringAsFixed(2)));
+    }
+    taxController = TextEditingController(text: taxPercentage.toStringAsFixed(2));
+  }
+
+  double get subtotal {
+    double sum = 0.0;
+    for (var controller in feeControllers) {
+      sum += double.tryParse(controller.text) ?? 0.0;
+    }
+    return sum;
+  }
+
+  double get taxAmount => subtotal * (taxPercentage / 100);
+  double get total => subtotal - taxAmount; // Matches FinanceInvoicePreview2Screen logic
 
   @override
   void dispose() {
@@ -31,6 +66,13 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
     _toController.dispose();
     _ccController.dispose();
     _subjectController.dispose();
+    for (var controller in nameControllers) {
+      controller.dispose();
+    }
+    for (var controller in feeControllers) {
+      controller.dispose();
+    }
+    taxController.dispose();
     super.dispose();
   }
 
@@ -82,6 +124,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Back + Icons
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
             child: Row(
@@ -106,7 +149,8 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
               ],
             ),
           ),
-          const SizedBox(height: 25),
+          const SizedBox(height: 15),
+          // Email Fields
           _buildLineField(
               label: 'From:', controller: _fromController, showPen: false),
           _buildLineField(
@@ -115,7 +159,8 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
               label: 'CC:', controller: _ccController, showPen: true),
           _buildLineField(
               label: 'Subject:', controller: _subjectController, showPen: true),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
+          // Attached Files Section
           ElevatedButton(
             onPressed: () {
               showModalBottomSheet(
@@ -130,7 +175,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
               );
             },
             style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
+              foregroundColor: Colors.black,
               backgroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.all(12),
@@ -175,7 +220,8 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
               color: const Color(0xFF5A5A5A),
             ),
           ),
-          const SizedBox(height: 60),
+          const SizedBox(height: 70),
+          // Divider above Invoice Preview
           Container(
             margin: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
@@ -196,6 +242,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
               endIndent: 0,
             ),
           ),
+          // Invoice Preview and Customize Template Section
           Container(
             width: double.infinity,
             child: Row(
@@ -216,7 +263,27 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
                           child: SingleChildScrollView(
                             child: ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 800),
-                              child: const FinanceInvoicePreview2Screen(),
+                              child: FinanceInvoicePreview2Screen(
+                                initialItems: invoiceItems,
+                                initialTaxPercentage: taxPercentage,
+                                onSave: (updatedItems, updatedTax) {
+                                  setState(() {
+                                    invoiceItems = updatedItems;
+                                    taxPercentage = updatedTax;
+                                    // Update controllers
+                                    nameControllers.clear();
+                                    feeControllers.clear();
+                                    for (var item in invoiceItems) {
+                                      nameControllers.add(
+                                          TextEditingController(text: item.name));
+                                      feeControllers.add(TextEditingController(
+                                          text: item.fee.toStringAsFixed(2)));
+                                    }
+                                    taxController.text =
+                                        taxPercentage.toStringAsFixed(2);
+                                  });
+                                },
+                              ),
                             ),
                           ),
                         );
@@ -242,10 +309,10 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(16)),
+                        BorderRadius.vertical(top: Radius.circular(16)),
                       ),
                       builder: (BuildContext context) {
-                        return CustomizeTemplateDialog();
+                        return const CustomizeTemplateDialog();
                       },
                     );
                   },
@@ -277,6 +344,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
               ],
             ),
           ),
+          // Divider below Invoice Preview
           Container(
             margin: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
@@ -297,6 +365,10 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
               endIndent: 0,
             ),
           ),
+          // Invoice Section
+          const SizedBox(height: 20),
+
+          // Terms and Conditions Checkbox
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -304,15 +376,15 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
                 Checkbox(
                   value: true,
                   onChanged: (bool? value) {},
-                  activeColor: Colors.white,
-                  checkColor: Colors.black,
-                  side: BorderSide(color: Colors.black),
+                  activeColor: const Color(0xFFFF1901),
+                  checkColor: Colors.white,
+                  side: const BorderSide(color: Color(0xFFFF1901)),
                 ),
                 Expanded(
                   child: RichText(
                     text: TextSpan(
                       text:
-                          'By sending this invoice further you are agreeing to the ',
+                      'By sending this invoice further you are agreeing to the ',
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 12,
                         color: Colors.grey,
@@ -335,7 +407,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
                                       top: Radius.circular(20)),
                                 ),
                                 builder: (BuildContext context) {
-                                  return TermsConditionsDialog();
+                                  return const TermsConditionsDialog();
                                 },
                               );
                             },
@@ -354,7 +426,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
               ],
             ),
           ),
-          const SizedBox(height: 80),
+          // Action Buttons
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -363,6 +435,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
                 ElevatedButton(
                   onPressed: () {
                     print('Download pressed');
+                    // TODO: Implement download functionality
                   },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.black,
@@ -382,6 +455,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
                 ElevatedButton(
                   onPressed: () {
                     print('Email pressed');
+                    // TODO: Implement email functionality
                   },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.black,
@@ -405,10 +479,10 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(16)),
+                        BorderRadius.vertical(top: Radius.circular(16)),
                       ),
                       builder: (BuildContext context) {
-                        return ScheduleInvoiceDialog();
+                        return const ScheduleInvoiceDialog();
                       },
                     );
                   },
@@ -455,13 +529,13 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(width: 8), // Space between label and TextField
+              const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   controller: controller,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero, // Remove default padding
+                    contentPadding: EdgeInsets.zero,
                   ),
                   style: GoogleFonts.montserrat(
                     fontSize: 16,
@@ -480,7 +554,7 @@ class _ComposeButton2ScreenState extends State<ComposeButton2Screen> {
           const Divider(
             color: Color(0xFFE8E8E8),
             thickness: 1,
-            height: 10, // Adjusted to bring divider closer
+            height: 10,
           ),
         ],
       ),

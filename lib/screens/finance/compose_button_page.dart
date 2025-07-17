@@ -2,15 +2,15 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/screens/finance/finance_attached_files_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_customized_template_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_invoice_preview_2_screen.dart';
-import 'package:harris_j_system/screens/finance/finance_invoice_preview_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_schedule_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_terms_and_condition_screen.dart';
+import 'package:harris_j_system/screens/finance/invoice_model_screen.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class ComposeButtonScreen extends StatefulWidget {
   const ComposeButtonScreen({super.key});
@@ -20,6 +20,37 @@ class ComposeButtonScreen extends StatefulWidget {
 }
 
 class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
+  List<InvoiceItem> invoiceItems = [
+    InvoiceItem(name: 'Resource 1', fee: 100.0),
+    InvoiceItem(name: 'Resource 2', fee: 100.0),
+    InvoiceItem(name: 'Resource 3', fee: 100.0),
+    InvoiceItem(name: 'Resource 4', fee: 100.0),
+    InvoiceItem(name: 'Resource 5', fee: 100.0),
+  ];
+  double taxPercentage = 4.0; // Default tax percentage
+  late TextEditingController taxController;
+
+  @override
+  void initState() {
+    super.initState();
+    taxController = TextEditingController(text: taxPercentage.toStringAsFixed(2));
+  }
+
+  double get subtotal {
+    double sum = 0.0;
+    for (var item in invoiceItems) {
+      sum += item.fee;
+    }
+    return sum;
+  }
+  double get taxAmount => subtotal * (taxPercentage / 100);
+  double get total => subtotal - taxAmount;
+  @override
+  void dispose() {
+    taxController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,7 +99,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Back + Icons
+          // Back + Icons (unchanged)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
             child: Row(
@@ -93,18 +124,14 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 25),
-
-          // Email Fields with bottom line + optional pen icon
+          // Email Fields (unchanged)
           _buildLineField(label: 'From:', showPen: false),
           _buildLineField(label: 'To:', showPen: true),
           _buildLineField(label: 'CC:', showPen: true),
           _buildLineField(label: 'Subject:', showPen: true),
-
           const SizedBox(height: 20),
-
-          // Attached Files Section
+          // Attached Files Section (unchanged)
           ElevatedButton(
             onPressed: () {
               showModalBottomSheet(
@@ -114,7 +141,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                   borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                 ),
                 builder: (BuildContext context) {
-                  return AttachmentsDialog(); // Your popup widget
+                  return const AttachmentsDialog();
                 },
               );
             },
@@ -164,10 +191,8 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
               color: const Color(0xFF5A5A5A),
             ),
           ),
-          SizedBox(
-            height: 60,
-          ),
-          // Divider above Invoice Preview with Shadow
+          const SizedBox(height: 60),
+          // Divider above Invoice Preview (unchanged)
           Container(
             margin: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
@@ -188,8 +213,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
               endIndent: 0,
             ),
           ),
-
-          // Invoice Preview and Customize Template Section
+          // Invoice Preview and Customize Template Section (unchanged)
           Container(
             width: double.infinity,
             child: Row(
@@ -205,12 +229,24 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                         return Dialog(
                           insetPadding: const EdgeInsets.all(24),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius:
+
+                            BorderRadius.circular(10),
                           ),
                           child: SingleChildScrollView(
                             child: ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 800),
-                              child: const FinanceInvoicePreview2Screen(),
+                              child: FinanceInvoicePreview2Screen(
+                                initialItems: invoiceItems,
+                                initialTaxPercentage: taxPercentage,
+                                onSave: (updatedItems, updatedTax) {
+                                  setState(() {
+                                    invoiceItems = updatedItems;
+                                    taxPercentage = updatedTax;
+                                    taxController.text = taxPercentage.toStringAsFixed(2);
+                                  });
+                                },
+                              ),
                             ),
                           ),
                         );
@@ -235,11 +271,10 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                       context: context,
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(16)),
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                       ),
                       builder: (BuildContext context) {
-                        return CustomizeTemplateDialog();
+                        return const CustomizeTemplateDialog();
                       },
                     );
                   },
@@ -271,7 +306,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
               ],
             ),
           ),
-          // Divider below Invoice Preview with Shadow
+          // Divider below Invoice Preview (unchanged)
           Container(
             margin: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
@@ -292,7 +327,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
               endIndent: 0,
             ),
           ),
-          // Invoice Section
+          // Invoice Section (Modified to be Non-Editable)
           const SizedBox(height: 20),
           Container(
             width: double.infinity,
@@ -403,7 +438,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                 const SizedBox(height: 20),
                 Column(
                   children: [
-                    // Header Row (no shade, with bottom line)
+                    // Header Row
                     Container(
                       decoration: BoxDecoration(
                         border: Border(
@@ -431,9 +466,8 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                         ],
                       ),
                     ),
-
-                    // Data Rows with underline
-                    for (int i = 0; i < 5; i++)
+                    // Non-Editable Data Rows
+                    for (int i = 0; i < invoiceItems.length; i++)
                       Container(
                         decoration: BoxDecoration(
                           border: Border(
@@ -447,15 +481,23 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                             Expanded(
                               flex: 3,
                               child: Text(
-                                'Resource 1',
-                                style: GoogleFonts.montserrat(),
+                                invoiceItems[i].name,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Text(
-                                '\$100',
-                                style: GoogleFonts.montserrat(),
+                                '\$${invoiceItems[i].fee.toStringAsFixed(2)}',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                           ],
@@ -466,20 +508,20 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                 const SizedBox(height: 20),
                 Column(
                   children: [
-                    // Labels in one line
+                    // Labels
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
-                            'Total Amount',
+                            'Subtotal',
                             style: GoogleFonts.montserrat(color: Colors.grey),
                             textAlign: TextAlign.center,
                           ),
                         ),
                         Expanded(
                           child: Text(
-                            'Tax %',
+                            'Tax Deduction %',
                             style: GoogleFonts.montserrat(color: Colors.grey),
                             textAlign: TextAlign.center,
                           ),
@@ -500,7 +542,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            '\$500',
+                            '\$${subtotal.toStringAsFixed(2)}',
                             style: GoogleFonts.montserrat(
                                 fontWeight: FontWeight.w600),
                             textAlign: TextAlign.center,
@@ -508,7 +550,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            '4%',
+                            '${taxPercentage.toStringAsFixed(2)}%',
                             style: GoogleFonts.montserrat(
                                 fontWeight: FontWeight.w600),
                             textAlign: TextAlign.center,
@@ -516,7 +558,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            '\$540',
+                            '\$${total.toStringAsFixed(2)}',
                             style: GoogleFonts.montserrat(
                                 fontWeight: FontWeight.w600),
                             textAlign: TextAlign.center,
@@ -538,9 +580,9 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '\$540',
-                        style:
-                            GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+                        '\$${total.toStringAsFixed(2)}',
+                        style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -555,7 +597,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
               ],
             ),
           ),
-          // Terms and Conditions Checkbox
+          // Terms and Conditions Checkbox (unchanged)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -569,7 +611,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                   child: RichText(
                     text: TextSpan(
                       text:
-                          'By sending this invoice further you are agreeing to the ',
+                      'By sending this invoice further you are agreeing to the ',
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 12,
                         color: Colors.grey,
@@ -592,7 +634,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                                       top: Radius.circular(20)),
                                 ),
                                 builder: (BuildContext context) {
-                                  return TermsConditionsDialog();
+                                  return const TermsConditionsDialog();
                                 },
                               );
                             },
@@ -611,16 +653,16 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
               ],
             ),
           ),
-          // Action Buttons
-          // Action Buttons
+          // Action Buttons (unchanged)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start, // Changed to start
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 ElevatedButton(
                   onPressed: () {
                     print('Download pressed');
+                    // TODO: Implement download functionality
                   },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.black,
@@ -637,10 +679,10 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                     colorFilter: null,
                   ),
                 ),
-                // Reduced gap
                 ElevatedButton(
                   onPressed: () {
                     print('Email pressed');
+                    // TODO: Implement email functionality
                   },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.black,
@@ -657,7 +699,6 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                     colorFilter: null,
                   ),
                 ),
-                // Reduced gap
                 ElevatedButton(
                   onPressed: () {
                     showModalBottomSheet(
@@ -665,10 +706,10 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(16)),
+                        BorderRadius.vertical(top: Radius.circular(16)),
                       ),
                       builder: (BuildContext context) {
-                        return ScheduleInvoiceDialog();
+                        return const ScheduleInvoiceDialog();
                       },
                     );
                   },
