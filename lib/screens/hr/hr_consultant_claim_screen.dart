@@ -35,7 +35,7 @@ class HrConsultantClaimScreen extends ConsumerStatefulWidget {
 class _HrConsultantClaimScreenState
     extends ConsumerState<HrConsultantClaimScreen> {
   int activeIndex = -1;
-  double calendarHeight = 350;
+  double calendarHeight = 0;
   String? token;
   String? _selectedClient;
   String? _selectedClientId;
@@ -290,7 +290,7 @@ class _HrConsultantClaimScreenState
                     pinned: true,
                     floating: true,
                     delegate: FixedHeaderDelegate(
-                      height: 180 + calendarHeight,
+                      height: 120 + calendarHeight,
                       activeIndex: activeIndex,
                       customData: customData,
                       child: Column(

@@ -243,8 +243,8 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Left side: Info
-                        Container(
-                          height: 220,
+                        SizedBox(
+                          height: 230,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -391,27 +391,26 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
                 ),
                 const SizedBox(height: 16),
                 consultancyCard(
-                  count: dashboardData['status_counts']['working'].toString(),
+                  count: dashboardData['status_counts']?['working']?.toString() ?? '0',
                   label: "Total Number Of Employees",
                   iconPath: 'assets/icons/employee_list_icon.svg',
                 ),
                 const SizedBox(height: 16),
                 consultancyCard(
-                  count: dashboardData['status_counts']['new'].toString(),
+                  count: dashboardData['status_counts']?['new']?.toString()??'0',
                   label: "Total Number Of New Employees",
                   iconPath: 'assets/icons/new_employee_icon.svg',
                 ),
 
                 const SizedBox(height: 16),
                 consultancyCard(
-                  count: dashboardData['status_counts']['relieving'].toString(),
+                  count: dashboardData['status_counts']?['relieving']?.toString()??'0',
                   label: "Total Number Of Relieving Employees",
                   iconPath: 'assets/icons/relieving_employee_icon.svg',
                 ),
                 const SizedBox(height: 16),
                 consultancyCard(
-                  count: dashboardData['status_counts']['future_joining']
-                      .toString(),
+                  count: dashboardData['status_counts']?['future_joining']?.toString()??'0',
                   label: "Total Number Of Future Joining Employees",
                   iconPath: 'assets/icons/joining_employee_icon.svg',
                 ),

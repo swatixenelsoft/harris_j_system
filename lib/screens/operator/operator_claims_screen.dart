@@ -32,7 +32,7 @@ class OperatorClaimScreen extends ConsumerStatefulWidget {
 class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
   int activeIndex = -1;
   int? _selectedRowIndex;
-  double calendarHeight = 350;
+  double calendarHeight = 0;
   String? token;
   TextEditingController _searchController = TextEditingController();
 
@@ -256,13 +256,6 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-
-// Use a percentage of screen height, e.g., 20%
-    final headerBaseHeight = screenHeight * 0.24;
-
-// Add calendarHeight
-    final headerHeight = headerBaseHeight + calendarHeight;
     final operatorState = ref.watch(operatorProvider);
     final List<dynamic> fullConsultantData =
         operatorState.hrConsultantList ?? [];
@@ -299,56 +292,59 @@ class _OperatorClaimScreenState extends ConsumerState<OperatorClaimScreen> {
                     pinned: true,
                     floating: true,
                     delegate: FixedHeaderDelegate(
-                      height: headerHeight,
+                      height: calendarHeight+130,
                       activeIndex: activeIndex,
                       customData: customData,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 5),
-                            width: double.infinity,
-                            color: const Color(0xffF5F5F5),
-                            child: _stepperUI(context, iconData, activeIndex),
-                          ),
-                          const SizedBox(height: 5),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 7,
-                                  spreadRadius: 1,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
+                      child: SizedBox(
+                        height: calendarHeight,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 5),
+                              width: double.infinity,
+                              color: const Color(0xffF5F5F5),
+                              child: _stepperUI(context, iconData, activeIndex),
                             ),
-                            child: CalendarScreen(
-                              selectedMonth: selectedMonth,
-                              selectedYear: selectedYear,
-                              onHeightCalculated: _updateCalendarHeight,
-                              customData: customData,
-                              isFromClaimScreen: true,
-                              isFromHrScreen: true,
-                              isGoodToGo:true,
-                              claimsDetails: claimsDetails,
-                              backDatedClaims: (operatorState
-                                      .selectedConsultantData['data'] is Map)
-                                  ? Map<String, dynamic>.from(operatorState
-                                      .selectedConsultantData['data'])
-                                  : {},
-                              onMonthChanged: (month, year) async {
-                                setState(() {
-                                  selectedMonth = month;
-                                  selectedYear = year;
-                                });
-                                _refreshData();
-                              },
+                            const SizedBox(height: 5),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 7,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: CalendarScreen(
+                                selectedMonth: selectedMonth,
+                                selectedYear: selectedYear,
+                                onHeightCalculated: _updateCalendarHeight,
+                                customData: customData,
+                                isFromClaimScreen: true,
+                                isFromHrScreen: true,
+                                isGoodToGo:true,
+                                claimsDetails: claimsDetails,
+                                backDatedClaims: (operatorState
+                                        .selectedConsultantData['data'] is Map)
+                                    ? Map<String, dynamic>.from(operatorState
+                                        .selectedConsultantData['data'])
+                                    : {},
+                                onMonthChanged: (month, year) async {
+                                  setState(() {
+                                    selectedMonth = month;
+                                    selectedYear = year;
+                                  });
+                                  _refreshData();
+                                },
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

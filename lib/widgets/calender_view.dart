@@ -241,48 +241,75 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return (to.year - from.year) * 12 + (to.month - from.month);
   }
 
-
-
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenSize = mediaQuery.size;
+    final screenHeight = screenSize.height;
+    final screenWidth = screenSize.width;
+    final aspectRatio = screenHeight / screenWidth;
+    final safeAreaHeight = screenHeight - mediaQuery.padding.top - mediaQuery.padding.bottom;
+
     List<DateTime> monthDays = CommonFunction().getDaysInMonth(_currentMonth);
     int weeksInMonth = (monthDays.length / 7).ceil();
 
-    final screenHeight = MediaQuery.of(context).size.height;
+    // Base height calculation (responsive)
+    double baseHeight = weeksInMonth == 6
+        ? screenHeight * 0.37
+        : screenHeight * 0.31;
 
-    // ✅ Base height for regular rows
-    calculatedHeight = weeksInMonth == 6 ? screenHeight*0.37 : screenHeight*0.313;
+    // Additional height based on screen type and aspect ratio
+    double additionalHeight = 0;
 
-    // ✅ Adjust for claim screen's extra row
-    if (widget.isFromClaimScreen && !widget.isFromHrScreen) {
-      if (weeksInMonth == 6) {
-        calculatedHeight +=screenHeight*0.234; // Add height for extra row (7 items)
-      } else if (weeksInMonth == 5) {
-        calculatedHeight += screenHeight*0.215; // Slightly less if only 5 weeks
-      }
+    if (widget.isFromClaimScreen && widget.isFromHrScreen) {
+      additionalHeight = _calculateAdditionalHeight(
+        safeAreaHeight: safeAreaHeight,
+        weeksInMonth: weeksInMonth,
+        isHrScreen: true,
+        isClaimScreen: true,
+      );
+      print('additionalHeight $additionalHeight');
     }
-
-    else if (widget.isFromClaimScreen && widget.isFromHrScreen) {
-      if (weeksInMonth == 6) {
-        calculatedHeight += screenHeight*0.197; // Add height for extra row (7 items)
-      } else if (weeksInMonth == 5) {
-        calculatedHeight += screenHeight*0.177; // Slightly less if only 5 weeks
-      }
+    else if (widget.isFromClaimScreen && !widget.isFromHrScreen) {
+      print('dfh');
+      additionalHeight = _calculateAdditionalHeight(
+        safeAreaHeight: safeAreaHeight,
+        weeksInMonth: weeksInMonth,
+        isHrScreen: false,
+        isClaimScreen: true,
+      );
+      print('additionalHeight $additionalHeight');
     }
     else if (!widget.isFromClaimScreen && widget.isFromHrScreen) {
-      if (weeksInMonth == 6) {
-        calculatedHeight += screenHeight*0.141; // Add height for extra row (7 items)
-      } else if (weeksInMonth == 5) {
-        calculatedHeight += screenHeight*0.123; // Slightly less if only 5 weeks
-      }
+      additionalHeight = _calculateAdditionalHeight(
+        safeAreaHeight: safeAreaHeight,
+        weeksInMonth: weeksInMonth,
+        isHrScreen: true,
+        isClaimScreen: false,
+      );
+      print('additionalHeight $additionalHeight');
     }
-    else if (!widget.isFromClaimScreen && !widget.isFromHrScreen) {
-      if (weeksInMonth == 6) {
-        calculatedHeight += screenHeight*0.14; // Add height for extra row (7 items)
-      } else if (weeksInMonth == 5) {
-        calculatedHeight += screenHeight*0.123; // Slightly less if only 5 weeks
-      }
+    else {
+      additionalHeight = _calculateAdditionalHeight(
+        safeAreaHeight: safeAreaHeight,
+        weeksInMonth: weeksInMonth,
+        isHrScreen: false,
+        isClaimScreen: false,
+      );
+      print('additionalHeight $additionalHeight');
     }
+
+    // Fixed extra height for backdated claims
+    if (widget.isFromClaimScreen) {
+      additionalHeight += safeAreaHeight * 0.07; // or tune percentage
+    }
+
+
+    // Calculate final height with constraints
+    calculatedHeight = (baseHeight + additionalHeight).clamp(
+      screenHeight * 0.43,  // lower minimum so smaller screens won't overflow
+      screenHeight * 0.65,  // allow taller on big screens
+    );
 
     widget.onHeightCalculated(calculatedHeight);
 
@@ -355,21 +382,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         calenderView(monthDays),
       ],
     );
-
-
   }
 
   Widget calenderView(List<DateTime> monthDays) {
-    print('customDatacalender ${widget.customData}');
-    print('backdatedClaim ${widget.backDatedClaims},${widget.selectedMonth}');
     final backdatedClaims = widget.backDatedClaims as Map<String, dynamic>? ?? {};
-    print('blk1Map $backdatedClaims');
+
     return SizedBox(
-      height: widget.isFromClaimScreen && !widget.isFromHrScreen
-          ? calculatedHeight + 32
-          : widget.isFromHrScreen && widget.isFromClaimScreen
-              ? calculatedHeight +60
-              : calculatedHeight,
+      height: calculatedHeight,
       child: PageView.builder(
         controller: _pageController,
         onPageChanged: _onPageChanged,
@@ -407,7 +426,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
                         List<String> valuesList = [];
                         if (blkMap.isNotEmpty) {
-                          // Sort keys numerically and get values
                           final sortedKeys = blkMap.keys.toList()
                             ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
                           valuesList = sortedKeys.map((k) => blkMap[k]?.toString() ?? '0').toList();
@@ -417,7 +435,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           child: Container(
                             height: 50,
                             decoration: const BoxDecoration(
-                              color: Colors.white, // no background color change
+                              color: Colors.white,
                               border: Border(
                                 bottom: BorderSide(width: 1, color: Color(0xffE8E8E8)),
                                 left: BorderSide(width: 1, color: Color(0xffE8E8E8)),
@@ -430,11 +448,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               text: TextSpan(
                                 children: List.generate(valuesList.length * 2 - 1, (i) {
                                   if (i.isEven) {
-                                    // Number part
                                     final numIndex = i ~/ 2;
                                     final text = valuesList[numIndex];
-                                    // Assign colors for each number differently (cycle colors if needed)
-                                    final colors = [const Color(0xffB8E6D0), const Color(0xffE9BDBF), const Color(0xffFF9F2D)];
+                                    final colors = [
+                                      const Color(0xffB8E6D0),
+                                      const Color(0xffE9BDBF),
+                                      const Color(0xffFF9F2D)
+                                    ];
                                     final color = colors[numIndex % colors.length];
                                     return TextSpan(
                                       text: text,
@@ -445,7 +465,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                       ),
                                     );
                                   } else {
-                                    // Comma separator
                                     return const TextSpan(
                                       text: ' ',
                                       style: TextStyle(fontSize: 16, color: Colors.black),
@@ -455,15 +474,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               ),
                             )
                                 : const Text(
-                              '', // empty if no data
+                              '',
                               style: TextStyle(fontSize: 16),
                             ),
                           ),
                         );
                       }),
                     ),
-
-
                   ],
                 ),
             ],
@@ -472,6 +489,48 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
     );
   }
+  // Helper function for consistent additional height calculation
+  double _calculateAdditionalHeight({
+    required double safeAreaHeight,
+    required int weeksInMonth,
+    required bool isHrScreen,
+    required bool isClaimScreen,
+  }) {
+    final bool isTallDevice = safeAreaHeight > 800;  // or adjust threshold as per testing
+
+    print('isTallDevice $isTallDevice, $safeAreaHeight $weeksInMonth');
+
+    if (isHrScreen && isClaimScreen) {
+      // adjust by weeks
+      print('thhh');
+      return isTallDevice
+          ?safeAreaHeight * (weeksInMonth == 6 ? 0.16 : 0.14)
+          : safeAreaHeight * (weeksInMonth == 6 ? 0.2: 0.19);
+    } else if (isHrScreen) {
+      return isTallDevice
+          ? safeAreaHeight * (weeksInMonth == 6 ? 0.1 : 0.00)  // <– new value for 5 weeks
+          : safeAreaHeight * (weeksInMonth == 6 ? 0.14 : 0.00); // <– same
+    }
+    else if (isClaimScreen) {
+      print('Only Claim screen');
+      return isTallDevice
+          ? safeAreaHeight * (weeksInMonth == 6 ? 0.16 : 0.14)
+          : safeAreaHeight * (weeksInMonth == 6 ? 0.2 : 0.192);
+    }
+    else if (!isClaimScreen) {
+      print('Only time screen');
+      return isTallDevice
+          ? safeAreaHeight * (weeksInMonth == 6 ? 0.11 : 0.09)
+          : safeAreaHeight * (weeksInMonth == 6 ? 0.14 : 0.09);
+    }
+    else {
+      print('Default case');
+      return isTallDevice
+          ?safeAreaHeight * (weeksInMonth == 6 ? 0.14 : 0.05)
+          : safeAreaHeight * (weeksInMonth == 6 ? 0.09 : 0.07);  // slightly less for shorter devices
+    }
+  }
+
 
   Widget _buildWeekdayLabels() {
     List<String> weekdays = ["S", "M", "T", "W", "TH", "F", "S"];
@@ -538,6 +597,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       return date.weekday;
     } // Other days remain same
   }
+
+
 
   Widget _buildMonthlyCalender(List<DateTime> monthDays) {
     final consultantState = ref.watch(consultantProvider);

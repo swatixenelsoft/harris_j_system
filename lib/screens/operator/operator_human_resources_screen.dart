@@ -29,7 +29,7 @@ class HumanResourcesScreen extends ConsumerStatefulWidget {
 class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
   int activeIndex = 0;
   int? _selectedRowIndex;
-  double calendarHeight = 350;
+  double calendarHeight = 0;
   String? token;
   String? _selectedClient;
   String? _selectedClientId;
@@ -194,14 +194,7 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-
-// Use a percentage of screen height, e.g., 20%
-    final headerBaseHeight = screenHeight * 0.11;
-
-// Add calendarHeight
-    final headerHeight = headerBaseHeight + calendarHeight;
+    Widget build(BuildContext context) {
     final operatorState = ref.watch(operatorProvider);
     final List<dynamic> fullConsultantData =
         operatorState.hrConsultantList ?? [];
@@ -236,7 +229,7 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
                       pinned: true,
                       floating: true,
                       delegate: FixedHeaderDelegate(
-                        height: headerHeight,
+                        height: calendarHeight+125,
                         customData: customData,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -267,6 +260,7 @@ class _HumanResourcesScreenState extends ConsumerState<HumanResourcesScreen> {
                                 onHeightCalculated: _updateCalendarHeight,
                                 customData: customData,
                                 isFromHrScreen: true,
+                                  isGoodToGo:true,
                                 onMonthChanged: (month, year) async {
                                   setState(() {
                                     selectedMonth = month;

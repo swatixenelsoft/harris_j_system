@@ -35,7 +35,7 @@ class HrConsultantTimeSheetScreen extends ConsumerStatefulWidget {
 class _HrConsultantTimeSheetScreenState
     extends ConsumerState<HrConsultantTimeSheetScreen> {
   int activeIndex = -1;
-  double calendarHeight = 350;
+  double calendarHeight = 0;
   String? token;
 
   String? _selectedClient;

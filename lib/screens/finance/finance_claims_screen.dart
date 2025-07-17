@@ -31,7 +31,7 @@ class FinanceClaimScreen extends ConsumerStatefulWidget {
 class _FinanceClaimScreenState extends ConsumerState<FinanceClaimScreen> {
   int activeIndex = -1;
   int? _selectedRowIndex;
-  double calendarHeight = 350;
+  double calendarHeight = 0;
   String? token;
   String? _selectedClient;
   String? _selectedClientId;
@@ -250,13 +250,7 @@ class _FinanceClaimScreenState extends ConsumerState<FinanceClaimScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
 
-// Use a percentage of screen height, e.g., 20%
-    final headerBaseHeight = screenHeight * 0.2;
-
-// Add calendarHeight
-    final headerHeight = headerBaseHeight + calendarHeight;
     final financeState = ref.watch(financeProvider);
 
     final List<dynamic> fullConsultantData = financeState.hrConsultantList ?? [];
@@ -292,7 +286,7 @@ print('customDatafinance $customData');
                   pinned: true,
                   floating: true,
                   delegate: FixedHeaderDelegate(
-                    height: headerHeight,
+                    height: calendarHeight+90,
                     customData: customData,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

@@ -582,7 +582,7 @@ class _OperatorDashboardScreenState
                   color: const Color(0xffE5F1FF),
                 ),
                 child: Text(
-                  timesheetData!['Total Timesheets'].toString(),
+                  timesheetData?['Total Timesheets'].toString()??'0',
                   style: GoogleFonts.montserrat(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -593,17 +593,17 @@ class _OperatorDashboardScreenState
               const SizedBox(height: 40),
               LegendDot(
                 color: const Color(0xff28A745),
-                label: "Submitted: ${timesheetData!['Submitted']!.toInt()}",
+                label: "Submitted: ${timesheetData?['Submitted']?.toInt() ?? 0}",
               ),
               const SizedBox(height: 8),
               LegendDot(
                 color: const Color(0xff007BFF),
-                label: "Approved: ${timesheetData!['Approved']!.toInt()}",
+                label: "Approved: ${timesheetData?['Approved']?.toInt()??'0'}",
               ),
               const SizedBox(height: 8),
               LegendDot(
                 color: const Color(0xffFF1901),
-                label: "Rejected: ${timesheetData!['Rejected']!.toInt()}",
+                label: "Rejected: ${timesheetData?['Rejected']?.toInt()??'0'}",
               ),
             ],
           ),
@@ -613,9 +613,9 @@ class _OperatorDashboardScreenState
           width: 120,
           child: PieChart(
             dataMap: {
-              "Submitted": (timesheetData!['Submitted'] ?? 0).toDouble(),
-              "Approved": (timesheetData!['Approved'] ?? 0).toDouble(),
-              "Rejected": (timesheetData!['Rejected'] ?? 0).toDouble(),
+              "Submitted": (timesheetData?['Submitted'] ?? 0).toDouble(),
+              "Approved": (timesheetData?['Approved'] ?? 0).toDouble(),
+              "Rejected": (timesheetData?['Rejected'] ?? 0).toDouble(),
             },
             chartType: ChartType.disc,
             baseChartColor: Colors.grey[200]!,
