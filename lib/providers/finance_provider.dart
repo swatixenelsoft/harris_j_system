@@ -26,6 +26,8 @@ class GetFinanceState {
     this.selectedConsultantData = const {},
   });
 
+
+
   GetFinanceState copyWith({
     bool? isLoading,
     String? error,
@@ -73,8 +75,8 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
     }
   }
 
-  Future<Map<String, dynamic>> getConsultantByClient(
-      String clientId, String token) async {
+  Future<Map<String, dynamic>> getConsultantByClient(String clientId,
+      String token) async {
     try {
       final response = await apiService.getConsultantByClient(clientId, token);
       final bool status = response['status'] ?? false;
@@ -103,8 +105,8 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
     }
   }
 
-  Future<Map<String, dynamic>> deleteConsultant(
-      int id, String token, String clientId) async {
+  Future<Map<String, dynamic>> deleteConsultant(int id, String token,
+      String clientId) async {
     try {
       final response = await apiService.deleteConsultant(id, token);
       final bool status = response['status'] ?? false;
@@ -128,13 +130,12 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
     }
   }
 
-  Future<void> getConsultantTimeSheetByClient(
-    String clientId,
-    String month,
-    String year,
-    String token, {
-    Map<String, dynamic>? previouslySelectedConsultant,
-  }) async {
+  Future<void> getConsultantTimeSheetByClient(String clientId,
+      String month,
+      String year,
+      String token, {
+        Map<String, dynamic>? previouslySelectedConsultant,
+      }) async {
     state = state.copyWith(error: null);
 
     try {
@@ -146,9 +147,9 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
         final List<dynamic> consultants = response['data'] ?? [];
 
         final List<Map<String, dynamic>> flattenedConsultantList =
-            consultants.map<Map<String, dynamic>>((consultant) {
+        consultants.map<Map<String, dynamic>>((consultant) {
           final Map<String, dynamic> consultantInfo =
-              Map<String, dynamic>.from(consultant['consultant_info'] ?? {});
+          Map<String, dynamic>.from(consultant['consultant_info'] ?? {});
           consultant.forEach((key, value) {
             if (key != 'consultant_info') {
               consultantInfo[key] = value;
@@ -158,7 +159,7 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
         }).toList();
 
         final List<Map<String, dynamic>> fullConsultants =
-            consultants.whereType<Map<String, dynamic>>().toList();
+        consultants.whereType<Map<String, dynamic>>().toList();
 
         state = state.copyWith(
           consultantList: flattenedConsultantList,
@@ -171,12 +172,12 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
         // ✅ Match selected consultant again after refresh
         if (previouslySelectedConsultant != null) {
           final selectedEmpId =
-              previouslySelectedConsultant['consultant_info']?['user_id'];
+          previouslySelectedConsultant['consultant_info']?['user_id'];
           print('selectedEmpId $selectedEmpId');
           if (selectedEmpId != null) {
             print('fullConsultants $fullConsultants');
             final updatedConsultant = fullConsultants.firstWhere(
-              (e) {
+                  (e) {
                 print(
                     'user_id ${e['consultant_info']?['user_id']},$selectedEmpId');
                 return e['consultant_info']?['user_id'] == selectedEmpId;
@@ -206,13 +207,12 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
     }
   }
 
-  Future<void> getConsultantClaimsByClientFinance(
-    String clientId,
-    String month,
-    String year,
-    String token, {
-    Map<String, dynamic>? previouslySelectedConsultant,
-  }) async
+  Future<void> getConsultantClaimsByClientFinance(String clientId,
+      String month,
+      String year,
+      String token, {
+        Map<String, dynamic>? previouslySelectedConsultant,
+      }) async
   {
     state = state.copyWith(error: null);
 
@@ -225,9 +225,9 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
         final List<dynamic> consultants = response['data'] ?? [];
 
         final List<Map<String, dynamic>> flattenedConsultantClaimsList =
-            consultants.map<Map<String, dynamic>>((consultant) {
+        consultants.map<Map<String, dynamic>>((consultant) {
           final Map<String, dynamic> consultantInfo =
-              Map<String, dynamic>.from(consultant['consultant_info'] ?? {});
+          Map<String, dynamic>.from(consultant['consultant_info'] ?? {});
           consultant.forEach((key, value) {
             if (key != 'consultant_info') {
               consultantInfo[key] = value;
@@ -237,7 +237,7 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
         }).toList();
 
         final List<Map<String, dynamic>> fullConsultantsClaim =
-            consultants.whereType<Map<String, dynamic>>().toList();
+        consultants.whereType<Map<String, dynamic>>().toList();
 
         state = state.copyWith(
           consultantList: flattenedConsultantClaimsList,
@@ -250,11 +250,11 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
         // ✅ Match selected consultant again after refresh
         if (previouslySelectedConsultant != null) {
           final selectedEmpId =
-              previouslySelectedConsultant['consultant_info']?['user_id'];
+          previouslySelectedConsultant['consultant_info']?['user_id'];
           print('selectedEmpId $selectedEmpId');
           if (selectedEmpId != null) {
             final updatedConsultant = fullConsultantsClaim.firstWhere(
-              (e) => e['consultant_info']?['user_id'] == selectedEmpId,
+                  (e) => e['consultant_info']?['user_id'] == selectedEmpId,
               orElse: () => {},
             );
 
@@ -280,12 +280,78 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
     }
   }
 
-  getSelectedConsultantDetails(Map<String, dynamic> selectedConsultant) {
-    log('selectedConsultant ${selectedConsultant}');
+  Future<void> getConsultantTimesheetByClientFinance(String clientId,
+      String month,
+      String year,
+      String token, {
+        Map<String, dynamic>? previouslySelectedConsultant,
+      }) async {
+    state = state.copyWith(error: null);
+    try {
+      final response = await apiService.getConsultantTimesheetByClientFinance(
+        clientId, month, year, token,
+      );
+      final bool status = response['status'] ?? false;
+
+      if (status) {
+        final List<dynamic> consultants = response['data'] ?? [];
+
+        // FLATTEN: consultant_info + top-level keys except consultant_info
+        final List<Map<String, dynamic>> flattenedConsultantList =
+        consultants.map<Map<String, dynamic>>((consultant) {
+          final Map<String, dynamic> consultantInfo =
+          Map<String, dynamic>.from(consultant['consultant_info'] ?? {});
+          consultant.forEach((key, value) {
+            if (key != 'consultant_info') {
+              consultantInfo[key] = value;
+            }
+          });
+          return consultantInfo;
+        }).toList();
+
+        final List<Map<String, dynamic>> fullConsultants =
+        consultants.whereType<Map<String, dynamic>>().toList();
+
+        state = state.copyWith(
+          consultantList: flattenedConsultantList,
+          hrConsultantList: fullConsultants,
+          selectedConsultantData: {}, // Reset for safety
+        );
+
+        // Optionally match previously selected
+        if (previouslySelectedConsultant != null) {
+          final selectedEmpId =
+          previouslySelectedConsultant['consultant_info']?['user_id'];
+          if (selectedEmpId != null) {
+            final updatedConsultant = fullConsultants.firstWhere(
+                  (e) => e['consultant_info']?['user_id'] == selectedEmpId,
+              orElse: () => {},
+            );
+            if (updatedConsultant.isNotEmpty) {
+              getSelectedConsultantDetails(updatedConsultant);
+            }
+          }
+        }
+      } else {
+        state = state.copyWith(
+          error: response['message'] ?? 'Failed to fetch consultants',
+          consultantList: [],
+          hrConsultantList: [],
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  // For row tap: select full consultant detail
+  void getSelectedConsultantDetails(Map<String, dynamic> selectedConsultant) {
     final rawData = selectedConsultant['data'];
     final backdateData =
-        (rawData is List && rawData.isEmpty) ? {} : (rawData ?? {});
-    print(' statussss ${selectedConsultant['status']}');
+    (rawData is List && rawData.isEmpty) ? {} : (rawData ?? {});
     final status = selectedConsultant['status'] ?? '';
     final remarks = selectedConsultant['remarks'] ?? [];
     final timesheetData = selectedConsultant['timesheet_data'] ?? [];
@@ -294,12 +360,9 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
     final payOffLog = selectedConsultant['pay_off_log'] ?? [];
     final compOffLog = selectedConsultant['comp_off_log'] ?? [];
     final getCopies = selectedConsultant['get_copies'] ?? [];
-
-    // ✅ Claims-specific keys
     final claims = selectedConsultant['claims'] ?? [];
     final claimTab = selectedConsultant['claim_tab'] ?? [];
 
-    // Update state
     state = state.copyWith(
       selectedConsultantData: {
         'data': backdateData,
@@ -316,9 +379,7 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
       },
     );
 
-    print('Selected consultant data updated ${state.selectedConsultantData['claims']}');
-  }
-
+}
 // Future<Map<String, dynamic>> editConsultancy(
 //     int id,
 //     String consultancyName,
