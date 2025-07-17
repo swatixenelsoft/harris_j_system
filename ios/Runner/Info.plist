@@ -45,5 +45,29 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- ✅ Add these for permissions used by packages -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to take pictures.</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to select and upload images.</string>
+
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs access to save images to your photo library.</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app uses the microphone for video/audio recording.</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs your location to show relevant content nearby.</string>
+
+	<key>NSContactsUsageDescription</key>
+	<string>This app may use your contacts to autofill phone numbers or country codes.</string>
+
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 </dict>
 </plist>

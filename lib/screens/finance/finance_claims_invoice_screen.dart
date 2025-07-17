@@ -727,6 +727,27 @@ class _FinanceClaimsInvoiceScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: CustomButton(
+        text: 'Compose',
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ComposeButton2Screen(),
+            ),
+          );
+        },
+        height: 40,
+        width: 120,
+        color: const Color(0xffFF1901),
+        svgAsset: 'assets/icons/white_edit.svg',
+        textStyle: GoogleFonts.montserrat(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        leftPadding: 10,
+      ),
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
         showBackButton: false,
@@ -900,31 +921,7 @@ class _FinanceClaimsInvoiceScreenState
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: _buildRemarksSection(),
               ),
-              Positioned(
-                bottom: 10,
-                right: 0, // fully flush to the right edge
-                child: CustomButton(
-                  text: 'Compose',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ComposeButton2Screen(),
-                      ),
-                    );
-                  },
-                  height: 40,
-                  width: 120,
-                  color: const Color(0xffFF1901),
-                  svgAsset: 'assets/icons/white_edit.svg',
-                  textStyle: GoogleFonts.montserrat(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                  leftPadding: 10,
-                ),
-              ),
+
             ],
           ),
         ),

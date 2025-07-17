@@ -66,4 +66,6 @@ class ApiConstant {
   static const String financeClientList = "finance/client-list";
   static const String consultantClaimsListFinanceTab =
       "hr/consultant-list-claim-tab";
+  static const String consultantTimesheetFinanceTab = "finance/finanetab-api";
+
 }
