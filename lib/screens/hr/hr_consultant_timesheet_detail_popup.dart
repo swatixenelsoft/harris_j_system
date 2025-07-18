@@ -41,8 +41,10 @@ class HrConsultantTimesheetDetailPopup extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                child: const CircleAvatar(
-                  backgroundImage: AssetImage('assets/images/profile.jpg'),
+                child:  CircleAvatar(
+                  backgroundImage:  (consultant['consultant_info']['profile_image'] != null && consultant['consultant_info']['profile_image'].toString().isNotEmpty)
+                      ? NetworkImage(consultant['consultant_info']['profile_image'])
+                      : AssetImage('assets/images/profile.jpg') as ImageProvider,
                   radius: 20,
                 ),
               ),
@@ -51,7 +53,7 @@ class HrConsultantTimesheetDetailPopup extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    consultant['consultant_info']['emp_name'] ?? 'Bruce Lee',
+                    consultant['consultant_info']['emp_name'] ?? 'N/A',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -59,7 +61,7 @@ class HrConsultantTimesheetDetailPopup extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    consultant['consultant_info']['emp_code'] ?? "",
+                   'Employee Id: ${consultant['consultant_info']['emp_code'] ?? ""}',
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -148,7 +150,7 @@ class HrConsultantTimesheetDetailPopup extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                             color: const Color(0xff037EFF))), // Reduce space
                     TextSpan(
-                        text: consultant['consultant_info']['joining_date'],
+                        text: consultant['consultant_info']['joining_date']??"",
                         style: GoogleFonts.montserrat(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -161,7 +163,7 @@ class HrConsultantTimesheetDetailPopup extends StatelessWidget {
           ),
 
           Text(
-            consultant['consultant_info']['designation'],
+            consultant['consultant_info']['designation']??'',
             style: GoogleFonts.montserrat(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -188,7 +190,7 @@ class HrConsultantTimesheetDetailPopup extends StatelessWidget {
                       child: SvgPicture.asset('assets/icons/phone_icon.svg')),
                   const SizedBox(width: 6),
                   Text(
-                    '${consultant['consultant_info']['mobile_number_code']} ${consultant['consultant_info']['mobile_number']}',
+                    '${consultant['consultant_info']['mobile_number_code']??''} ${consultant['consultant_info']['mobile_number']??''}',
                     style: GoogleFonts.spaceGrotesk(
                         fontSize: 12, fontWeight: FontWeight.w500),
                     overflow: TextOverflow.ellipsis,
@@ -210,7 +212,7 @@ class HrConsultantTimesheetDetailPopup extends StatelessWidget {
                   SizedBox(
                     width: MediaQuery.of(context).size.width * 0.4,
                     child: Text(
-                      consultant['consultant_info']['email'],
+                      consultant['consultant_info']['email']??'',
                       style: GoogleFonts.spaceGrotesk(
                           fontSize: 12, fontWeight: FontWeight.w500),
                       softWrap: true,
@@ -241,7 +243,7 @@ class HrConsultantTimesheetDetailPopup extends StatelessWidget {
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.7,
                 child: Text(
-                  consultant['consultant_info']['show_address_input'],
+                  consultant['consultant_info']['show_address_input']??'',
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -272,7 +274,7 @@ class HrConsultantTimesheetDetailPopup extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                'W772+M6 Chennai, Tamil Nadu',
+                consultant['consultant_info']['plus_code'] ??'' ,
                 style: GoogleFonts.spaceGrotesk(
                     fontSize: 12, fontWeight: FontWeight.w500),
                 overflow: TextOverflow.ellipsis,

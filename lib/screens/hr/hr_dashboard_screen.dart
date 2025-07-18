@@ -278,7 +278,7 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
                               ),
                               const SizedBox(height: 8),
                               LegendDot(
-                                  color: const Color(0xff007BFF),
+                                  color: const Color(0xffFF8403),
                                   label:
                                       "Permanent Resident:  ${dashboardData["residential_breakdown"]?["permanent_resident"].toString() ?? "N/A"}"),
                               const SizedBox(height: 8),
@@ -313,7 +313,7 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
                             baseChartColor: Colors.grey[200]!,
                             colorList: const [
                               Color(0xFF28A745),
-                              Color(0xff007BFF),
+                              Color(0xffFF8403),
                               Color(0xFFFD0D1B),
                             ],
                             chartRadius: 160, // Bigger radius
@@ -337,7 +337,7 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Total Activity",
+                      Text("Your Wins",
                           style: GoogleFonts.montserrat(
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
@@ -392,26 +392,26 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
                 const SizedBox(height: 16),
                 consultancyCard(
                   count: dashboardData['status_counts']?['working']?.toString() ?? '0',
-                  label: "Total Number Of Employees",
+                  label: "Talent HeadCount",
                   iconPath: 'assets/icons/employee_list_icon.svg',
                 ),
                 const SizedBox(height: 16),
                 consultancyCard(
                   count: dashboardData['status_counts']?['new']?.toString()??'0',
-                  label: "Total Number Of New Employees",
+                  label: "New Talent onBoarded",
                   iconPath: 'assets/icons/new_employee_icon.svg',
                 ),
 
                 const SizedBox(height: 16),
                 consultancyCard(
                   count: dashboardData['status_counts']?['relieving']?.toString()??'0',
-                  label: "Total Number Of Relieving Employees",
+                  label: "Talent Departure Summary",
                   iconPath: 'assets/icons/relieving_employee_icon.svg',
                 ),
                 const SizedBox(height: 16),
                 consultancyCard(
                   count: dashboardData['status_counts']?['future_joining']?.toString()??'0',
-                  label: "Total Number Of Future Joining Employees",
+                  label: "Incoming Talent",
                   iconPath: 'assets/icons/joining_employee_icon.svg',
                 ),
 

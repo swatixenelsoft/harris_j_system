@@ -467,16 +467,21 @@ class _HrConsultantTimeSheetScreenState
                         final consultantInfo =
                             consultant['consultant_info'] ?? {};
                         final workLog = consultant['work_log'] ?? {};
+                        print('workLog ${workLog['AL']}');
                         return {
                           'emp_name': consultantInfo['emp_name'] ?? '',
-                          'working_hours':
-                              consultantInfo['working_hours'] ?? '',
+                          'status': consultantInfo['status'] ?? '',
                           'logged_hours': workLog['logged_hours'] ?? 0,
+                          'forecasted_hours': workLog['forecasted_hours'] ?? 0,
+                          'AL': workLog['leave_summary']['AL'] ?? 0,
+                          'ML': workLog['leave_summary']['ML'] ?? 0,
+                          'PDO': workLog['leave_summary']['PDO'] ?? 0,
+                          'UL': workLog['leave_summary']['UL'] ?? 0,
                           'full_data':
                               consultant, // include full object for actions
                         };
                       }).toList(),
-                      columns: ['emp_name', 'working_hours', 'actions'],
+                      columns: ['emp_name','status', 'logged_hours','forecasted_hours','AL','ML','PDO', 'UL','actions'],
                       onZoomTap: (rowData) {
                         _showConsultancyPopup(context, rowData['full_data']);
                       },
@@ -508,13 +513,43 @@ class _HrConsultantTimeSheetScreenState
                     columns: [
                       GridColumn(
                         columnName: 'emp_name',
-                        width: 120,
+                        width: 100,
                         label: _buildHeaderCell('Name'),
                       ),
                       GridColumn(
-                        columnName: 'working_hours',
-                        width: 120,
-                        label: _buildHeaderCell('Hours Logged'),
+                        columnName: 'status',
+                        width: 60,
+                        label: _buildHeaderCell('Queue'),
+                      ),
+                      GridColumn(
+                        columnName: 'forecasted_hours',
+                        width: 70,
+                        label: _buildHeaderCell('Hrs Lgd/Fcst'),
+                      ),
+                      GridColumn(
+                        columnName: 'logged_hours',
+                        width: 70,
+                        label: _buildHeaderCell('Logged Time-off'),
+                      ),
+                      GridColumn(
+                        columnName: 'AL',
+                        width: 70,
+                        label: _buildHeaderCell('AL Overview'),
+                      ),
+                      GridColumn(
+                        columnName: 'ML',
+                        width: 70,
+                        label: _buildHeaderCell('ML Overview'),
+                      ),
+                      GridColumn(
+                        columnName: 'PDO',
+                        width: 70,
+                        label: _buildHeaderCell('PDO Overview'),
+                      ),
+                      GridColumn(
+                        columnName: 'UL',
+                        width: 70,
+                        label: _buildHeaderCell('UL Overview'),
                       ),
                       GridColumn(
                         columnName: 'actions',
