@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/screens/finance/invoice_model_screen.dart';
 import 'package:harris_j_system/widgets/custom_button.dart'; // Adjust path as needed
 
-class FinanceInvoicePreview2Screen extends StatefulWidget {
+class CustomInvoiceView extends StatefulWidget {
+  final String selecteTemplate;
+  final bool isEditable;
   final List<InvoiceItem> initialItems;
   final double initialTaxPercentage;
   final Function(List<InvoiceItem>, double) onSave;
 
-  const FinanceInvoicePreview2Screen({
+  const CustomInvoiceView({
     super.key,
+    required this.selecteTemplate,
+    required this.isEditable,
     required this.initialItems,
     required this.initialTaxPercentage,
     required this.onSave,
   });
 
   @override
-  State<FinanceInvoicePreview2Screen> createState() =>
-      _FinanceInvoicePreview2ScreenState();
+  State<CustomInvoiceView> createState() =>
+      _CustomInvoiceViewState();
 }
 
-class _FinanceInvoicePreview2ScreenState
-    extends State<FinanceInvoicePreview2Screen> {
+class _CustomInvoiceViewState
+    extends State<CustomInvoiceView> {
   List<TextEditingController> nameControllers = [];
   List<TextEditingController> feeControllers = [];
   late TextEditingController taxController;
@@ -64,7 +69,7 @@ class _FinanceInvoicePreview2ScreenState
       children: [
         Container(
           width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 35),
+          margin:  EdgeInsets.symmetric(horizontal: 20, vertical: widget.isEditable?0:35),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -109,7 +114,7 @@ class _FinanceInvoicePreview2ScreenState
                 ),
 
                 const SizedBox(height: 20),
-                Row(
+                widget.selecteTemplate=="Template1"?Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     billFromWidget(
@@ -126,10 +131,32 @@ class _FinanceInvoicePreview2ScreenState
                       location: 'X5JX+HX Chennai, Tamil Nadu',
                     ),
                   ],
-                ),
-                const SizedBox(height: 10),
+                ):
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
 
-                // Table header
+                    billTemp2Widget(
+                      title: 'Bill From:',
+                      companyName: 'Harris J System',
+                      address: 'No.22,Abcd Street,RR Nager,Chennai-600016,Tamil Nadu,India',
+                      code: 'X5JX+HX Chennai, Tamil Nadu',
+                      color: Color.fromRGBO(255, 150, 27, 0.3),
+                      textColor: Color(0xff0369D7),
+                    ),
+                    SizedBox(height: 10),
+                    billTemp2Widget(
+                      title: 'Bill To:',
+                      companyName: 'Encore Films',
+                      address: 'No.22,Abcd Street,RR Nager,Chennai-600016,Tamil Nadu,India',
+                      code: 'X5JX+HX Chennai, Tamil Nadu',
+                      color: Colors.grey.shade200,
+                      textColor: Color(0xff1F9254),
+                    ),
+                  ],
+                ),
+
+
                 Container(
                   decoration: BoxDecoration(
                     border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
@@ -165,6 +192,7 @@ class _FinanceInvoicePreview2ScreenState
                         Expanded(
                           flex: 3,
                           child: TextField(
+                            readOnly: widget.isEditable?true:false,
                             controller: nameControllers[i],
                             onChanged: (_) => setState(() {}),
                             decoration: const InputDecoration(
@@ -178,6 +206,7 @@ class _FinanceInvoicePreview2ScreenState
                         Expanded(
                           flex: 2,
                           child: TextField(
+                            readOnly: widget.isEditable?true:false,
                             controller: feeControllers[i],
                             keyboardType: TextInputType.number,
                             onChanged: (_) => setState(() {}),
@@ -231,6 +260,7 @@ class _FinanceInvoicePreview2ScreenState
                         ),
                         Expanded(
                           child: TextField(
+                            readOnly: widget.isEditable?true:false,
                             controller: taxController,
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
@@ -281,7 +311,7 @@ class _FinanceInvoicePreview2ScreenState
         ),
 
         // Close button
-        Positioned(
+    if(!widget.isEditable)    Positioned(
           top: 10,
           right: 10,
           child: GestureDetector(
@@ -299,7 +329,7 @@ class _FinanceInvoicePreview2ScreenState
         ),
 
         // Save button
-        Positioned(
+      if(!widget.isEditable)  Positioned(
           bottom: 0,
           right: 16,
           child: ElevatedButton.icon(
@@ -359,4 +389,118 @@ class _FinanceInvoicePreview2ScreenState
       ),
     );
   }
+
+  Widget billTemp2Widget({
+    required String title,
+    required String companyName,
+    required String address,
+    required String code,
+    required Color color,
+    required Color textColor,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color:color,
+        borderRadius: BorderRadius.circular(2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.montserrat(
+              fontSize: 8,                // fixed font size
+              color:textColor,   // fixed color
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                companyName,
+                style: GoogleFonts.montserrat(
+                  fontSize: 11,                // fixed font size
+                  fontWeight: FontWeight.w600, // fixed weight
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Address row with location icon
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: SvgPicture.asset(
+                            'assets/icons/location_marker.svg',
+                            height: 5,
+                            width: 5,
+                            color: Color(0xffFF1901),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Expanded(
+                          child: Text(
+                            address,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 7, // fixed font size
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    // Code row with google_code icon
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: SvgPicture.asset(
+                            'assets/icons/google_code.svg',
+                            height: 5,
+                            width: 5,
+                            color: Color(0xffFF1901),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Expanded(
+                          child: Text(
+                            code,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 7, // fixed font size
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
 }

@@ -471,8 +471,9 @@ class _HrConsultantTimeSheetScreenState
                         return {
                           'emp_name': consultantInfo['emp_name'] ?? '',
                           'status': consultantInfo['status'] ?? '',
-                          'logged_hours': workLog['logged_hours'] ?? 0,
-                          'forecasted_hours': workLog['forecasted_hours'] ?? 0,
+
+                          'logged_hours':  '${workLog['logged_hours']}/${workLog['forecasted_hours']}'?? 0,
+                          'Logged Time-off': workLog['leave_summary']['Logged Time-off'] ?? 0,
                           'AL': workLog['leave_summary']['AL'] ?? 0,
                           'ML': workLog['leave_summary']['ML'] ?? 0,
                           'PDO': workLog['leave_summary']['PDO'] ?? 0,
@@ -481,7 +482,7 @@ class _HrConsultantTimeSheetScreenState
                               consultant, // include full object for actions
                         };
                       }).toList(),
-                      columns: ['emp_name','status', 'logged_hours','forecasted_hours','AL','ML','PDO', 'UL','actions'],
+                      columns: ['emp_name','status', 'logged_hours','Logged Time-off','AL','ML','PDO', 'UL','actions'],
                       onZoomTap: (rowData) {
                         _showConsultancyPopup(context, rowData['full_data']);
                       },
@@ -527,7 +528,7 @@ class _HrConsultantTimeSheetScreenState
                         label: _buildHeaderCell('Hrs Lgd/Fcst'),
                       ),
                       GridColumn(
-                        columnName: 'logged_hours',
+                        columnName: 'Logged Time-off',
                         width: 70,
                         label: _buildHeaderCell('Logged Time-off'),
                       ),

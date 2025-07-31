@@ -441,18 +441,18 @@ class HrConsultantTimesheetDetailPopup extends StatelessWidget {
           if (!isFromClaims) ...[
             _buildFieldPair(
               leftLabel: 'AL Overview',
-              leftValue: consultant['work_log']['leave_summary']['AL'],
+              leftValue: consultant['work_log']['leave_summary']['AL'].toString(),
               rightLabel: 'ML Overview',
-              rightValue: consultant['work_log']['leave_summary']['ML'],
+              rightValue: consultant['work_log']['leave_summary']['ML'].toString(),
             ),
             const SizedBox(height: 16),
 
             // Country and Primary Email
             _buildFieldPair(
               leftLabel: 'PDO Overview',
-              leftValue: consultant['work_log']['leave_summary']['PDO'],
+              leftValue: consultant['work_log']['leave_summary']['PDO'].toString(),
               rightLabel: 'UL Overview',
-              rightValue: consultant['work_log']['leave_summary']['UL'],
+              rightValue: consultant['work_log']['leave_summary']['UL'].toString(),
             ),
           ],
 

@@ -122,8 +122,8 @@ class CustomButton extends StatelessWidget {
           if (svgAsset != null) ...[
             SvgPicture.asset(
               svgAsset!,
-              height: 25,
-              width: 25,
+              height: 20,
+              width: 20,
             ),
             const SizedBox(width: 5), // Space between icon and text
           ],

@@ -10,6 +10,8 @@ import 'package:harris_j_system/screens/finance/finance_schedule_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_terms_and_condition_screen.dart';
 import 'package:harris_j_system/screens/finance/invoice_model_screen.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
+import 'package:harris_j_system/widgets/custom_button.dart';
+import 'package:harris_j_system/widgets/custom_invoice_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ComposeButtonScreen extends StatefulWidget {
@@ -20,6 +22,18 @@ class ComposeButtonScreen extends StatefulWidget {
 }
 
 class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
+
+  double taxPercentage = 4.0; // Default tax percentage
+  late TextEditingController taxController;
+  String selectedTemplate = 'Template1';
+
+  @override
+  void initState() {
+    super.initState();
+    taxController =
+        TextEditingController(text: taxPercentage.toStringAsFixed(2));
+  }
+
   List<InvoiceItem> invoiceItems = [
     InvoiceItem(name: 'Resource 1', fee: 100.0),
     InvoiceItem(name: 'Resource 2', fee: 100.0),
@@ -27,29 +41,8 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
     InvoiceItem(name: 'Resource 4', fee: 100.0),
     InvoiceItem(name: 'Resource 5', fee: 100.0),
   ];
-  double taxPercentage = 4.0; // Default tax percentage
-  late TextEditingController taxController;
 
-  @override
-  void initState() {
-    super.initState();
-    taxController = TextEditingController(text: taxPercentage.toStringAsFixed(2));
-  }
 
-  double get subtotal {
-    double sum = 0.0;
-    for (var item in invoiceItems) {
-      sum += item.fee;
-    }
-    return sum;
-  }
-  double get taxAmount => subtotal * (taxPercentage / 100);
-  double get total => subtotal - taxAmount;
-  @override
-  void dispose() {
-    taxController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +76,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
 
   Widget _buildHeaderContent() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+      padding: const EdgeInsets.symmetric(vertical: 15),
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.only(
           topRight: Radius.circular(20),
@@ -101,7 +94,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
         children: [
           // Back + Icons (unchanged)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -130,32 +123,10 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
           _buildLineField(label: 'To:', showPen: true),
           _buildLineField(label: 'CC:', showPen: true),
           _buildLineField(label: 'Subject:', showPen: true),
-          const SizedBox(height: 20),
-          // Attached Files Section (unchanged)
-          ElevatedButton(
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                builder: (BuildContext context) {
-                  return const AttachmentsDialog();
-                },
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.black,
-              backgroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.all(12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   decoration: const BoxDecoration(
@@ -165,61 +136,60 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                   padding: const EdgeInsets.all(8),
                   child: SvgPicture.asset(
                     'assets/icons/attach.svg',
-                    height: 20,
+                    height: 10,
                     colorFilter: null,
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'Attached Files',
-                  style: GoogleFonts.montserrat(
-                    color: const Color(0xFFFF1901),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    decoration: TextDecoration.underline,
-                    decorationColor: const Color(0xFFFF1901),
-                  ),
+                Column(
+                  children: [
+                    Text(
+                      'Attached Files',
+                      style: GoogleFonts.montserrat(
+                        color: const Color(0xFFFF1901),
+                        fontWeight: FontWeight.w400,
+                        fontSize: 13,
+                        decoration: TextDecoration.underline,
+                        decorationColor: const Color(0xFFFF1901),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            'Maximum allowed file size is 512 MB',
-            style: GoogleFonts.montserrat(
-              fontSize: 12,
-              color: const Color(0xFF5A5A5A),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 45),
+            child: Text(
+              'Maximum allowed file size is 512 MB',
+              style: GoogleFonts.montserrat(
+                fontSize: 10,
+                color: const Color(0xFF5A5A5A),
+              ),
             ),
           ),
-          const SizedBox(height: 60),
-          // Divider above Invoice Preview (unchanged)
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  spreadRadius: 0,
-                  blurRadius: 1,
-                  offset: const Offset(1, 0),
-                ),
-              ],
-            ),
-            child: Divider(
-              color: Colors.grey.shade300,
-              thickness: 1,
-              height: 1,
-              indent: 0,
-              endIndent: 0,
-            ),
-          ),
-          // Invoice Preview and Customize Template Section (unchanged)
+          const SizedBox(height: 40),
           Container(
             width: double.infinity,
+            padding: const EdgeInsets.only(left: 18,top:13,bottom: 13,right: 10),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(width: 1,   color: Colors.white,),      // add top border
+                bottom: BorderSide(width: 1,   color:Colors.white),   // add bottom border
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color.fromRGBO(0, 0, 0, 0.25),
+                  spreadRadius: 0,
+                  blurRadius: 3,
+                  offset: Offset(0, 0),
+                ),
+              ],
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
                     showDialog(
@@ -227,26 +197,25 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                       barrierDismissible: true,
                       builder: (BuildContext context) {
                         return Dialog(
-                          insetPadding: const EdgeInsets.all(24),
+                          insetPadding: const EdgeInsets.all(15),
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-
-                            BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(1),
                           ),
-                          child: SingleChildScrollView(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 800),
-                              child: FinanceInvoicePreview2Screen(
-                                initialItems: invoiceItems,
-                                initialTaxPercentage: taxPercentage,
-                                onSave: (updatedItems, updatedTax) {
-                                  setState(() {
-                                    invoiceItems = updatedItems;
-                                    taxPercentage = updatedTax;
-                                    taxController.text = taxPercentage.toStringAsFixed(2);
-                                  });
-                                },
-                              ),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 900),
+                            child: CustomInvoiceView(
+                              selecteTemplate: selectedTemplate,
+                              isEditable:false,
+                              initialItems: invoiceItems,
+                              initialTaxPercentage: taxPercentage,
+                              onSave: (updatedItems, updatedTax) {
+                                setState(() {
+                                  invoiceItems = updatedItems;
+                                  taxPercentage = updatedTax;
+                                  taxController.text =
+                                      taxPercentage.toStringAsFixed(2);
+                                });
+                              },
                             ),
                           ),
                         );
@@ -257,370 +226,105 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                     'Invoice Preview',
                     style: GoogleFonts.montserrat(
                       color: const Color(0xFFFF1901),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
                       decoration: TextDecoration.underline,
                       decorationColor: const Color(0xFFFF1901),
                     ),
                   ),
                 ),
                 const SizedBox(width: 70),
-                ElevatedButton(
-                  onPressed: () {
-                    showModalBottomSheet(
+
+                GestureDetector(
+                  onTap: ()async{
+                    final selectedTemplateData = await showModalBottomSheet(
                       context: context,
                       backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(16)),
                       ),
                       builder: (BuildContext context) {
                         return const CustomizeTemplateDialog();
                       },
                     );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    backgroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
+
+
+                    if (selectedTemplateData != null) {
+                      print('User selected: $selectedTemplate');
+                      setState(() {
+                        selectedTemplate=selectedTemplateData;
+                      });
+                      // TODO: Update your state, send API call, show toast, etc.
+                    }                  },
                   child: Text(
                     'Customize Template',
                     style: GoogleFonts.montserrat(
                       color: const Color(0xFFFF1901),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
                       decoration: TextDecoration.underline,
                       decorationColor: const Color(0xFFFF1901),
                     ),
                   ),
                 ),
+
                 const SizedBox(width: 5),
                 SvgPicture.asset(
                   'assets/icons/fullscreen.svg',
-                  height: 18,
+                  height: 20,
                 ),
               ],
-            ),
-          ),
-          // Divider below Invoice Preview (unchanged)
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  spreadRadius: 0,
-                  blurRadius: 1,
-                  offset: const Offset(1, 0),
-                ),
-              ],
-            ),
-            child: Divider(
-              color: Colors.grey.shade300,
-              thickness: 1,
-              height: 1,
-              indent: 0,
-              endIndent: 0,
             ),
           ),
           // Invoice Section (Modified to be Non-Editable)
           const SizedBox(height: 20),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.black26),
-              borderRadius: BorderRadius.zero,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Image.asset(
-                      'assets/icons/cons_logo.png',
-                      height: 30,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Invoice',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Date: 01-04-2025',
-                      style: GoogleFonts.montserrat(fontSize: 12),
-                    ),
-                    Text(
-                      'Due Date: 01-04-2025',
-                      style: GoogleFonts.montserrat(fontSize: 12),
-                    ),
-                    Text(
-                      'Invoice#: #EM098789',
-                      style: GoogleFonts.montserrat(fontSize: 12),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Bill From:',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 14,
-                              color: Color(0xff007BFF),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Encore Films',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'No.22,Abcd Street,RR Nager,\nChennai-600016,Tamil Nadu,India\nX5JX+HX Chennai, Tamil Nadu',
-                            style: GoogleFonts.montserrat(fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Bill To:',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 14,
-                              color: Color(0xff28A745),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Encore Films',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'No.22,Abcd Street,RR Nager,\nChennai-600016,Tamil Nadu,India\nX5JX+HX Chennai, Tamil Nadu',
-                            style: GoogleFonts.montserrat(fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Column(
-                  children: [
-                    // Header Row
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.grey.shade300),
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              'Name',
-                              style: GoogleFonts.montserrat(color: Colors.grey),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              'Service Fee',
-                              style: GoogleFonts.montserrat(color: Colors.grey),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Non-Editable Data Rows
-                    for (int i = 0; i < invoiceItems.length; i++)
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Colors.grey.shade300),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                invoiceItems[i].name,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                '\$${invoiceItems[i].fee.toStringAsFixed(2)}',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Column(
-                  children: [
-                    // Labels
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Subtotal',
-                            style: GoogleFonts.montserrat(color: Colors.grey),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            'Tax Deduction %',
-                            style: GoogleFonts.montserrat(color: Colors.grey),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            'Total',
-                            style: GoogleFonts.montserrat(color: Colors.grey),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    const Divider(height: 32, color: Colors.grey),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '\$${subtotal.toStringAsFixed(2)}',
-                            style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w600),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            '${taxPercentage.toStringAsFixed(2)}%',
-                            style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w600),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            '\$${total.toStringAsFixed(2)}',
-                            style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w600),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 32, color: Colors.grey),
-                  ],
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Total Billing Amt.',
-                        style: GoogleFonts.montserrat(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '\$${total.toStringAsFixed(2)}',
-                        style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Auto generated by the system',
-                  style: GoogleFonts.spaceGrotesk(
-                      color: Colors.grey, fontSize: 12),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+          CustomInvoiceView(
+            selecteTemplate :selectedTemplate,
+            isEditable:true,
+            initialItems: invoiceItems,
+            initialTaxPercentage: taxPercentage,
+            onSave: (updatedItems, updatedTax) {
+              setState(() {
+                invoiceItems = updatedItems;
+                taxPercentage = updatedTax;
+                taxController.text =
+                    taxPercentage.toStringAsFixed(2);
+              });
+            },
           ),
           // Terms and Conditions Checkbox (unchanged)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Checkbox(
-                  value: true,
-                  onChanged: (bool? value) {},
-                  activeColor: const Color(0xFFFF1901),
+                Transform.scale(
+                  scale: 0.9, // shrink checkbox size a bit
+                  child: Checkbox(
+                    value: true,
+                    onChanged: (bool? value) {},
+                    activeColor: const Color(0xFFFF1901),
+                    visualDensity: VisualDensity.compact, // reduce extra padding
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
                 Expanded(
                   child: RichText(
                     text: TextSpan(
                       text:
-                      'By sending this invoice further you are agreeing to the ',
+                          'By sending this invoice further you are agreeing to the ',
                       style: GoogleFonts.spaceGrotesk(
-                        fontSize: 12,
-                        color: Colors.grey,
+                        fontSize: 11,
+                        color: const Color(0xff9D9D9D),
+                        fontWeight: FontWeight.w400,
+                        height: 1.8,
                       ),
                       children: [
                         TextSpan(
                           text: 'Terms & Conditions',
                           style: GoogleFonts.spaceGrotesk(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: const Color(0xff007BFF),
                             decoration: TextDecoration.underline,
                           ),
@@ -629,7 +333,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                               showModalBottomSheet(
                                 context: context,
                                 backgroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
+                                shape: const RoundedRectangleBorder(
                                   borderRadius: BorderRadius.vertical(
                                       top: Radius.circular(20)),
                                 ),
@@ -642,7 +346,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                         TextSpan(
                           text: ' of Encore Films.',
                           style: GoogleFonts.spaceGrotesk(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Colors.grey,
                           ),
                         ),
@@ -654,80 +358,36 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
             ),
           ),
           // Action Buttons (unchanged)
+
+          SizedBox(height: 20),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+
               children: [
-                ElevatedButton(
-                  onPressed: () {
-                    print('Download pressed');
-                    // TODO: Implement download functionality
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    backgroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: SvgPicture.asset(
-                    'assets/icons/downloadd.svg',
-                    height: 30,
-                    colorFilter: null,
-                  ),
+                CustomButton(isOutlined:true,text: 'Donwload', onPressed: (){},svgAsset:
+                    'assets/icons/download2.svg',width: 100,height: 30,leftPadding: 0,
+                 ),
+                SizedBox(width: 30),
+                CustomButton(isOutlined:true,text: 'Email', onPressed: (){},svgAsset:
+                'assets/icons/mail_report.svg',width: 70,height: 30,leftPadding: 0,
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    print('Email pressed');
-                    // TODO: Implement email functionality
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.black,
+                SizedBox(width: 30),
+                CustomButton(isOutlined:true,text: 'Schedule', onPressed: (){
+                  showModalBottomSheet(
+                    context: context,
                     backgroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(16)),
                     ),
-                  ),
-                  child: SvgPicture.asset(
-                    'assets/icons/email.svg',
-                    height: 30,
-                    colorFilter: null,
-                  ),
+                    builder: (BuildContext context) {
+                      return const ScheduleInvoiceDialog();
+                    },
+                  );
+                },width: 80,height: 30,leftPadding: 0,
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(16)),
-                      ),
-                      builder: (BuildContext context) {
-                        return const ScheduleInvoiceDialog();
-                      },
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    backgroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: SvgPicture.asset(
-                    'assets/icons/schedule.svg',
-                    height: 30,
-                    colorFilter: null,
-                  ),
-                ),
+
               ],
             ),
           ),
@@ -736,9 +396,11 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
     );
   }
 
+
+
   Widget _buildLineField({required String label, required bool showPen}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15, left: 8, right: 8),
+      padding: const EdgeInsets.only(bottom: 15, left: 18, right: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -748,8 +410,8 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
                 child: Text(
                   label,
                   style: GoogleFonts.montserrat(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
                     color: Colors.black,
                   ),
                 ),
@@ -763,7 +425,7 @@ class _ComposeButtonScreenState extends State<ComposeButtonScreen> {
           ),
           const SizedBox(height: 5),
           const Divider(
-            color: Color(0xFFE8E8E8),
+            color: Color(0xFFE1E1E1),
             thickness: 1,
             height: 1,
           ),

@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/providers/consultant_provider.dart';
 import 'package:harris_j_system/providers/hr_provider.dart';
+import 'package:harris_j_system/screens/bom/bom_dashboard_screen.dart';
 import 'package:harris_j_system/screens/consultancy/widget/consultancy_client_data_table_widget.dart';
 import 'package:harris_j_system/screens/hr/hr_consultant_timesheet_detail_popup.dart';
 import 'package:harris_j_system/screens/navigation/constant.dart';
@@ -43,11 +44,13 @@ class _HrConsultantClaimScreenState
   List<String> _clientList = [];
   List<Map<String, dynamic>> _rawClientList = [];
   int? _selectedRowIndex;
+  int? _selectedUserId;
   Map<String, dynamic> selectedFullData = {};
 
   int selectedMonth = DateTime.now().month;
   int selectedYear = DateTime.now().year;
   Map<DateTime, List<Map<String, dynamic>>> customData = {};
+  List<Map<String, dynamic>> _dataList = [];
 
   List<String> iconData = [
     'assets/icons/icon1.svg',
@@ -122,13 +125,37 @@ class _HrConsultantClaimScreenState
     setState(() {});
   }
 
-  getConsultantClaimsByClient() async {
+  Future<void> getConsultantClaimsByClient() async {
     await ref.read(hrProvider.notifier).getConsultantClaimsByClient(
         _selectedClientId!,
         selectedMonth.toString().padLeft(2, '0'),
         selectedYear.toString(),
         token!);
+
+    // After fetch completes, update the flattened _dataList cache
+    final hrState = ref.read(hrProvider);
+    final consultantList = hrState.hrConsultantList ?? [];
+
+    setState(() {
+      _dataList = consultantList.expand<Map<String, dynamic>>((consultant) {
+        final tableDataList = consultant['table_data'] as List<dynamic>? ?? [];
+        final userId = consultant['consultant_info']?['user_id'];
+        return tableDataList.map<Map<String, dynamic>>((tableData) {
+          return {
+            'name': formatValue(tableData['name']),
+            'queue': formatValue(tableData['queue']),
+            'submitted': formatValue(tableData['submitted']),
+            'claim_no': formatValue(tableData['claim_no']),
+            'number_of_claims': formatValue(tableData['number_of_claims']),
+            'total_amount': formatValue(tableData['total_amount']),
+            'user_id': userId,
+            'full_data': consultant,
+          };
+        });
+      }).toList();
+    });
   }
+
 
   fetchData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -140,34 +167,51 @@ class _HrConsultantClaimScreenState
     ref.read(hrProvider.notifier).setLoading(false);
   }
   Future<void> _refreshData() async {
-    print('selectedMonth $selectedMonth');
+    print('selectedMonth $selectedMonth,$_selectedClientId');
 
     if (token != null) {
       await ref.read(hrProvider.notifier).getConsultantClaimsByClient(
-            _selectedClientId!,
-            selectedMonth.toString().padLeft(2, '0'),
-            selectedYear.toString(),
-            token!,
-            previouslySelectedConsultant: selectedFullData,
-          );
+        _selectedClientId!,
+        selectedMonth.toString().padLeft(2, '0'),
+        selectedYear.toString(),
+        token!,
+        previouslySelectedConsultant: selectedFullData,
+      );
 
-      // ✅ Now re-read the updated provider state
+      // Re-read the updated state
       final hrState = ref.read(hrProvider);
-      final updatedClaims = hrState.selectedConsultantData['claims'] ?? [];
-      final status= hrState.selectedConsultantData['status'];
+      final updatedConsultantList = hrState.hrConsultantList ?? [];
 
-      print('updatedClaims ,$status');
-
-      final newParsedData = parseTimelineData(updatedClaims);
-
+      // 🟩 Update _dataList here
       setState(() {
-        customData = newParsedData;
+        _dataList = updatedConsultantList.expand<Map<String, dynamic>>((consultant) {
+          final tableDataList = consultant['table_data'] as List<dynamic>? ?? [];
+          final userId = consultant['consultant_info']?['user_id'];
+          return tableDataList.map<Map<String, dynamic>>((tableData) {
+            return {
+              'name': formatValue(tableData['name']),
+              'queue': formatValue(tableData['queue']),
+              'submitted': formatValue(tableData['submitted']),
+              'claim_no': formatValue(tableData['claim_no']),
+              'number_of_claims': formatValue(tableData['number_of_claims']),
+              'total_amount': formatValue(tableData['total_amount']),
+              'user_id': userId,
+              'full_data': consultant,
+            };
+          });
+        }).toList();
+
+        // Update other UI data (e.g., timeline)
+        final updatedClaims = hrState.selectedConsultantData['claims'] ?? [];
+        customData = parseTimelineData(updatedClaims);
       });
+
       await updateActiveIndexFromStatus();
 
-      print('✅ Updated customData for month $selectedMonth => $customData');
+      print('✅ Refreshed dataList and customData for month $selectedMonth');
     }
   }
+
 
   @override
   void initState() {
@@ -378,7 +422,10 @@ class _HrConsultantClaimScreenState
     );
   }
 
-  Widget _buildHeaderContent(consultancies) {
+  Widget _buildHeaderContent(List<dynamic> consultancies) {
+    // flatten consultancies into dataList
+    final dataList = _dataList;
+
     return Container(
       padding: const EdgeInsets.only(top: 15),
       decoration: BoxDecoration(
@@ -409,7 +456,7 @@ class _HrConsultantClaimScreenState
                     _selectedClientId = selectedId;
                     _selectedRowIndex = -1;
                     customData = {};
-                    activeIndex=-1;
+                    activeIndex = -1;
                   });
                   await getConsultantClaimsByClient();
                   await updateActiveIndexFromStatus();
@@ -421,82 +468,97 @@ class _HrConsultantClaimScreenState
             height: consultancies.isEmpty ? 50 : 200,
             child: consultancies.isEmpty
                 ? const Center(
-                    child: Text(
-                      "No Consultant Found",
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  )
+              child: Text(
+                "No Consultant Found",
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )
                 : SfDataGrid(
-                    source: GenericDataSource(
-                      data:
-                          consultancies.map<Map<String, dynamic>>((consultant) {
-                        final consultantInfo =
-                            consultant['consultant_info'] ?? {};
-                        final workLog = consultant['work_log'] ?? {};
-                        return {
-                          'emp_name': consultantInfo['emp_name'] ?? '',
-                          'working_hours':
-                              consultantInfo['working_hours'] ?? '',
-                          'logged_hours': workLog['logged_hours'] ?? 0,
-                          'full_data':
-                              consultant, // include full object for actions
-                        };
-                      }).toList(),
-                      columns: ['emp_name', 'working_hours', 'actions'],
-                      onZoomTap: (rowData) {
-                        _showConsultancyPopup(context, rowData['full_data']);
-                      },
-                      selectedIndex: _selectedRowIndex,
-                    ),
-                    columnWidthMode: ColumnWidthMode.fill,
-                    headerRowHeight: 38,
-                    rowHeight: 52,
-                    onCellTap: (details) async {
-                      final index = details.rowColumnIndex.rowIndex - 1;
-                      if (index < 0 || index >= consultancies.length) return;
+              source: GenericDataSource(
+                data: dataList,
+                columns: [
+                  'name',
+                  'queue',
+                  'submitted',
+                  'claim_no',
+                  'number_of_claims',
+                  'total_amount',
+                  'actions'
+                ],
+                onZoomTap: (rowData) {
+                  _showConsultancyPopup(context, rowData['full_data']);
+                },
+                selectedIndex: _selectedRowIndex,
+              ),
+              columnWidthMode: ColumnWidthMode.fill,
+              headerRowHeight: 38,
+              rowHeight: 52,
+              onCellTap: (details) async {
+                final index = details.rowColumnIndex.rowIndex - 1;
+                if (index < 0 || index >= dataList.length) return;
 
-                      final selectedData = consultancies[index];
+                final rowData = dataList[index];
+                final selectedUserId = rowData['user_id'];
+                final consultant = rowData['full_data'];
 
-                   await   ref
-                          .read(hrProvider.notifier)
-                          .getSelectedConsultantDetails(selectedData);
+                await ref.read(hrProvider.notifier).getSelectedConsultantDetails(consultant);
 
-                      setState(() {
-                        _selectedRowIndex = index;
-                        selectedFullData = selectedData;
-                        customData = parseTimelineData(
-                          selectedData['claims'] ?? [],
-                        );
-                      });
-                      await updateActiveIndexFromStatus();
-                    },
-                    columns: [
-                      GridColumn(
-                        columnName: 'emp_name',
-                        width: 120,
-                        label: _buildHeaderCell('Name'),
-                      ),
-                      GridColumn(
-                        columnName: 'working_hours',
-                        width: 120,
-                        label: _buildHeaderCell('Hours Logged'),
-                      ),
-                      GridColumn(
-                        columnName: 'actions',
-                        label: _buildHeaderCell('Actions',
-                            alignment: Alignment.center),
-                      ),
-                    ],
-                  ),
+                setState(() {
+                  _selectedRowIndex = index;
+                  _selectedUserId = selectedUserId;
+                  selectedFullData = consultant;
+                  customData = parseTimelineData(consultant['claims'] ?? []);
+                });
+
+                await updateActiveIndexFromStatus();
+              },
+              columns: [
+                GridColumn(
+                  columnName: 'name',
+                  width: 120,
+                  label: _buildHeaderCell('Name'),
+                ),
+                GridColumn(
+                  columnName: 'queue',
+                  width: 120,
+                  label: _buildHeaderCell('Queue'),
+                ),
+                GridColumn(
+                  columnName: 'submitted',
+                  width: 120,
+                  label: _buildHeaderCell('Submitted'),
+                ),
+                GridColumn(
+                  columnName: 'claim_no',
+                  width: 120,
+                  label: _buildHeaderCell('Claim No'),
+                ),
+                GridColumn(
+                  columnName: 'number_of_claims',
+                  width: 120,
+                  label: _buildHeaderCell('Number of claims'),
+                ),
+                GridColumn(
+                  columnName: 'total_amount',
+                  width: 120,
+                  label: _buildHeaderCell('Total Amount'),
+                ),
+                GridColumn(
+                  columnName: 'actions',
+                  label: _buildHeaderCell('Actions', alignment: Alignment.center),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
+
 
   Widget _buildHeaderCell(String text,
       {Alignment alignment = Alignment.centerLeft}) {
@@ -688,6 +750,12 @@ class _HrConsultantClaimScreenState
         }),
       ),
     );
+  }
+
+  String formatValue(dynamic value) {
+    if (value == null) return 'N/A';
+    final str = value.toString().trim();
+    return str.isEmpty ? 'N/A' : str;
   }
 }
 

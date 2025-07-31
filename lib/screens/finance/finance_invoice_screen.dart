@@ -104,7 +104,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
 
   void _showImportExportPopupBelow(BuildContext context) {
     final RenderBox? renderBox =
-    _menuIconKey.currentContext?.findRenderObject() as RenderBox?;
+        _menuIconKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
     final position = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
@@ -167,7 +167,6 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
                   onTap: () {
@@ -175,42 +174,38 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                   },
                   child: SvgPicture.asset('assets/icons/back.svg', height: 15),
                 ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xff5A5A5A),
-                        ),
-                        children: [
-                          const TextSpan(text: 'BILLING STATUS : ('),
-                          TextSpan(
-                            text: '10',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                          const TextSpan(text: ','),
-                          TextSpan(
-                            text: '30',
-                            style: TextStyle(color: Colors.green),
-                          ),
-                          const TextSpan(text: ','),
-                          TextSpan(
-                            text: '12',
-                            style: TextStyle(color: Colors.orange),
-                          ),
-                          const TextSpan(text: ','),
-                          TextSpan(
-                            text: '3',
-                            style: TextStyle(color: Colors.blue),
-                          ),
-                          const TextSpan(text: ') / 100'),
-                        ],
-                      ),
+                const SizedBox(width: 30),
+                RichText(
+                  text: TextSpan(
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xff5A5A5A),
                     ),
-                  ],
+                    children: const [
+                      TextSpan(text: 'BILLING STATUS : ('),
+                      TextSpan(
+                        text: '10',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      TextSpan(text: ','),
+                      TextSpan(
+                        text: '30',
+                        style: TextStyle(color: Colors.green),
+                      ),
+                      TextSpan(text: ','),
+                      TextSpan(
+                        text: '12',
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                      TextSpan(text: ','),
+                      TextSpan(
+                        text: '3',
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      TextSpan(text: ') / 100'),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -253,12 +248,12 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(4),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
+            color: Color.fromRGBO(0, 0, 0, 0.05),
+            blurRadius: 1,
             spreadRadius: 1,
-            offset: const Offset(0, 0),
+            offset: Offset(0, 0),
           ),
         ],
       ),
@@ -267,7 +262,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           SvgPicture.asset(iconPath, height: 40, width: 40),
-          const SizedBox(width: 10),
+          const SizedBox(width: 5),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -284,7 +279,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                 label,
                 style: GoogleFonts.montserrat(
                   fontWeight: FontWeight.w500,
-                  fontSize: 10,
+                  fontSize: 8,
                   color: const Color(0xffA7A7A7),
                 ),
               ),
@@ -294,6 +289,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
       ),
     );
   }
+
   Widget _contactCard({
     required String label,
     required String name,
@@ -302,8 +298,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFFFAFAFA),
-
+        color: const Color(0xFFFAFAFA),
         borderRadius: BorderRadius.circular(6),
         boxShadow: const [
           BoxShadow(
@@ -321,32 +316,32 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
           // Top Red Label - now full width
           Container(
             width: 250, // make it stretch full width
-            height: 30,
-            padding: const EdgeInsets.only(left: 20), // label text padding from left
+            height: 25,
+            padding:
+                const EdgeInsets.only(left: 20), // label text padding from left
             alignment: Alignment.centerLeft, // align text to the left
             decoration: const BoxDecoration(
               color: Color(0xffFF1901),
               borderRadius: BorderRadius.only(
-                bottomRight: Radius.circular(12),
+                bottomRight: Radius.circular(13),
                 topLeft: Radius.circular(6),
               ),
             ),
             child: Text(
               label,
               style: GoogleFonts.montserrat(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
                 color: Colors.white,
               ),
             ),
           ),
 
-
           // Gray background for name, address and location
           Container(
             width: double.infinity,
             color: const Color(0xFFFAFAFA),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -368,11 +363,11 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 2, right: 10),
+                      padding: const EdgeInsets.only( right: 6),
                       child: SvgPicture.asset(
                         'assets/icons/address_invoice.svg',
-                        width: 24,
-                        height: 24,
+                        width: 27,
+                        height: 27,
                       ),
                     ),
                     Expanded(
@@ -380,7 +375,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                         address,
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
                         ),
                         softWrap: true,
                         maxLines: 3,
@@ -389,18 +384,18 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
 
                 // Location Row
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 2, right: 10),
+                      padding: const EdgeInsets.only(right: 6),
                       child: SvgPicture.asset(
                         'assets/icons/location_invoice.svg',
-                        width: 24,
-                        height: 24,
+                        width: 27,
+                        height: 27,
                       ),
                     ),
                     Expanded(
@@ -408,7 +403,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                         location,
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
                         ),
                         softWrap: true,
                         maxLines: 3,
@@ -423,7 +418,6 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
       ),
     );
   }
-
 
   Widget _buildRemarksSection() {
     return Container(
@@ -447,13 +441,13 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
   Widget _buildClaimsTable() {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double nameWidth = screenWidth * 0.25;
-    final double queueWidth = screenWidth * 0.15;
+    final double queueWidth = screenWidth * 0.2;
     final double numClaimsWidth = screenWidth * 0.15;
     final double totalAmountWidth = screenWidth * 0.20;
     final double invoiceAmountWidth = screenWidth * 0.20;
     final double invoiceNoWidth = screenWidth * 0.20;
     final double invoiceMonthWidth = screenWidth * 0.20;
-    final double statusWidth = screenWidth * 0.20;
+    final double statusWidth = screenWidth * 0.2;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -466,7 +460,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
             headingRowHeight: 40,
             dataRowHeight: 60,
             headingRowColor: MaterialStateColor.resolveWith(
-                  (states) => const Color(0xFFF5F5F5),
+              (states) => const Color(0xFFF5F5F5),
             ),
             columns: [
               DataColumn(
@@ -709,7 +703,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                   ),
                   DataCell(
                     SizedBox(
-                      width: 90,
+                      width: 100,
                       child: Container(
                         decoration: BoxDecoration(
                           color: isCompleted
@@ -801,129 +795,137 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
+                        ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 0),
+                        color: Color.fromRGBO(0, 0, 0, 0.25),
+                        blurRadius: 1,
+                        offset: Offset(0, 0),
                       ),
                     ],
                   ),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Encore Films',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
+                      Padding(
+                        padding:
+                            const EdgeInsets.only(left: 20, right: 15, top: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Encore Films',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                'Invoice Number: EM098789',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w400,
+                                Text(
+                                  'Invoice Number: EM098789',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              const Divider(
-                                color: Color(0xffE8E8E8),
-                                thickness: 1,
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.white,
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(20)),
-                                    ),
-                                    builder: (context) {
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          bottom:
-                                          MediaQuery.of(context)
-                                              .viewInsets
-                                              .bottom,
-                                        ),
-                                        child: const EditInvoiceDetailDialog(),
-                                      );
-                                    },
-                                  );
-                                },
-                                child: SvgPicture.asset(
-                                  'assets/icons/editor.svg',
-                                  height: 25,
-                                  width: 25,
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.white,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(20)),
+                                      ),
+                                      builder: (context) {
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom: MediaQuery.of(context)
+                                                .viewInsets
+                                                .bottom,
+                                          ),
+                                          child:
+                                              const EditInvoiceDetailDialog(),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: SvgPicture.asset(
+                                    'assets/icons/editor.svg',
+                                    height: 25,
+                                    width: 25,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    areContactsVisible = !areContactsVisible;
-                                  });
-                                },
-                                child: SvgPicture.asset(
-                                  areContactsVisible
-                                      ? 'assets/icons/upside.svg'
-                                      : 'assets/icons/downside.svg',
-                                  height: 20,
-                                  width: 20,
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      areContactsVisible = !areContactsVisible;
+                                    });
+                                  },
+                                  child: SvgPicture.asset(
+                                    areContactsVisible
+                                        ? 'assets/icons/upside.svg'
+                                        : 'assets/icons/downside.svg',
+                                    height: 20,
+                                    width: 20,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      GridView.builder(
-                        gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          childAspectRatio: 2.0,
+                              ],
+                            ),
+                          ],
                         ),
-                        itemCount: consultancyData.length,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          final item = consultancyData[index];
-                          return consultancyCard(
-                            count: item['count'] ?? '0',
-                            label: item['label'] ?? 'Unknown',
-                            iconPath:
-                            item['iconPath'] ?? 'assets/icons/default.svg',
-                          );
-                        },
+                      ),
+                      const SizedBox(height: 8),
+                      const Divider(
+                        color: Color(0xffE1E1E1),
+                        thickness: 1,
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 10, right: 10, bottom: 15),
+                        child: GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 2.0,
+                          ),
+                          itemCount: consultancyData.length,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            final item = consultancyData[index];
+                            return consultancyCard(
+                              count: item['count'] ?? '0',
+                              label: item['label'] ?? 'Unknown',
+                              iconPath: item['iconPath'] ??
+                                  'assets/icons/default.svg',
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              const SizedBox(height: 12),
+              const SizedBox(height: 30),
               if (areContactsVisible) ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -931,7 +933,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                         label: 'Billing To',
                         name: 'Alfonso Mango',
                         address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
-                                  'Tamil Nadu, India',
+                            'Tamil Nadu, India',
                         location: 'X5JX+HX Chennai, Tamil Nadu',
                       ),
                     ],
@@ -939,7 +941,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                 ),
                 const SizedBox(height: 12),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
                   child: _contactCard(
                     label: 'Shipping To',
                     name: 'Abram Culhane',
@@ -951,10 +953,8 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                 const SizedBox(height: 12),
               ],
               const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                child: _buildRemarksSection(),
-              ),
+              _buildRemarksSection(),
+              const SizedBox(height: 16),
             ],
           ),
         ),

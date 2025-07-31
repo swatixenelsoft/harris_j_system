@@ -239,16 +239,27 @@ Future<Map<String, dynamic>> getConsultantByClient(String clientId,String token)
         final List<dynamic> consultants = response['data'] ?? [];
 
         final List<Map<String, dynamic>> flattenedConsultantList =
-        consultants.map<Map<String, dynamic>>((consultant) {
+        consultants.expand<Map<String, dynamic>>((consultant) {
           final Map<String, dynamic> consultantInfo =
           Map<String, dynamic>.from(consultant['consultant_info'] ?? {});
-          consultant.forEach((key, value) {
-            if (key != 'consultant_info') {
-              consultantInfo[key] = value;
-            }
-          });
-          return consultantInfo;
+          final List<dynamic> tableData = consultant['table_data'] ?? [];
+
+          // For each table_data item, combine with consultantInfo
+          return tableData.map<Map<String, dynamic>>((tableItem) {
+            return {
+              'consultant_info': consultantInfo,
+              'table_data': tableItem,
+              // optionally, you can also keep other keys if needed:
+              'claims': consultant['claims'] ?? [],
+              'remarks': consultant['remarks'] ?? {},
+              'claim_tab': consultant['claim_tab'] ?? [],
+              'get_copies': consultant['get_copies'] ?? [],
+              // keep full consultant too if needed
+              'full_consultant': consultant,
+            };
+          }).toList();
         }).toList();
+
 
         final List<Map<String, dynamic>> fullConsultants =
         consultants.whereType<Map<String, dynamic>>().toList();
@@ -258,6 +269,8 @@ Future<Map<String, dynamic>> getConsultantByClient(String clientId,String token)
           hrConsultantList: fullConsultants,
           selectedConsultantData: {}, // Reset for safety
         );
+
+        print('hrConsultantList ${state.hrConsultantList}');
 
         print('previouslySelectedConsultant $previouslySelectedConsultant');
         print('previouslySelectedConsultant33 $month');
