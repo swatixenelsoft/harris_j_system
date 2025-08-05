@@ -256,7 +256,6 @@ class _FinanceInvoicePreview2ScreenState
                     const Divider(height: 1, color: Color(0xffE1E1E1)),
                   ],
                 ),
-
                 const SizedBox(height: 10),
                 Align(
                   alignment: Alignment.centerRight,
@@ -297,7 +296,6 @@ class _FinanceInvoicePreview2ScreenState
             ),
           ),
         ),
-
         // Save button
         Positioned(
           bottom: 0,
@@ -326,7 +324,6 @@ class _FinanceInvoicePreview2ScreenState
       ],
     );
   }
-
   Widget billFromWidget({title, companyName, address, location}) {
     return Expanded(
       child: Column(

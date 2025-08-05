@@ -7,7 +7,6 @@ import 'package:harris_j_system/screens/bom/widget/finance_popup.dart';
 import 'package:harris_j_system/screens/finance/compose_button_page.dart';
 import 'package:harris_j_system/screens/finance/finance_edit_screen.dart';
 import 'package:harris_j_system/screens/operator/action_click.dart';
-import 'package:harris_j_system/widgets/custom_advanced_search_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
@@ -15,68 +14,18 @@ import 'package:harris_j_system/widgets/remark_section.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:harris_j_system/ulits/custom_loader.dart';
 
-class FinanceInvoiceScreen extends StatefulWidget {
-  const FinanceInvoiceScreen({super.key});
+class FinanceGroupInvoiceScreen extends StatefulWidget {
+  const FinanceGroupInvoiceScreen({super.key});
 
   @override
-  State<FinanceInvoiceScreen> createState() => _FinanceInvoiceScreenState();
+  State<FinanceGroupInvoiceScreen> createState() => _FinanceGroupInvoiceScreenState();
 }
 
-class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
+class _FinanceGroupInvoiceScreenState extends State<FinanceGroupInvoiceScreen> {
   final GlobalKey _menuIconKey = GlobalKey();
   final TextEditingController _searchController = TextEditingController();
   bool isLoading = false;
-  bool areContactsVisible = true;
-
-  // Sample client data for CustomClientDropdown3
-  final List<Map<String, dynamic>> clientsData = [
-    {
-      'serving_client': 'Encore Films',
-      'id': '1',
-      'initials': 'EF',
-      'active': 10,
-      'inactive': 2,
-      'notice': 1,
-      'all': 13,
-      'groups': [
-        {
-          'group_name': 'Group A',
-          'status': 'In Progress',
-          'active': 5,
-          'inactive': 1,
-          'notice': 0,
-          'all': 6,
-        },
-        {
-          'group_name': 'Group B',
-          'status': 'Completed',
-          'active': 3,
-          'inactive': 0,
-          'notice': 1,
-          'all': 4,
-        },
-      ],
-    },
-    {
-      'serving_client': 'Star Media',
-      'id': '2',
-      'initials': 'SM',
-      'active': 8,
-      'inactive': 3,
-      'notice': 0,
-      'all': 11,
-      'groups': [
-        {
-          'group_name': 'Group C',
-          'status': 'Ready to Bill',
-          'active': 4,
-          'inactive': 1,
-          'notice': 0,
-          'all': 5,
-        },
-      ],
-    },
-  ];
+  bool areContactsVisible = true;// global/local is shown globally in the program
 
   final List<Map<String, String>> consultancyData = [
     {
@@ -114,7 +63,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
     },
     {
       'name': 'Allison Schleifer',
-      'queueColor': const Color.fromRGBO(0, 123, 255, 1),
+      'queueColor': const Color.fromRGBO(255, 193, 7, 1),
       'numClaims': '2',
       'totalAmount': '\$500',
       'invoiceAmount': '\$450',
@@ -122,9 +71,10 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
       'invoiceMonth': 'Aug 2024',
       'status': 'Draft',
     },
+
     {
       'name': 'Charlie Vetrovs',
-      'queueColor': const Color.fromRGBO(0, 123, 255, 1),
+      'queueColor': const Color.fromRGBO(40, 167, 69, 1),
       'numClaims': '3',
       'totalAmount': '\$600',
       'invoiceAmount': '\$550',
@@ -134,7 +84,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
     },
     {
       'name': 'Lincoln Geidt',
-      'queueColor': const Color.fromRGBO(0, 123, 255, 1),
+      'queueColor': const Color.fromRGBO(255, 25, 1, 1),
       'numClaims': '2',
       'totalAmount': '\$800',
       'invoiceAmount': '\$750',
@@ -150,13 +100,13 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
   void dispose() {
     _searchController.dispose();
     _overlayEntry?.remove();
+    _overlayEntry = null;
     super.dispose();
   }
-
   void _showImportExportPopupBelow(BuildContext context) {
-    final RenderBox? renderBox =
-    _menuIconKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
+    final RenderBox? renderBox = _menuIconKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null || !mounted) return;
+
     final position = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -168,8 +118,12 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
         children: [
           GestureDetector(
             onTap: () {
-              _overlayEntry?.remove();
-              _overlayEntry = null;
+              if (mounted) {
+                setState(() {
+                  _overlayEntry?.remove();
+                  _overlayEntry = null;
+                });
+              }
             },
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
@@ -185,8 +139,12 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
             top: position.dy + size.height + 10,
             child: FinancePopupMenu(
               onClose: () {
-                _overlayEntry?.remove();
-                _overlayEntry = null;
+                if (mounted) {
+                  setState(() {
+                    _overlayEntry?.remove();
+                    _overlayEntry = null;
+                  });
+                }
               },
             ),
           ),
@@ -195,13 +153,6 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
     );
 
     Overlay.of(context).insert(_overlayEntry!);
-  }
-
-  void _onClientChanged(String clientName, String? clientId, String? groupName) {
-    // Handle the selected client or group
-    setState(() {
-      _searchController.text = groupName != null ? '$clientName/$groupName' : clientName;
-    });
   }
 
   Widget _buildHeaderContent() {
@@ -227,6 +178,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
             child: Row(
               children: [
                 GestureDetector(
+                  key: _menuIconKey, // Attach the key here
                   onTap: () {
                     context.pop();
                   },
@@ -241,7 +193,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                       color: const Color(0xff5A5A5A),
                     ),
                     children: const [
-                      TextSpan(text: 'BILLING STATUS : ('),
+                      TextSpan(text: 'BILLING STATUS : '),
                       TextSpan(
                         text: '10',
                         style: TextStyle(color: Colors.red),
@@ -265,14 +217,34 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                     ],
                   ),
                 ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => _showImportExportPopupBelow(context),
+                  child: SvgPicture.asset('assets/icons/menu.svg', height: 20), // Example icon
+                ),
               ],
             ),
           ),
           const SizedBox(height: 15),
-          CustomClientDropdown3(
-            clients: clientsData,
-            onChanged: _onClientChanged,
-            initialClientName: 'Encore Films',
+          CustomTextField(
+            hintText: 'Start typing or click to see clients/consultant',
+            label: 'Start typing or click to see clients/consultant',
+            controller: _searchController,
+            suffixIcon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 30,
+              color: Color(0xff8D91A0),
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(14.0),
+              child: SizedBox(
+                height: 10,
+                width: 10,
+                child: SvgPicture.asset(
+                  'assets/icons/search_icon.svg',
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -468,312 +440,278 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
       child: const RemarksSection(),
     );
   }
+  Widget _buildHeaderText(String text, double fontSize) {
+    return Text(
+      text,
+      style: GoogleFonts.montserrat(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w600,
+        color: Colors.black,
+      ),
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildQueueHeader(double fontSize) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: const BoxDecoration(
+            color: Colors.black,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          'Queue',
+          style: GoogleFonts.montserrat(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          ),
+        ),
+      ],
+    );
+  }
+
+  DataCell _buildCell(String text, double width, double fontSize, {bool center = false}) {
+    return DataCell(
+      SizedBox(
+        width: width,
+        child: Text(
+          text,
+          style: GoogleFonts.montserrat(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          overflow: TextOverflow.ellipsis,
+          textAlign: center ? TextAlign.center : TextAlign.left,
+        ),
+      ),
+    );
+  }
 
   Widget _buildClaimsTable() {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double nameWidth = screenWidth * 0.25;
-    final double queueWidth = screenWidth * 0.2;
-    final double numClaimsWidth = screenWidth * 0.15;
-    final double totalAmountWidth = screenWidth * 0.20;
-    final double invoiceAmountWidth = screenWidth * 0.20;
-    final double invoiceNoWidth = screenWidth * 0.20;
-    final double invoiceMonthWidth = screenWidth * 0.20;
-    final double statusWidth = screenWidth * 0.2;
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: screenWidth * 1.35),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 0.0),
-          child: DataTable(
-            columnSpacing: 16,
-            headingRowHeight: 40,
-            dataRowHeight: 60,
-            headingRowColor: MaterialStateColor.resolveWith(
-                  (states) => const Color(0xFFF5F5F5),
-            ),
-            columns: [
-              DataColumn(
-                label: SizedBox(
-                  width: nameWidth,
-                  child: Text(
-                    'Name/Group',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+      padding: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, 0.1),
+            blurRadius: 4,
+            spreadRadius: 1,
+            offset: Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: const Color(0xffE8E8E8),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 4),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
                   ),
                 ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: queueWidth,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                Text(
+                  'Total Consultants: 4',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double availableWidth = constraints.maxWidth;
+              const double minColumnWidth = 80.0;
+              const double maxColumnWidth = 150.0;
+              final double nameWidth = (availableWidth * 0.20).clamp(minColumnWidth, maxColumnWidth);
+              final double queueWidth = (availableWidth * 0.15).clamp(minColumnWidth, maxColumnWidth);
+              final double hrsLgdFcstWidth = (availableWidth * 0.15).clamp(minColumnWidth, maxColumnWidth);
+              final double totalAmtWidth = (availableWidth * 0.15).clamp(minColumnWidth, maxColumnWidth);
+              final double invoiceAmtWidth = (availableWidth * 0.15).clamp(minColumnWidth, maxColumnWidth);
+              final double invoiceNoWidth = (availableWidth * 0.15).clamp(minColumnWidth, maxColumnWidth);
+              final double invoiceMonthWidth = (availableWidth * 0.15).clamp(minColumnWidth, maxColumnWidth);
+              final double statusWidth = (availableWidth * 0.15).clamp(minColumnWidth, maxColumnWidth);
+              final double fontSize = (availableWidth < 600 ? 10 : 12).toDouble();
+
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: availableWidth),
+                  child: Column(
                     children: [
-                      Text(
-                        'Queue',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xff000000),
+                      DataTable(
+                        columnSpacing: 8,
+                        headingRowHeight: 40,
+                        dataRowHeight: 60,
+                        dividerThickness: 1,
+                        border: const TableBorder(
+                          horizontalInside: BorderSide(
+                            color: Color(0xffE8E8E8),
+                            width: 1,
+                          ),
                         ),
+                        headingRowColor: MaterialStateColor.resolveWith(
+                              (states) => const Color(0xFFD3D3D3),
+                        ),
+                        columns: [
+                          DataColumn(label: SizedBox(width: nameWidth, child: _buildHeaderText('Name', fontSize))),
+                          DataColumn(label: SizedBox(width: queueWidth, child: _buildQueueHeader(fontSize))),
+                          DataColumn(label: SizedBox(width: hrsLgdFcstWidth, child: _buildHeaderText('Hrs Lgd/Fcst', fontSize))),
+                          DataColumn(label: SizedBox(width: totalAmtWidth, child: _buildHeaderText('Total Amt', fontSize))),
+                          DataColumn(label: SizedBox(width: invoiceAmtWidth, child: _buildHeaderText('Invoice Amt', fontSize))),
+                          DataColumn(label: SizedBox(width: invoiceNoWidth, child: _buildHeaderText('Invoice No', fontSize))),
+                          DataColumn(label: SizedBox(width: invoiceMonthWidth, child: _buildHeaderText('Invoice Month', fontSize))),
+                          DataColumn(label: SizedBox(width: statusWidth, child: _buildHeaderText('Invoice Status', fontSize))),
+                        ],
+                        rows: consultanciesData.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final item = entry.value;
+                          final name = item['name'] as String? ?? 'Unknown';
+                          final queueColor = item['queueColor'] as Color? ?? const Color.fromRGBO(0, 123, 255, 1);
+                          final hrsLgdFcst = index == 0 || index == 3 ? '0/160' : '100/160';
+                          final totalAmount = item['totalAmount'] as String? ?? '-';
+                          final invoiceAmount = item['invoiceAmount'] as String? ?? '-';
+                          final invoiceNo = item['invoiceNo'] as String? ?? '-';
+                          final invoiceMonth = item['invoiceMonth'] as String? ?? '-';
+                          final status = item['status'] as String? ?? 'Unknown';
+                          final isCompleted = status == 'Completed';
+
+                          return DataRow(
+                            color: MaterialStateProperty.resolveWith<Color>((states) {
+                              if (states.contains(MaterialState.selected)) {
+                                return const Color(0xffE4E4EF);
+                              }
+                              return Colors.white;
+                            }),
+                            cells: [
+                              _buildCell(name, nameWidth, fontSize),
+                              DataCell(SizedBox(
+                                width: queueWidth,
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: Container(
+                                    width: 15,
+                                    height: 15,
+                                    decoration: BoxDecoration(
+                                      color: queueColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              )),
+                              _buildCell(hrsLgdFcst, hrsLgdFcstWidth, fontSize, center: true),
+                              _buildCell(totalAmount, totalAmtWidth, fontSize, center: true),
+                              _buildCell(invoiceAmount, invoiceAmtWidth, fontSize, center: true),
+                              _buildCell(invoiceNo, invoiceNoWidth, fontSize, center: true),
+                              _buildCell(invoiceMonth, invoiceMonthWidth, fontSize, center: true),
+                              DataCell(SizedBox(
+                                width: statusWidth,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: isCompleted ? const Color(0xFFE6F0FA) : const Color(0xFFF5F5F5),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: isCompleted ? Colors.blue : Colors.grey,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        status,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: fontSize,
+                                          fontWeight: FontWeight.w500,
+                                          color: isCompleted ? Colors.blue : Colors.grey,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )),
+                            ],
+                          );
+                        }).toList(),
                       ),
-                      const SizedBox(width: 8),
-                      SvgPicture.asset(
-                        'assets/icons/queue.svg',
-                        width: 18,
-                        height: 18,
+                      const Divider(
+                        color: Color(0xffE8E8E8),
+                        height: 1,
+                        thickness: 1,
                       ),
                     ],
                   ),
                 ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: numClaimsWidth,
-                  child: Text(
-                    '#Emp',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: totalAmountWidth,
-                  child: Text(
-                    'Total Amt',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: invoiceAmountWidth,
-                  child: Text(
-                    'Invoice Amt',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: invoiceNoWidth,
-                  child: Text(
-                    'Invoice No.',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: invoiceMonthWidth,
-                  child: Text(
-                    'Invoice Month',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: statusWidth,
-                  child: Text(
-                    'Invoice Status',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-            rows: consultanciesData.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              final name = item['name'] as String? ?? 'Unknown';
-              final queueColor = item['queueColor'] as Color? ??
-                  const Color.fromRGBO(0, 123, 255, 1);
-              final numClaims = item['numClaims'] as String? ?? '-';
-              final totalAmount = item['totalAmount'] as String? ?? '-';
-              final invoiceAmount = item['invoiceAmount'] as String? ?? '-';
-              final invoiceNo = item['invoiceNo'] as String? ?? '-';
-              final invoiceMonth = item['invoiceMonth'] as String? ?? '-';
-              final status = item['status'] as String? ?? 'Unknown';
-              final isCompleted = status == 'Completed';
-
-              return DataRow(
-                cells: [
-                  DataCell(
-                    SizedBox(
-                      width: nameWidth,
-                      child: Text(
-                        name,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: queueWidth,
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: Container(
-                          width: 15,
-                          height: 15,
-                          decoration: BoxDecoration(
-                            color: queueColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: numClaimsWidth,
-                      child: Text(
-                        numClaims,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: totalAmountWidth,
-                      child: Text(
-                        totalAmount,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: invoiceAmountWidth,
-                      child: Text(
-                        invoiceAmount,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: invoiceNoWidth,
-                      child: Text(
-                        invoiceNo,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: invoiceMonthWidth,
-                      child: Text(
-                        invoiceMonth,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: 100,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isCompleted
-                              ? const Color(0xFFE6F0FA)
-                              : const Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: isCompleted ? Colors.blue : Colors.grey,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              status,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: isCompleted ? Colors.blue : Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               );
-            }).toList(),
+            },
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+            child: Row(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xff969696),
+                    borderRadius: BorderRadius.all(Radius.circular(4)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 14,
+                        height: 14,
+                        margin: const EdgeInsets.only(right: 4),
+                        decoration: const BoxDecoration(
+                          color: Color(0xffF2F2F2),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      Text(
+                        'Selected Row',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          color: const Color(0xffF2F2F2),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -843,8 +781,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                   child: Column(
                     children: [
                       Padding(
-                        padding:
-                        const EdgeInsets.only(left: 20, right: 15, top: 12),
+                        padding: const EdgeInsets.only(left: 20, right: 15, top: 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -876,17 +813,14 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                                       isScrollControlled: true,
                                       backgroundColor: Colors.white,
                                       shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.vertical(
-                                            top: Radius.circular(20)),
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                                       ),
                                       builder: (context) {
                                         return Padding(
                                           padding: EdgeInsets.only(
-                                            bottom: MediaQuery.of(context)
-                                                .viewInsets
-                                                .bottom,
+                                            bottom: MediaQuery.of(context).viewInsets.bottom,
                                           ),
-                                          child: const EditInvoiceDetailDialog(),
+                                          child: const EditInvoiceDetailDialog(), // Ensure this widget is defined
                                         );
                                       },
                                     );
@@ -924,11 +858,9 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                       ),
                       const SizedBox(height: 10),
                       Padding(
-                        padding: const EdgeInsets.only(
-                            left: 10, right: 10, bottom: 15),
+                        padding: const EdgeInsets.only(left: 10, right: 10, bottom: 15),
                         child: GridView.builder(
-                          gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 10,
                             mainAxisSpacing: 10,
@@ -942,8 +874,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                             return consultancyCard(
                               count: item['count'] ?? '0',
                               label: item['label'] ?? 'Unknown',
-                              iconPath: item['iconPath'] ??
-                                  'assets/icons/default.svg',
+                              iconPath: item['iconPath'] ?? 'assets/icons/default.svg',
                             );
                           },
                         ),
@@ -962,8 +893,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                       _contactCard(
                         label: 'Billing To',
                         name: 'Alfonso Mango',
-                        address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
-                            'Tamil Nadu, India',
+                        address: 'No.22, Abcd Street, RR Nagar, Chennai-600016, Tamil Nadu, India',
                         location: 'X5JX+HX Chennai, Tamil Nadu',
                       ),
                     ],
@@ -975,8 +905,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                   child: _contactCard(
                     label: 'Shipping To',
                     name: 'Abram Culhane',
-                    address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
-                        'Tamil Nadu, India',
+                    address: 'No.22, Abcd Street, RR Nagar, Chennai-600016, Tamil Nadu, India',
                     location: 'X5JX+HX Chennai, Tamil Nadu',
                   ),
                 ),
@@ -988,6 +917,36 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Placeholder for EditInvoiceDetailDialog (replace with actual implementation)
+class EditInvoiceDetailDialog extends StatelessWidget {
+  const EditInvoiceDetailDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 300,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Text(
+            'Edit Invoice Details',
+            style: GoogleFonts.montserrat(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Add form fields or other widgets as needed
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }

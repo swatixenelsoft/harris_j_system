@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/screens/finance/finance_schedular_screen.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
@@ -87,7 +88,12 @@ class _FinanceStaticSettingScreenState extends State<FinanceStaticSettingScreen>
                 children: [
                   Row(
                     children: [
-                       SvgPicture.asset('assets/icons/back.svg', height: 15),
+                      GestureDetector(
+                        onTap: () {
+                          context.pop();
+                        },
+                        child: SvgPicture.asset('assets/icons/back.svg', height: 15),
+                      ),
                       const SizedBox(width: 120),
                       Text(
                         "Settings",
@@ -130,7 +136,6 @@ class _FinanceStaticSettingScreenState extends State<FinanceStaticSettingScreen>
                 const Divider(height: 1, thickness: 1, color: Color(0xffE8E8E8)),
               ],
             ),
-
             // Page Content
             Expanded(
               child: PageView(
