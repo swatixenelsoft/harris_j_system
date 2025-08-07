@@ -307,8 +307,8 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                             ),
                           ),
                         ),
-                        if (client['groups'] != null && isExpanded)
-                          ...client['groups'].map<Widget>((group) {
+                        if (client['finance_group'] != null && isExpanded)
+                          ...client['finance_group'].map<Widget>((group) {
                             final color = getStatusColor(group['status']);
                             return GestureDetector(// Gesture Button  should be changed
                               onTap: () => _selectGroup(group),

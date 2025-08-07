@@ -318,7 +318,6 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
           hrConsultantList: fullConsultants,
           selectedConsultantData: {},
         );
-
         if (previouslySelectedConsultant != null) {
           final selectedEmpId =
           previouslySelectedConsultant['consultant_info']?['user_id'];
@@ -407,7 +406,7 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      debugPrint("consult ${consultantIds}");
+      debugPrint("consult $consultantIds");
       final response = await apiService.createGroupFinance(
         clientId: clientId,
         groupName: groupName,
@@ -438,8 +437,8 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
 
       if (status) {
         final List<Map<String, dynamic>> groupData =
-        (response['data'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+        (response['data'] as List<dynamic>).cast<Map<String, dynamic>>();
+        debugPrint("here is - $groupData");
         state = state.copyWith(
           isLoading: false,
           groupList: groupData,
