@@ -2111,4 +2111,105 @@ class ApiService {
       }
     }
   }
+  Future<Map<String, dynamic>> getConsultantsByClientFinance(
+      String clientId,
+      String token,
+      ) async
+  {
+    try {
+      FormData formData = FormData.fromMap({
+        'client_id': clientId,
+      });
+      print('formData $token, ${formData.fields}');
+      final response = await _dio.post(
+        ApiConstant.financeConsultantList,
+        data: formData,
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+        ),
+      );
+      print('Request URL: ${response.requestOptions.uri},$clientId');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+  Future<Map<String, dynamic>> createGroupFinance({
+    required String clientId,
+    required String groupName,
+    required List<String> consultantIds,
+    required String token,
+  }) async {
+    try {
+      FormData formData = FormData.fromMap({
+        'client_id': clientId,
+        'group_name': groupName,
+        'consultant_ids': consultantIds,
+      });
+      print('formData $token, ${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.financeAddGroup, // Ensure this constant is correctly defined
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+      print('response-createGroupFinance $response');
+      return response.data;
+    } on DioException catch (e) {
+      print('error ${e.toString()}');
+      if (e.response != null) {
+        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+      } else {
+        return {'success': false, 'message': 'No response from server'};
+      }
+    }
+  }
+  Future<Map<String, dynamic>> groupListFinance({
+    required String token,
+  }) async {
+    try {
+      FormData formData = FormData.fromMap({
+      });
+      print('formData $token, ${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.financeGroupList, // Ensure this constant is correctly defined
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+      print('response-createGroupFinance $response');
+      return response.data;
+    } on DioException catch (e) {
+      print('error ${e.toString()}');
+      if (e.response != null) {
+        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+      } else {
+        return {'success': false, 'message': 'No response from server'};
+      }
+    }
+  }
+
 }

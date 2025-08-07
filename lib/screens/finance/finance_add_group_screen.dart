@@ -4,12 +4,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/ulits/custom_loader.dart';
+import 'package:harris_j_system/widgets/multi_select.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:harris_j_system/widgets/custom_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_search_dropdown.dart';
-
 import '../../providers/finance_provider.dart';
 
 class FinanceAddGroupScreen extends ConsumerStatefulWidget {
@@ -24,13 +24,14 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
   final TextEditingController groupNameController = TextEditingController();
 
   List<Map<String, dynamic>> clientList = [];
-  final List<String> consultantList = ['John Doe', 'Jane Smith', 'Alice Patel'];
+  List<Map<String, String>> consultantList = []; // [{'id': '1', 'name': 'John'}]
 
   String? selectedClientName;
   String? selectedClientId;
-  String? selectedConsultant;
+  List<String> selectedConsultants = []; // this will store selected names
 
-  bool isLoading = true;
+  bool isClientLoading = true;
+  bool isConsultantLoading = false;
   String? error;
 
   final Color brandRed = const Color(0xFFFF1901);
@@ -43,30 +44,125 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
 
   Future<void> fetchClients() async {
     setState(() {
-      isLoading = true;
+      isClientLoading = true;
       error = null;
     });
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
-    print('Token: $token'); // Debug: Check if token is retrieved
-
     final response = await ref.read(financeProvider.notifier).clientList(token);
-    print('API Response: $response'); // Debug: Log the full response
 
     if (response['success'] == true && response['data'] != null) {
       final data = response['data'] as List<dynamic>;
-      print('Parsed Client List: $data'); // Debug: Log parsed data
       setState(() {
         clientList = data.map((e) => e as Map<String, dynamic>).toList();
-        isLoading = false;
+        isClientLoading = false;
       });
     } else {
-      print('Error Response: ${response['message']}'); // Debug: Log error message
       setState(() {
-        isLoading = false;
+        isClientLoading = false;
         error = response['message'] ?? 'Failed to load clients';
       });
+    }
+  }
+
+  Future<void> fetchConsultantsByClient(String clientId) async {
+    setState(() {
+      isConsultantLoading = true;
+      consultantList = [];
+      selectedConsultants = [];
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    final response = await ref
+        .read(financeProvider.notifier)
+        .getConsultantsByClientFinance(clientId, token);
+
+    final bool status = response['status'] ?? false;
+
+    if (status && response['data'] != null) {
+      final List<dynamic> consultants = response['data'];
+      setState(() {
+        consultantList = consultants.map<Map<String, String>>((e) {
+          return {
+            'id': e['id'].toString(),
+            'emp_name': e['emp_name'] ?? '',
+          };
+        }).toList();
+        debugPrint("herrere ${consultantList}");
+        isConsultantLoading = false;
+      });
+    } else {
+      setState(() {
+        consultantList = [];
+        isConsultantLoading = false;
+      });
+    }
+  }
+
+  Future<void> handleSave() async   {
+    final groupName = groupNameController.text.trim();
+
+    if (selectedClientId == null ||
+        groupName.isEmpty ||
+        selectedConsultants.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    setState(() {
+      isClientLoading = true;
+    });
+
+    // Map selected consultant names to their IDs
+    final selectedConsultantIds = consultantList.where((consultant) =>
+        selectedConsultants.contains(consultant['emp_name']))
+        .map((e) => e['id']!)
+        .toList();
+
+    final response = await ref.read(financeProvider.notifier).createGroupFinance(
+      clientId: selectedClientId!,
+      groupName: groupName,
+      consultantIds: selectedConsultantIds,
+      token: token,
+    );
+
+    setState(() {
+      isClientLoading = false;
+    });
+
+    if (response['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Group created successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      groupNameController.clear();
+      setState(() {
+        selectedClientName = null;
+        selectedClientId = null;
+        selectedConsultants = [];
+        consultantList = [];
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response['message'] ?? 'Failed to create group'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -162,16 +258,25 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  CustomClientDropdown(
-                    clients: clientList,
-                    initialClientName: null,
-                    onChanged: (clientName, clientId) {
-                      setState(() {
-                        selectedClientName = clientName;
-                        selectedClientId = clientId;
-                      });
-                    },
-                  ),
+                  if (!isClientLoading && clientList.isNotEmpty)
+                    CustomClientDropdown(
+                      clients: clientList,
+                      initialClientName: null,
+                      onChanged: (clientName, clientId) {
+                        setState(() {
+                          selectedClientName = clientName;
+                          selectedClientId = clientId;
+                        });
+                        fetchConsultantsByClient(clientId!);
+                      },
+                    )
+                  else if (!isClientLoading && clientList.isEmpty)
+                    const Text(
+                      'No clients available',
+                      style: TextStyle(color: Colors.grey),
+                    )
+                  else
+                    const SizedBox.shrink(),
                   const SizedBox(height: 20),
                   CustomTextField(
                     hintText: "Group Name*",
@@ -181,19 +286,22 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
                     borderRadius: 12,
                   ),
                   const SizedBox(height: 20),
-                  CustomDropdownField(
-                    label: "Select Consultants",
-                    items: consultantList,
-                    value: selectedConsultant,
-                    onChanged: (val) => setState(() {
-                      selectedConsultant = val;
-                    }),
+                  SimpleTapMultiSelectDropdown(
+                    label: "Consultants",
+                    hint: "Select consultants",
+                    items: consultantList.map((e) => e['emp_name']!).toList(),
+                    selectedItems: selectedConsultants,
+                    onChanged: (newList) {
+                      setState(() {
+                        selectedConsultants = newList;
+                      });
+                    },
                   ),
                 ],
               ),
             ),
           ),
-          if (isLoading)
+          if (isClientLoading || isConsultantLoading)
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
@@ -207,7 +315,7 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
                 ),
               ),
             ),
-          if (!isLoading && error == null)
+          if (!isClientLoading && error == null)
             Positioned(
               bottom: 10,
               left: 0,
@@ -222,7 +330,8 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
                         setState(() {
                           selectedClientName = null;
                           selectedClientId = null;
-                          selectedConsultant = null;
+                          selectedConsultants = [];
+                          consultantList = [];
                         });
                       },
                       child: SvgPicture.asset(
@@ -235,10 +344,7 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () {
-                        print(
-                            'Save: $selectedClientName, $selectedClientId, ${groupNameController.text}, $selectedConsultant');
-                      },
+                      onTap: handleSave,
                       child: SvgPicture.asset(
                         'assets/icons/savee.svg',
                         width: 35.0,

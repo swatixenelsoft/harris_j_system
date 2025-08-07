@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:harris_j_system/providers/finance_provider.dart';
 import 'package:harris_j_system/screens/bom/widget/finance_popup.dart';
 import 'package:harris_j_system/screens/finance/compose_button_page.dart';
 import 'package:harris_j_system/screens/finance/finance_edit_screen.dart';
@@ -15,69 +17,22 @@ import 'package:harris_j_system/widgets/remark_section.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:harris_j_system/ulits/custom_loader.dart';
 
-class FinanceInvoiceScreen extends StatefulWidget {
+
+class FinanceInvoiceScreen extends ConsumerStatefulWidget {
   const FinanceInvoiceScreen({super.key});
 
   @override
-  State<FinanceInvoiceScreen> createState() => _FinanceInvoiceScreenState();
+  ConsumerState<FinanceInvoiceScreen> createState() =>
+      _FinanceInvoiceScreenState();
 }
 
-class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
+class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
   final GlobalKey _menuIconKey = GlobalKey();
   final TextEditingController _searchController = TextEditingController();
-  bool isLoading = false;
   bool areContactsVisible = true;
+  String? token;
 
-  // Sample client data for CustomClientDropdown3
-  final List<Map<String, dynamic>> clientsData = [
-    {
-      'serving_client': 'Encore Films',
-      'id': '1',
-      'initials': 'EF',
-      'active': 10,
-      'inactive': 2,
-      'notice': 1,
-      'all': 13,
-      'groups': [
-        {
-          'group_name': 'Group A',
-          'status': 'In Progress',
-          'active': 5,
-          'inactive': 1,
-          'notice': 0,
-          'all': 6,
-        },
-        {
-          'group_name': 'Group B',
-          'status': 'Completed',
-          'active': 3,
-          'inactive': 0,
-          'notice': 1,
-          'all': 4,
-        },
-      ],
-    },
-    {
-      'serving_client': 'Star Media',
-      'id': '2',
-      'initials': 'SM',
-      'active': 8,
-      'inactive': 3,
-      'notice': 0,
-      'all': 11,
-      'groups': [
-        {
-          'group_name': 'Group C',
-          'status': 'Ready to Bill',
-          'active': 4,
-          'inactive': 1,
-          'notice': 0,
-          'all': 5,
-        },
-      ],
-    },
-  ];
-
+  // Sample consultancy data (unchanged)
   final List<Map<String, String>> consultancyData = [
     {
       'count': '200',
@@ -101,6 +56,7 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
     },
   ];
 
+  // Sample consultancies data (unchanged)
   final List<Map<String, dynamic>> consultanciesData = [
     {
       'name': 'Bruce Lee',
@@ -145,6 +101,22 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
   ];
 
   OverlayEntry? _overlayEntry;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTokenAndFetchData();
+  }
+
+  Future<void> _loadTokenAndFetchData() async {
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+    if (token != null) {
+      await ref.read(financeProvider.notifier).groupListFinanceProvider(token: token!);
+    } else {
+      context.go('/login');
+    }
+  }
 
   @override
   void dispose() {
@@ -198,84 +170,123 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
   }
 
   void _onClientChanged(String clientName, String? clientId, String? groupName) {
-    // Handle the selected client or group
     setState(() {
       _searchController.text = groupName != null ? '$clientName/$groupName' : clientName;
     });
   }
 
   Widget _buildHeaderContent() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(20),
-          topLeft: Radius.circular(20),
-        ),
-        border: Border(
-          top: BorderSide(color: Color(0xffE8E8E8)),
-          left: BorderSide(color: Color(0xffE8E8E8)),
-          right: BorderSide(color: Color(0xffE8E8E8)),
-          bottom: BorderSide.none,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-            child: Row(
+    return Consumer(
+      builder: (context, ref, child) {
+        final financeState = ref.watch(financeProvider);
+
+        if (financeState.isLoading) {
+          return const Center(child: CustomLoader());
+        }
+        if (financeState.error != null) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    context.pop();
-                  },
-                  child: SvgPicture.asset('assets/icons/back.svg', height: 15),
+                Text(
+                  'Error: ${financeState.error}',
+                  style: GoogleFonts.montserrat(color: Colors.red),
                 ),
-                const SizedBox(width: 30),
-                RichText(
-                  text: TextSpan(
-                    style: GoogleFonts.montserrat(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xff5A5A5A),
-                    ),
-                    children: const [
-                      TextSpan(text: 'BILLING STATUS : ('),
-                      TextSpan(
-                        text: '10',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                      TextSpan(text: ','),
-                      TextSpan(
-                        text: '30',
-                        style: TextStyle(color: Colors.green),
-                      ),
-                      TextSpan(text: ','),
-                      TextSpan(
-                        text: '12',
-                        style: TextStyle(color: Colors.orange),
-                      ),
-                      TextSpan(text: ','),
-                      TextSpan(
-                        text: '3',
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                      TextSpan(text: ') / 100'),
-                    ],
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    if (token != null) {
+                      ref.read(financeProvider.notifier).groupListFinanceProvider(token: token!);
+                    }
+                  },
+                  child: Text(
+                    'Retry',
+                    style: GoogleFonts.montserrat(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xffFF1901),
                   ),
                 ),
               ],
             ),
+          );
+        }
+        final groupList = financeState.groupList;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.only(
+              topRight: Radius.circular(20),
+              topLeft: Radius.circular(20),
+            ),
+            border: Border(
+              top: BorderSide(color: Color(0xffE8E8E8)),
+              left: BorderSide(color: Color(0xffE8E8E8)),
+              right: BorderSide(color: Color(0xffE8E8E8)),
+              bottom: BorderSide.none,
+            ),
           ),
-          const SizedBox(height: 15),
-          CustomClientDropdown3(
-            clients: clientsData,
-            onChanged: _onClientChanged,
-            initialClientName: 'Encore Films',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        context.pop();
+                      },
+                      child: SvgPicture.asset('assets/icons/back.svg', height: 15),
+                    ),
+                    const SizedBox(width: 30),
+                    RichText(
+                      text: TextSpan(
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xff5A5A5A),
+                        ),
+                        children: const [
+                          TextSpan(text: 'BILLING STATUS : ('),
+                          TextSpan(
+                            text: '10',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          TextSpan(text: ','),
+                          TextSpan(
+                            text: '30',
+                            style: TextStyle(color: Colors.green),
+                          ),
+                          TextSpan(text: ','),
+                          TextSpan(
+                            text: '12',
+                            style: TextStyle(color: Colors.orange),
+                          ),
+                          TextSpan(text: ','),
+                          TextSpan(
+                            text: '3',
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                          TextSpan(text: ') / 100'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 15),
+              CustomClientDropdown3(
+                clients: groupList,
+                onChanged: _onClientChanged,
+                initialClientName: groupList.isNotEmpty
+                    ? groupList[0]['serving_client']
+                    : 'Select Client',
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -843,29 +854,36 @@ class _FinanceInvoiceScreenState extends State<FinanceInvoiceScreen> {
                   child: Column(
                     children: [
                       Padding(
-                        padding:
-                        const EdgeInsets.only(left: 20, right: 15, top: 12),
+                        padding: const EdgeInsets.only(left: 20, right: 15, top: 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Encore Films',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'Invoice Number: EM098789',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ],
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final financeState = ref.watch(financeProvider);
+                                final groupList = financeState.groupList;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      groupList.isNotEmpty
+                                          ? groupList[0]['serving_client']
+                                          : 'Encore Films',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Invoice Number: EM098789',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                             Row(
                               children: [

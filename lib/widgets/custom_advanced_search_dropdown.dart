@@ -290,12 +290,19 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                                 ),
                                 GestureDetector(
                                   onTap: () => _toggleClientExpansion(client['serving_client']),
-                                  child: Icon(
-                                    isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                    size: 18,
-                                    color: const Color(0xff8D91A0),
+                                  child: Row(
+                                    children: [
+                                      const SizedBox(width: 10), // ← adds spacing before arrow
+                                      Icon(
+                                        isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                        size: 30, // ← bigger arrow
+                                        color: const Color(0xff8D91A0),
+                                      ),
+                                    ],
                                   ),
                                 ),
+
+
                               ],
                             ),
                           ),
@@ -303,7 +310,7 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                         if (client['groups'] != null && isExpanded)
                           ...client['groups'].map<Widget>((group) {
                             final color = getStatusColor(group['status']);
-                            return GestureDetector(
+                            return GestureDetector(// Gesture Button  should be changed
                               onTap: () => _selectGroup(group),
                               onLongPress: () => _navigateToEditGroupScreen(group),
                               child: Container(
