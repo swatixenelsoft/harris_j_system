@@ -380,107 +380,58 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
     );
 
 }
-// Future<Map<String, dynamic>> editConsultancy(
-//     int id,
-//     String consultancyName,
-//     String consultancyId,
-//     String uenNumber,
-//     String fullAddress,
-//     String showAddressInput,
-//     String primaryContact,
-//     String primaryMobile,
-//     String primaryEmail,
-//     String secondaryContact,
-//     String secondaryEmail,
-//     String secondaryMobile,
-//     String consultancyType,
-//     String consultancyStatus,
-//     String licenseStartDate,
-//     String licenseEndDate,
-//     String licenseNumber,
-//     String feesStructure,
-//     String lastPaidStatus,
-//     String adminEmail,
-//     String primaryMobileCountryCode,
-//     String secondaryMobileCountryCode,
-//     bool resetPassword,
-//     int userId,
-//     File consultancyImage,
-//     String token,
-//     ) async
-// {
-//   state = state.copyWith(isLoading: true, error: null);
-//   try {
-//     print(
-//         "edit-consultancy$id, $consultancyName,$consultancyId,$uenNumber,$fullAddress,$showAddressInput,$primaryContact,$primaryMobile,$primaryEmail,$secondaryContact,$secondaryEmail,$secondaryMobile,$consultancyType,$consultancyStatus,$licenseStartDate,$licenseEndDate,$licenseNumber,$feesStructure,$lastPaidStatus,$adminEmail,$primaryMobileCountryCode,$secondaryMobileCountryCode,$userId,$resetPassword,$consultancyImage");
-//     final editConsultancyResponse = await apiService.editConsultancy(
-//         id,
-//         consultancyName,
-//         consultancyId,
-//         uenNumber,
-//         fullAddress,
-//         showAddressInput,
-//         primaryContact,
-//         primaryMobile,
-//         primaryEmail,
-//         secondaryContact,
-//         secondaryMobile,
-//         secondaryEmail,
-//         consultancyType,
-//         consultancyStatus,
-//         licenseStartDate,
-//         licenseEndDate,
-//         licenseNumber,
-//         feesStructure,
-//         lastPaidStatus,
-//         adminEmail,
-//         primaryMobileCountryCode,
-//         secondaryMobileCountryCode,
-//         resetPassword,
-//         userId,
-//         consultancyImage,token);
-//
-//     // if (editConsultancyResponse['status']) {
-//     await fetchConsultancy(token); // Refresh list
-//     state = state.copyWith(isLoading: false);
-//     return editConsultancyResponse;
-//     // }
-//
-//
-//   } catch (error) {
-//     print("error123 ${error.toString()}");
-//     state = state.copyWith(
-//       isLoading: false,
-//       error: error.toString(),
-//     );
-//     return {
-//       "success": false,
-//       "message": error.toString()
-//       // Add other default values as per your model
-//     };
-//   }
-// }
 
-// Future<Map<String, dynamic>> deleteConsultancy(int id,String token) async {
-//   try {
-//     final response = await apiService.deleteConsultancy(id,token);
-//     final bool status = response['status'] ?? false;
-//
-//     if (status) {
-//       await fetchConsultancy(token); // Refresh list
-//       state = state.copyWith(isLoading: false);
-//     } else {
-//       state = state.copyWith(
-//         isLoading: false,
-//         error: response['message'] ?? 'Delete failed',
-//       );
-//     }
-//
-//     return response;
-//   } catch (e) {
-//     final errorMsg = e.toString();
-//     state = state.copyWith(isLoading: false, error: errorMsg);
-//     return {'status': false, 'message': errorMsg};
-//   }
-// }
+  Future<Map<String, dynamic>> clientListClaimInvoice(String token) async {
+    state = state.copyWith(error: null);
+    try {
+      print('token $token');
+      final clientResponse = await apiService.getClientListClaimInvoiceFinance(token);
+
+      return clientResponse;
+    } catch (error) {
+      print("errorclientlistprovider ${error.toString()}");
+
+      state = state.copyWith(
+        isLoading: false,
+        error: error.toString(),
+      );
+      return {"success": false, "message": error.toString()};
+    }
+
+
+  }
+
+
+  Future<void> financeClaimClientConsultants(String clientId,
+      String month,
+      String year,
+      String token) async {
+    state = state.copyWith(error: null);
+    try {
+      final response = await apiService.financeClaimClientConsultants(
+        clientId, month, year, token,
+      );
+      final bool status = response['success'] ?? false;
+
+      if (status) {
+        final List<dynamic> consultants = response['data'] ?? [];
+
+
+        print('consultants $consultants');
+
+
+      } else {
+        state = state.copyWith(
+          error: response['message'] ?? 'Failed to fetch consultants',
+          consultantList: [],
+          hrConsultantList: [],
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
 }

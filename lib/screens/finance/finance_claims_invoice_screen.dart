@@ -1,35 +1,29 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:harris_j_system/screens/bom/widget/finance_popup.dart';
+import 'package:harris_j_system/providers/finance_provider.dart';
 import 'package:harris_j_system/screens/finance/compose_button_page.dart';
-import 'package:harris_j_system/screens/finance/finance_claims_compose_screen.dart';
 import 'package:harris_j_system/screens/finance/finance_edit_screen.dart';
-
-import 'package:harris_j_system/screens/operator/action_click.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
-import 'package:harris_j_system/widgets/custom_text_field.dart';
+import 'package:harris_j_system/widgets/custom_client_dropdown_claim_invoice.dart';
 import 'package:harris_j_system/widgets/remark_section.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:harris_j_system/ulits/custom_loader.dart'; // Added for CustomLoader
 
-class FinanceClaimsInvoiceScreen extends StatefulWidget {
+class FinanceClaimsInvoiceScreen extends ConsumerStatefulWidget {
   const FinanceClaimsInvoiceScreen({super.key});
 
   @override
-  State<FinanceClaimsInvoiceScreen> createState() =>
-      _FinanceClaimsInvoiceScreenState();
+  ConsumerState<FinanceClaimsInvoiceScreen> createState() => _FinanceClaimsInvoiceScreenState();
 }
 
-class _FinanceClaimsInvoiceScreenState
-    extends State<FinanceClaimsInvoiceScreen> {
-  final GlobalKey _menuIconKey = GlobalKey();
+class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoiceScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool isLoading = false;
   bool areContactsVisible = true;
+  String? token;
 
   final List<Map<String, String>> consultancyData = [
     {
@@ -96,8 +90,24 @@ class _FinanceClaimsInvoiceScreenState
       'status': 'Draft',
     },
   ];
+  int selectedMonth = DateTime.now().month;
+  int selectedYear = DateTime.now().year;
 
   OverlayEntry? _overlayEntry;
+
+  List<String> _clientList = [];
+  List<Map<String, dynamic>> _rawClientList = [];
+  String? _selectedClient;
+  String? _selectedClientId;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Future.microtask(() {
+      fetchData();
+    });
+  }
 
   @override
   void dispose() {
@@ -106,49 +116,51 @@ class _FinanceClaimsInvoiceScreenState
     super.dispose();
   }
 
-  void _showImportExportPopupBelow(BuildContext context) {
-    final RenderBox? renderBox =
-        _menuIconKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final position = renderBox.localToGlobal(Offset.zero);
-    final size = renderBox.size;
-    final screenWidth = MediaQuery.of(context).size.width;
-    double leftPosition = screenWidth * 0.60;
-
-    _overlayEntry?.remove();
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          GestureDetector(
-            onTap: () {
-              _overlayEntry?.remove();
-              _overlayEntry = null;
-            },
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-              child: Container(
-                color: Colors.black.withOpacity(0.1),
-                width: double.infinity,
-                height: double.infinity,
-              ),
-            ),
-          ),
-          Positioned(
-            left: leftPosition,
-            top: position.dy + size.height + 10,
-            child: FinancePopupMenu(
-              onClose: () {
-                _overlayEntry?.remove();
-                _overlayEntry = null;
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-
-    Overlay.of(context).insert(_overlayEntry!);
+  fetchData() async {
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+    ref.read(financeProvider.notifier).setLoading(true);
+    await getClientList();
+    ref.read(financeProvider.notifier).setLoading(false);
   }
+
+
+  getClientList() async {
+
+    final client = await ref.read(financeProvider.notifier).clientListClaimInvoice(token!);
+
+    print('client list $client');
+
+    _rawClientList = List<Map<String, dynamic>>.from(client['data']);
+
+    _clientList = _rawClientList
+        .map<String>((item) => item['serving_client'].toString())
+        .toList();
+
+    // ✅ Set _selectedClientId as the first client's ID if available
+    if (_rawClientList.isNotEmpty) {
+      _selectedClientId = _rawClientList[0]['id'].toString();
+      _selectedClient = _rawClientList[0]['serving_client'].toString();
+    }
+    print('data in clientr $_rawClientList,$_selectedClientId,$_selectedClient');
+
+    setState(() {});
+  }
+
+
+
+  Future<void> financeClaimClientConsultants() async {
+    if (_selectedClientId != null && token != null) {
+      await ref.read(financeProvider.notifier).getConsultantClaimsByClientFinance(
+        _selectedClientId!,
+        selectedMonth.toString().padLeft(2, '0'),
+        selectedYear.toString(),
+        token!,
+      );
+
+    }
+  }
+
 
   Widget _buildHeaderContent() {
     return Container(
@@ -171,7 +183,6 @@ class _FinanceClaimsInvoiceScreenState
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
                   onTap: () {
@@ -179,66 +190,48 @@ class _FinanceClaimsInvoiceScreenState
                   },
                   child: SvgPicture.asset('assets/icons/back.svg', height: 15),
                 ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xff5A5A5A),
-                        ),
-                        children: [
-                          const TextSpan(text: 'BILLING STATUS : ('),
-                          TextSpan(
-                            text: '10',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                          const TextSpan(text: ','),
-                          TextSpan(
-                            text: '30',
-                            style: TextStyle(color: Colors.green),
-                          ),
-                          const TextSpan(text: ','),
-                          TextSpan(
-                            text: '12',
-                            style: TextStyle(color: Colors.orange),
-                          ),
-                          const TextSpan(text: ','),
-                          TextSpan(
-                            text: '3',
-                            style: TextStyle(color: Colors.blue),
-                          ),
-                          const TextSpan(text: ') / 100'),
-                        ],
-                      ),
+                const SizedBox(width: 30),
+                RichText(
+                  text: TextSpan(
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xff5A5A5A),
                     ),
-                  ],
+                    children: const [
+                      TextSpan(text: 'Claim Status : ('),
+                      TextSpan(
+                        text: '10',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      TextSpan(text: ','),
+                      TextSpan(
+                        text: '30',
+                        style: TextStyle(color: Colors.green),
+                      ),
+                      TextSpan(text: ','),
+                      TextSpan(
+                        text: '12',
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                      TextSpan(text: ','),
+                      TextSpan(
+                        text: '3',
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      TextSpan(text: ') / 45'),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 15),
-          CustomTextField(
-            hintText: 'Start typing or click to see clients/consultant',
-            label: 'Start typing or click to see clients/consultant',
-            controller: _searchController,
-            suffixIcon: const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 30,
-              color: Color(0xff8D91A0),
-            ),
-            prefixIcon: Padding(
-              padding: const EdgeInsets.all(14.0),
-              child: SizedBox(
-                height: 10,
-                width: 10,
-                child: SvgPicture.asset(
-                  'assets/icons/search_icon.svg',
-                ),
-              ),
-            ),
+          if (_rawClientList.isNotEmpty && _selectedClient != null)
+          CustomClientDropDownClaimInvoice(
+            clients: _rawClientList,
+            initialClientName: _selectedClient,
+
           ),
         ],
       ),
@@ -257,12 +250,12 @@ class _FinanceClaimsInvoiceScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(4),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
+            color: Color.fromRGBO(0, 0, 0, 0.05),
+            blurRadius: 1,
             spreadRadius: 1,
-            offset: const Offset(0, 0),
+            offset: Offset(0, 0),
           ),
         ],
       ),
@@ -271,7 +264,7 @@ class _FinanceClaimsInvoiceScreenState
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           SvgPicture.asset(iconPath, height: 40, width: 40),
-          const SizedBox(width: 10),
+          const SizedBox(width: 5),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -288,7 +281,7 @@ class _FinanceClaimsInvoiceScreenState
                 label,
                 style: GoogleFonts.montserrat(
                   fontWeight: FontWeight.w500,
-                  fontSize: 10,
+                  fontSize: 8,
                   color: const Color(0xffA7A7A7),
                 ),
               ),
@@ -307,8 +300,7 @@ class _FinanceClaimsInvoiceScreenState
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFFFAFAFA),
-
+        color: const Color(0xFFFAFAFA),
         borderRadius: BorderRadius.circular(6),
         boxShadow: const [
           BoxShadow(
@@ -326,32 +318,32 @@ class _FinanceClaimsInvoiceScreenState
           // Top Red Label - now full width
           Container(
             width: 250, // make it stretch full width
-            height: 30,
-            padding: const EdgeInsets.only(left: 20), // label text padding from left
+            height: 25,
+            padding:
+            const EdgeInsets.only(left: 20), // label text padding from left
             alignment: Alignment.centerLeft, // align text to the left
             decoration: const BoxDecoration(
               color: Color(0xffFF1901),
               borderRadius: BorderRadius.only(
-                bottomRight: Radius.circular(12),
+                bottomRight: Radius.circular(13),
                 topLeft: Radius.circular(6),
               ),
             ),
             child: Text(
               label,
               style: GoogleFonts.montserrat(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
                 color: Colors.white,
               ),
             ),
           ),
 
-
           // Gray background for name, address and location
           Container(
             width: double.infinity,
             color: const Color(0xFFFAFAFA),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -373,11 +365,11 @@ class _FinanceClaimsInvoiceScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 2, right: 10),
+                      padding: const EdgeInsets.only( right: 6),
                       child: SvgPicture.asset(
                         'assets/icons/address_invoice.svg',
-                        width: 24,
-                        height: 24,
+                        width: 27,
+                        height: 27,
                       ),
                     ),
                     Expanded(
@@ -385,7 +377,7 @@ class _FinanceClaimsInvoiceScreenState
                         address,
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
                         ),
                         softWrap: true,
                         maxLines: 3,
@@ -394,18 +386,18 @@ class _FinanceClaimsInvoiceScreenState
                   ],
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
 
                 // Location Row
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 2, right: 10),
+                      padding: const EdgeInsets.only(right: 6),
                       child: SvgPicture.asset(
                         'assets/icons/location_invoice.svg',
-                        width: 24,
-                        height: 24,
+                        width: 27,
+                        height: 27,
                       ),
                     ),
                     Expanded(
@@ -413,7 +405,7 @@ class _FinanceClaimsInvoiceScreenState
                         location,
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
                         ),
                         softWrap: true,
                         maxLines: 3,
@@ -428,7 +420,6 @@ class _FinanceClaimsInvoiceScreenState
       ),
     );
   }
-
 
   Widget _buildRemarksSection() {
     return Container(
@@ -452,13 +443,13 @@ class _FinanceClaimsInvoiceScreenState
   Widget _buildClaimsTable() {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double nameWidth = screenWidth * 0.25;
-    final double queueWidth = screenWidth * 0.15;
+    final double queueWidth = screenWidth * 0.2;
     final double numClaimsWidth = screenWidth * 0.15;
     final double totalAmountWidth = screenWidth * 0.20;
     final double invoiceAmountWidth = screenWidth * 0.20;
     final double invoiceNoWidth = screenWidth * 0.20;
     final double invoiceMonthWidth = screenWidth * 0.20;
-    final double statusWidth = screenWidth * 0.20;
+    final double statusWidth = screenWidth * 0.2;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -471,14 +462,14 @@ class _FinanceClaimsInvoiceScreenState
             headingRowHeight: 40,
             dataRowHeight: 60,
             headingRowColor: MaterialStateColor.resolveWith(
-              (states) => const Color(0xFFF5F5F5),
+                  (states) => const Color(0xFFF5F5F5),
             ),
             columns: [
               DataColumn(
                 label: SizedBox(
                   width: nameWidth,
                   child: Text(
-                    'Name/Group',
+                    'Name',
                     style: GoogleFonts.montserrat(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -515,7 +506,21 @@ class _FinanceClaimsInvoiceScreenState
                 label: SizedBox(
                   width: numClaimsWidth,
                   child: Text(
-                    '#Emp',
+                    '#Claims',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xff000000),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: SizedBox(
+                  width: invoiceMonthWidth,
+                  child: Text(
+                    'Claim No.',
                     style: GoogleFonts.montserrat(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -567,20 +572,7 @@ class _FinanceClaimsInvoiceScreenState
                   ),
                 ),
               ),
-              DataColumn(
-                label: SizedBox(
-                  width: invoiceMonthWidth,
-                  child: Text(
-                    'Invoice Month',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
+
               DataColumn(
                 label: SizedBox(
                   width: statusWidth,
@@ -714,7 +706,7 @@ class _FinanceClaimsInvoiceScreenState
                   ),
                   DataCell(
                     SizedBox(
-                      width: 90,
+                      width: 100,
                       child: Container(
                         decoration: BoxDecoration(
                           color: isCompleted
@@ -767,7 +759,7 @@ class _FinanceClaimsInvoiceScreenState
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const ComposeButton2Screen(),
+              builder: (context) => const ComposeButtonScreen(),
             ),
           );
         },
@@ -806,129 +798,137 @@ class _FinanceClaimsInvoiceScreenState
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 0),
+                        color: Color.fromRGBO(0, 0, 0, 0.25),
+                        blurRadius: 1,
+                        offset: Offset(0, 0),
                       ),
                     ],
                   ),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Encore Films',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
+                      Padding(
+                        padding:
+                        const EdgeInsets.only(left: 20, right: 15, top: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Encore Films',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                'Invoice Number: EM098789',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w400,
+                                Text(
+                                  'Invoice Number: EM098789',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              const Divider(
-                                color: Color(0xffE8E8E8),
-                                thickness: 1,
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.white,
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(20)),
-                                    ),
-                                    builder: (context) {
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          bottom:
-                                          MediaQuery.of(context)
-                                              .viewInsets
-                                              .bottom,
-                                        ),
-                                        child: const EditInvoiceDetailDialog(),
-                                      );
-                                    },
-                                  );
-                                },
-                                child: SvgPicture.asset(
-                                  'assets/icons/editor.svg',
-                                  height: 25,
-                                  width: 25,
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.white,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(20)),
+                                      ),
+                                      builder: (context) {
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom: MediaQuery.of(context)
+                                                .viewInsets
+                                                .bottom,
+                                          ),
+                                          child:
+                                          const EditInvoiceDetailDialog(),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: SvgPicture.asset(
+                                    'assets/icons/editor.svg',
+                                    height: 25,
+                                    width: 25,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    areContactsVisible = !areContactsVisible;
-                                  });
-                                },
-                                child: SvgPicture.asset(
-                                  areContactsVisible
-                                      ? 'assets/icons/upside.svg'
-                                      : 'assets/icons/downside.svg',
-                                  height: 20,
-                                  width: 20,
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      areContactsVisible = !areContactsVisible;
+                                    });
+                                  },
+                                  child: SvgPicture.asset(
+                                    areContactsVisible
+                                        ? 'assets/icons/upside.svg'
+                                        : 'assets/icons/downside.svg',
+                                    height: 20,
+                                    width: 20,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      GridView.builder(
-                        gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          childAspectRatio: 2.0,
+                              ],
+                            ),
+                          ],
                         ),
-                        itemCount: consultancyData.length,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          final item = consultancyData[index];
-                          return consultancyCard(
-                            count: item['count'] ?? '0',
-                            label: item['label'] ?? 'Unknown',
-                            iconPath:
-                            item['iconPath'] ?? 'assets/icons/default.svg',
-                          );
-                        },
+                      ),
+                      const SizedBox(height: 8),
+                      const Divider(
+                        color: Color(0xffE1E1E1),
+                        thickness: 1,
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 10, right: 10, bottom: 15),
+                        child: GridView.builder(
+                          gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 2.0,
+                          ),
+                          itemCount: consultancyData.length,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            final item = consultancyData[index];
+                            return consultancyCard(
+                              count: item['count'] ?? '0',
+                              label: item['label'] ?? 'Unknown',
+                              iconPath: item['iconPath'] ??
+                                  'assets/icons/default.svg',
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              const SizedBox(height: 12),
+              const SizedBox(height: 30),
               if (areContactsVisible) ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -944,7 +944,7 @@ class _FinanceClaimsInvoiceScreenState
                 ),
                 const SizedBox(height: 12),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
                   child: _contactCard(
                     label: 'Shipping To',
                     name: 'Abram Culhane',
@@ -956,10 +956,8 @@ class _FinanceClaimsInvoiceScreenState
                 const SizedBox(height: 12),
               ],
               const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                child: _buildRemarksSection(),
-              ),
+              _buildRemarksSection(),
+              const SizedBox(height: 16),
             ],
           ),
         ),

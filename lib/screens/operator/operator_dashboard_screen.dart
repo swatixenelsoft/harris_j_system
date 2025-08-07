@@ -19,59 +19,6 @@ import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final List<Map<String, dynamic>> tableData = [
-  {
-    'consultancy_name': 'Encore Films',
-    'license_expiry': '12/08/2024 10:12:34 AM',
-    'status': {
-      'label': 'Approved',
-      'color': Colors.green,
-      'background': Colors.green.withOpacity(0.1),
-    },
-  },
-  {
-    'consultancy_name': 'Encore Films',
-    'license_expiry': '12/08/2024 10:12:34 AM',
-    'status': {
-      'label': 'Approved',
-      'color': Colors.green,
-      'background': Colors.green.withOpacity(0.1),
-    },
-  },
-  {
-    'consultancy_name': 'Encore Films',
-    'license_expiry': '12/08/2024 10:12:34 AM',
-    'status': {
-      'label': 'Approved',
-      'color': Colors.green,
-      'background': Colors.green.withOpacity(0.1),
-    },
-  },
-  {
-    'consultancy_name': 'Encore Films',
-    'license_expiry': '12/08/2024 10:12:34 AM',
-    'status': {
-      'label': 'Approved',
-      'color': Colors.green,
-      'background': Colors.green.withOpacity(0.1),
-    },
-  },
-  {
-    'consultancy_name': 'Encore Films',
-    'license_expiry': '12/08/2024 10:12:34 AM',
-    'status': {
-      'label': 'Approved',
-      'color': Colors.green,
-      'background': Colors.green.withOpacity(0.1),
-    },
-  },
-];
-final List<Map<String, String>> heading = [
-  {'label': 'Consultancy Name', 'key': 'consultancy_name'},
-  {'label': 'License Expiry', 'key': 'license_expiry'},
-  {'label': 'Status', 'key': 'status'},
-];
-
 class OperatorDashboardScreen extends ConsumerStatefulWidget {
   const OperatorDashboardScreen({super.key});
 
@@ -173,11 +120,7 @@ class _OperatorDashboardScreenState
   @override
   Widget build(BuildContext context) {
     final operatorState = ref.watch(operatorProvider);
-
     final isLoading = operatorState.isLoading;
-    final Map<String, dynamic> operatorDashboardData =
-        operatorState.dashboardData ?? {};
-    print('consultantStatedashj ${operatorState.dashboardData}');
 
     final List<Widget> pages = [
       _buildTimesheetCard(),

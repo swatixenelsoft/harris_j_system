@@ -30,7 +30,6 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
   String? selectedClientId;
   String? selectedConsultant;
 
-  bool isLoading = true;
   String? error;
 
   final Color brandRed = const Color(0xFFFF1901);
@@ -38,15 +37,15 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
   @override
   void initState() {
     super.initState();
-    fetchClients();
+    Future.microtask(() {
+      fetchClients();
+    });
   }
 
   Future<void> fetchClients() async {
-    setState(() {
-      isLoading = true;
-      error = null;
-    });
+    ref.read(financeProvider.notifier).setLoading(true);
 
+    print('loading');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
     print('Token: $token'); // Debug: Check if token is retrieved
@@ -59,19 +58,24 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
       print('Parsed Client List: $data'); // Debug: Log parsed data
       setState(() {
         clientList = data.map((e) => e as Map<String, dynamic>).toList();
-        isLoading = false;
+
       });
+      ref.read(financeProvider.notifier).setLoading(false);
+      print('clientList: $clientList');
     } else {
       print('Error Response: ${response['message']}'); // Debug: Log error message
       setState(() {
-        isLoading = false;
+
         error = response['message'] ?? 'Failed to load clients';
       });
+      ref.read(financeProvider.notifier).setLoading(false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final financeState = ref.watch(financeProvider);
+    print('financeState $clientList');
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
@@ -193,7 +197,7 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
               ),
             ),
           ),
-          if (isLoading)
+          if (financeState.isLoading)
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
@@ -207,7 +211,7 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
                 ),
               ),
             ),
-          if (!isLoading && error == null)
+          if (!financeState.isLoading && error == null)
             Positioned(
               bottom: 10,
               left: 0,

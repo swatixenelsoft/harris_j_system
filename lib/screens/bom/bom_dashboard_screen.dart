@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -65,6 +67,10 @@ final List<Map<String, String>> heading = [
   {'label': 'Status', 'key': 'status'},
 ];
 
+bool showInfoSections = true;
+bool showNotificationSections = true;
+Timer? _hideDashboardTimer;
+
 class BomDashboardScreen extends StatefulWidget {
   const BomDashboardScreen({super.key});
 
@@ -73,6 +79,36 @@ class BomDashboardScreen extends StatefulWidget {
 }
 
 class _BomDashboardScreenState extends State<BomDashboardScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    _startHideDashboardTimer();
+  }
+
+  void _startHideDashboardTimer() {
+    _hideDashboardTimer?.cancel();
+    _hideDashboardTimer = Timer(const Duration(seconds: 5), () {
+      setState(() {
+        showInfoSections = false;
+        showNotificationSections=false;
+      });
+    });
+  }
+
+  void _onDashboardHoldStart() {
+    _hideDashboardTimer?.cancel();
+    setState(() {
+      showInfoSections = true;
+    });
+  }
+
+  void _onDashboardHoldEnd() {
+    setState(() {
+      showInfoSections = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,8 +129,7 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
                 },
               ),
               // Notifications
-
-              Padding(
+       if(showNotificationSections)     Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Container(
                   padding: const EdgeInsets.only(
@@ -146,114 +181,39 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 10),
-
               // User Greeting & Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text("Hi Bruce Lee",
-                    style: GoogleFonts.montserrat(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xff5A5A5A))),
-              ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Hi BOM",
+                        style: GoogleFonts.montserrat(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xff5A5A5A))),
+                    CustomButton(
+                      text: "View Dashboard",
+                      onPressed: () {
+                        setState(() {
+                          showInfoSections = !showInfoSections;
+                        });
+                      },
+                      height: 38,
+                      width: 151,
+                      isOutlined: true,
+                      borderRadius: 8,
+                      textStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w500,fontSize: 12,),
+                      icon: showInfoSections
+                          ? Icons.keyboard_arrow_up_sharp
+                          : Icons.keyboard_arrow_down_sharp,
+                    ),
 
-              const SizedBox(height: 16),
-              // Work Hour Log
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  height: 216,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 15,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Left side: Info
-                      Container(
-                        height: 220,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Total No. Of Consultancy:",
-                                style: GoogleFonts.montserrat(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                    color: Colors.black)),
-                            const SizedBox(height: 8),
-                            Container(
-                              alignment: Alignment.center,
-                              height: 20,
-                              width: 95,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(4),
-                                color: const Color(0xffE5F1FF),
-                              ),
-                              child: Text("300",
-                                  style: GoogleFonts.montserrat(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xff007BFF))),
-                            ),
-                            const SizedBox(height: 40),
-                            const LegendDot(
-                                color: Color(0xff28A745), label: "Active: 200"),
-                            const SizedBox(height: 8),
-                            const LegendDot(
-                                color: Color(0xff007BFF),
-                                label: "Inactive: 100"),
-                            const SizedBox(height: 8),
-                            const LegendDot(
-                                color: Color(0xffFF1901), label: "Rejected: 0"),
-                          ],
-                        ),
-                      ),
-                      // Right side: Pie Chart
-                      SizedBox(
-                        height: 220,
-                        width: 120,
-                        child: PieChart(
-                          dataMap: const {
-                            "Clocked-In": 160,
-                            "Gap": 2,
-                            "Left": 40,
-                            "Gap1": 2,
-                          },
-                          chartType: ChartType.disc,
-                          baseChartColor: Colors.grey[200]!,
-                          colorList: const [
-                            Color(0xFF28A745),
-                            Colors.white,
-                            Color(0xFFFF8403),
-                            Colors.white,
-                          ],
-                          chartRadius: 160, // Bigger radius
-                          chartValuesOptions: const ChartValuesOptions(
-                            showChartValues: false,
-                          ),
-                          legendOptions: const LegendOptions(
-                            showLegends: false,
-                          ),
-                          centerText: '',
-                          ringStrokeWidth: 50,
-                        ),
-                      )
-                    ],
-                  ),
+                  ],
                 ),
               ),
-
+              // Work Hour Log
+            if (showInfoSections) ...[
               const SizedBox(height: 16),
               consultancyCard(
                 count: "200",
@@ -272,7 +232,7 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
               // Claims Summary
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -293,6 +253,8 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
               ),
 
               CustomTableView(data: tableData, heading: heading),
+            ],
+
 
               const SizedBox(height: 16),
               Padding(

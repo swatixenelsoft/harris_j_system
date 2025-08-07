@@ -309,7 +309,7 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                               child: Container(
                                 margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 3),
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                height: 48,
+                                height: 50,
                                 decoration: BoxDecoration(
                                   color: color,
                                   borderRadius: BorderRadius.circular(6),

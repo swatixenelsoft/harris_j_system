@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -90,6 +91,14 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
 
   String? token;
 
+  bool showInfoSections = true;
+  Timer? _hideDashboardTimer;
+  String _selectedPeriod = 'Monthly';
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  Map<String, dynamic>? timesheetData;
+  Map<String, dynamic>? workLogData;
+
   getClientList() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
@@ -133,13 +142,38 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
     ref.read(hrProvider.notifier).setLoading(true);
     await getClientList();
     await getDashBoardByClient();
+
     ref.read(hrProvider.notifier).setLoading(false);
+
   }
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() => fetchData());
+    _startHideDashboardTimer();
+  }
+
+  void _startHideDashboardTimer() {
+    _hideDashboardTimer?.cancel();
+    _hideDashboardTimer = Timer(const Duration(seconds: 5), () {
+      setState(() {
+        showInfoSections = false;
+      });
+    });
+  }
+
+  void _onDashboardHoldStart() {
+    _hideDashboardTimer?.cancel();
+    setState(() {
+      showInfoSections = true;
+    });
+  }
+
+  void _onDashboardHoldEnd() {
+    setState(() {
+      showInfoSections = false;
+    });
   }
 
   @override
@@ -149,6 +183,11 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
     final isLoading = consultantState.isLoading;
     final Map<String, dynamic> dashboardData =
         consultantState.dashboardData ?? {};
+
+    final List<Widget> pages = [
+      _buildTimesheetCard(),
+      _buildTimesheetCard(),
+    ];
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(children: [
@@ -168,252 +207,294 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
                     context.pushReplacement(Constant.login);
                   },
                 ),
+
+                SizedBox(height: showInfoSections ? 24 : 10),
                 // User Greeting & Button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text("Hi HR",
-                      style: GoogleFonts.montserrat(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xff5A5A5A))),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      "Turn – in – rate : 90 / 100",
-                      style: GoogleFonts.montserrat(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xff000000)),
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                if (_rawClientList.isNotEmpty && _selectedClient != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                    child: CustomClientDropdown(
-                      clients: _rawClientList,
-                      initialClientName: _selectedClient,
-                      onChanged: (selectedName, selectedId) async {
-                        FocusScope.of(context).unfocus();
-                        setState(() {
-                          _selectedClient = selectedName;
-                          _selectedClientId = selectedId;
-                        });
-
-                        getDashBoardByClient();
-                      },
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                // Work Hour Log
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'My Dashboard',
-                    style: GoogleFonts.montserrat(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Container(
-                    height: 216,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 15,
-                          spreadRadius: 1,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left side: Info
-                        SizedBox(
-                          height: 230,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("Residential Status",
-                                  style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                      color: Colors.black)),
-                              const SizedBox(height: 8),
-                              Container(
-                                alignment: Alignment.center,
-                                height: 20,
-                                width: 95,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(4),
-                                  color: const Color(0xffE5F1FF),
-                                ),
-                                child: Text(
-                                    dashboardData["consultant_total"]
-                                        .toString(),
-                                    style: GoogleFonts.montserrat(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xff007BFF))),
-                              ),
-                              const SizedBox(height: 40),
-                              LegendDot(
-                                color: const Color(0xff28A745),
-                                label:
-                                    "Nationality: ${dashboardData["residential_breakdown"]?["nationality"]?.toString() ?? 'N/A'}",
-                              ),
-                              const SizedBox(height: 8),
-                              LegendDot(
-                                  color: const Color(0xffFF8403),
-                                  label:
-                                      "Permanent Resident:  ${dashboardData["residential_breakdown"]?["permanent_resident"].toString() ?? "N/A"}"),
-                              const SizedBox(height: 8),
-                              LegendDot(
-                                  color: const Color(0xffFF1901),
-                                  label:
-                                      "Employment Pass Holders :${dashboardData["residential_breakdown"]?["employment_pass"].toString() ?? "N/A"}"),
-                            ],
-                          ),
-                        ),
-                        // Right side: Pie Chart
-                        SizedBox(
-                          height: 220,
-                          width: 120,
-                          child: PieChart(
-                            dataMap: {
-                              "Nationality":
-                                  (dashboardData["residential_breakdown"]
-                                              ?["nationality"] ??
-                                          0)
-                                      .toDouble(),
-                              "Left": (dashboardData["residential_breakdown"]
-                                          ?["permanent_resident"] ??
-                                      0)
-                                  .toDouble(),
-                              "Right": (dashboardData["residential_breakdown"]
-                                          ?["employment_pass"] ??
-                                      0)
-                                  .toDouble(),
-                            },
-                            chartType: ChartType.disc,
-                            baseChartColor: Colors.grey[200]!,
-                            colorList: const [
-                              Color(0xFF28A745),
-                              Color(0xffFF8403),
-                              Color(0xFFFD0D1B),
-                            ],
-                            chartRadius: 160, // Bigger radius
-                            chartValuesOptions: const ChartValuesOptions(
-                              showChartValues: false,
-                            ),
-                            legendOptions: const LegendOptions(
-                              showLegends: false,
-                            ),
-                            centerText: '',
-                            ringStrokeWidth: 50,
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Your Wins",
+                      Text("Hi HR",
                           style: GoogleFonts.montserrat(
+                              fontSize: 20,
                               fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                              color: Colors.black)),
-                      Container(
-                        height: 40,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xffE8E6EA)),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: 'Monthly',
-                            icon: const Icon(
-                              Icons
-                                  .keyboard_arrow_down_rounded, // Custom dropdown icon
-                              color: Color(0xff8D91A0),
-                              size: 25,
+                              color: const Color(0xff5A5A5A))),
+                      CustomButton(
+                        text: "View Dashboard",
+                        onPressed: () {
+                          setState(() {
+                            showInfoSections = !showInfoSections;
+                          });
+                        },
+                        height: 38,
+                        width: 151,
+                        isOutlined: true,
+                        borderRadius: 8,
+                        textStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w500,fontSize: 12,),
+                        icon: showInfoSections
+                            ? Icons.keyboard_arrow_up_sharp
+                            : Icons.keyboard_arrow_down_sharp,
+                      ),
+
+                    ],
+                  ),
+                ),
+
+                if (showInfoSections) ...[
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onLongPressStart: (_) => _onDashboardHoldStart(),
+                    onLongPressEnd: (_) => _onDashboardHoldEnd(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Text(
+                              "Turn-in-rate: 90/100",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xff000000),
+                              ),
+                              textAlign: TextAlign.end,
                             ),
-                            items: [
-                              DropdownMenuItem(
-                                value: 'Monthly',
-                                child: Text(
-                                  'Monthly',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xff8D91A0),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        if (_rawClientList.isNotEmpty && _selectedClient != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                            child: CustomClientDropdown(
+                              clients: _rawClientList,
+                              initialClientName: _selectedClient,
+                              onChanged: (selectedName, selectedId) async {
+                                FocusScope.of(context).unfocus();
+                                setState(() {
+                                  _selectedClient = selectedName;
+                                  _selectedClientId = selectedId;
+                                });
+
+                                getDashBoardByClient();
+                              },
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text(
+                            'My Dashboard',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Container(
+                            height: 216,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 15,
+                                  spreadRadius: 1,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Left side: Info
+                                SizedBox(
+                                  height: 230,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text("Residential Status",
+                                          style: GoogleFonts.montserrat(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                              color: Colors.black)),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        alignment: Alignment.center,
+                                        height: 20,
+                                        width: 95,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(4),
+                                          color: const Color(0xffE5F1FF),
+                                        ),
+                                        child: Text(
+                                            dashboardData["consultant_total"]
+                                                .toString(),
+                                            style: GoogleFonts.montserrat(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xff007BFF))),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      LegendDot(
+                                        color: const Color(0xff28A745),
+                                        label:
+                                        "Nationality: ${dashboardData["residential_breakdown"]?["nationality"]?.toString() ?? 'N/A'}",
+                                      ),
+                                      const SizedBox(height: 8),
+                                      LegendDot(
+                                          color: const Color(0xffFF8403),
+                                          label:
+                                          "Permanent Resident:  ${dashboardData["residential_breakdown"]?["permanent_resident"].toString() ?? "N/A"}"),
+                                      const SizedBox(height: 8),
+                                      LegendDot(
+                                          color: const Color(0xffFF1901),
+                                          label:
+                                          "Employment Pass Holders :${dashboardData["residential_breakdown"]?["employment_pass"].toString() ?? "N/A"}"),
+                                    ],
                                   ),
                                 ),
-                              ),
-                              DropdownMenuItem(
-                                value: 'Weekly',
-                                child: Text(
-                                  'Weekly',
+                                // Right side: Pie Chart
+                                SizedBox(
+                                  height: 220,
+                                  width: 120,
+                                  child: PieChart(
+                                    dataMap: {
+                                      "Nationality":
+                                      (dashboardData["residential_breakdown"]
+                                      ?["nationality"] ??
+                                          0)
+                                          .toDouble(),
+                                      "Left": (dashboardData["residential_breakdown"]
+                                      ?["permanent_resident"] ??
+                                          0)
+                                          .toDouble(),
+                                      "Right": (dashboardData["residential_breakdown"]
+                                      ?["employment_pass"] ??
+                                          0)
+                                          .toDouble(),
+                                    },
+                                    chartType: ChartType.disc,
+                                    baseChartColor: Colors.grey[200]!,
+                                    colorList: const [
+                                      Color(0xFF28A745),
+                                      Color(0xffFF8403),
+                                      Color(0xFFFD0D1B),
+                                    ],
+                                    chartRadius: 160, // Bigger radius
+                                    chartValuesOptions: const ChartValuesOptions(
+                                      showChartValues: false,
+                                    ),
+                                    legendOptions: const LegendOptions(
+                                      showLegends: false,
+                                    ),
+                                    centerText: '',
+                                    ringStrokeWidth: 50,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Your Wins",
                                   style: GoogleFonts.montserrat(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xff8D91A0),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                      color: Colors.black)),
+                              Container(
+                                height: 40,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: const Color(0xffE8E6EA)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: 'Monthly',
+                                    icon: const Icon(
+                                      Icons
+                                          .keyboard_arrow_down_rounded, // Custom dropdown icon
+                                      color: Color(0xff8D91A0),
+                                      size: 25,
+                                    ),
+                                    items: [
+                                      DropdownMenuItem(
+                                        value: 'Monthly',
+                                        child: Text(
+                                          'Monthly',
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: const Color(0xff8D91A0),
+                                          ),
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'Weekly',
+                                        child: Text(
+                                          'Weekly',
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: const Color(0xff8D91A0),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: (value) {},
                                   ),
                                 ),
                               ),
                             ],
-                            onChanged: (value) {},
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                consultancyCard(
-                  count: dashboardData['status_counts']?['working']?.toString() ?? '0',
-                  label: "Talent HeadCount",
-                  iconPath: 'assets/icons/employee_list_icon.svg',
-                ),
-                const SizedBox(height: 16),
-                consultancyCard(
-                  count: dashboardData['status_counts']?['new']?.toString()??'0',
-                  label: "New Talent onBoarded",
-                  iconPath: 'assets/icons/new_employee_icon.svg',
-                ),
+                        const SizedBox(height: 16),
+                        consultancyCard(
+                          count: dashboardData['status_counts']?['working']?.toString() ?? '0',
+                          label: "Talent HeadCount",
+                          iconPath: 'assets/icons/employee_list_icon.svg',
+                        ),
+                        const SizedBox(height: 16),
+                        consultancyCard(
+                          count: dashboardData['status_counts']?['new']?.toString()??'0',
+                          label: "New Talent onBoarded",
+                          iconPath: 'assets/icons/new_employee_icon.svg',
+                        ),
 
-                const SizedBox(height: 16),
-                consultancyCard(
-                  count: dashboardData['status_counts']?['relieving']?.toString()??'0',
-                  label: "Talent Departure Summary",
-                  iconPath: 'assets/icons/relieving_employee_icon.svg',
-                ),
-                const SizedBox(height: 16),
-                consultancyCard(
-                  count: dashboardData['status_counts']?['future_joining']?.toString()??'0',
-                  label: "Incoming Talent",
-                  iconPath: 'assets/icons/joining_employee_icon.svg',
-                ),
+                        const SizedBox(height: 16),
+                        consultancyCard(
+                          count: dashboardData['status_counts']?['relieving']?.toString()??'0',
+                          label: "Talent Departure Summary",
+                          iconPath: 'assets/icons/relieving_employee_icon.svg',
+                        ),
+                        const SizedBox(height: 16),
+                        consultancyCard(
+                          count: dashboardData['status_counts']?['future_joining']?.toString()??'0',
+                          label: "Incoming Talent",
+                          iconPath: 'assets/icons/joining_employee_icon.svg',
+                        ),
+                      ],
+                    ),
+                  )
+
+                ],
+
+
+
 
                 const SizedBox(height: 16),
                 Padding(
@@ -541,6 +622,90 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
             ),
           ),
       ]),
+    );
+  }
+
+  Widget _buildTimesheetCard() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left side: Info
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Total Timesheets",
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                alignment: Alignment.center,
+                height: 20,
+                width: 95,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  color: const Color(0xffE5F1FF),
+                ),
+                child: Text(
+                  timesheetData?['Total Timesheets'].toString()??'0',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xff007BFF),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+              LegendDot(
+                color: const Color(0xff28A745),
+                label: "Submitted: ${timesheetData?['Submitted']?.toInt() ?? 0}",
+              ),
+              const SizedBox(height: 8),
+              LegendDot(
+                color: const Color(0xff007BFF),
+                label: "Approved: ${timesheetData?['Approved']?.toInt()??'0'}",
+              ),
+              const SizedBox(height: 8),
+              LegendDot(
+                color: const Color(0xffFF1901),
+                label: "Rejected: ${timesheetData?['Rejected']?.toInt()??'0'}",
+              ),
+            ],
+          ),
+        ),
+        // Right side: Pie Chart
+        SizedBox(
+          width: 120,
+          child: PieChart(
+            dataMap: {
+              "Submitted": (timesheetData?['Submitted'] ?? 0).toDouble(),
+              "Approved": (timesheetData?['Approved'] ?? 0).toDouble(),
+              "Rejected": (timesheetData?['Rejected'] ?? 0).toDouble(),
+            },
+            chartType: ChartType.disc,
+            baseChartColor: Colors.grey[200]!,
+            colorList: const [
+              Color(0xFF28A745),
+              Color(0xFF007BFF),
+              Color(0xFFFF1901), // Rejected (red)
+            ],
+            chartRadius: 160,
+            chartValuesOptions: const ChartValuesOptions(
+              showChartValues: false,
+            ),
+            legendOptions: const LegendOptions(
+              showLegends: false,
+            ),
+            centerText: '',
+            ringStrokeWidth: 50,
+          ),
+        ),
+      ],
     );
   }
 

@@ -14,48 +14,60 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: Colors.white, // Set background color to white
-        primaryColor: Colors.red, // Set primary color to red
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.red, // Red theme
-          brightness: Brightness.light,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white, // White AppBar
-          elevation: 0,
-          iconTheme: IconThemeData(color: Colors.red), // Red icons in AppBar
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.black), // Default text color black
-          bodyMedium: TextStyle(color: Colors.black),
-          labelLarge: TextStyle(
-              color: Colors.red,
-              fontWeight: FontWeight.bold), // Red for buttons and labels
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red, // Red buttons
-            foregroundColor: Colors.white, // White text on button
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.red, // Red text/icons on outlined button
-            side: const BorderSide(color: Colors.red), // Red border
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.red), // Default red icons
-      ),
+    return Builder(
+      builder: (context) {
+        final mediaQuery = MediaQuery.of(context);
 
-      routerConfig: goRouter, // Attach the GoRouter instance
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaler: const TextScaler.linear(1.0),
+          ),
+          child: MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'Flutter Demo',
+            theme: ThemeData(
+              useMaterial3: true,
+              scaffoldBackgroundColor: Colors.white,
+              primaryColor: Colors.red,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.red,
+                brightness: Brightness.light,
+              ),
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                iconTheme: IconThemeData(color: Colors.red),
+              ),
+              textTheme: const TextTheme(
+                bodyLarge: TextStyle(color: Colors.black),
+                bodyMedium: TextStyle(color: Colors.black),
+                labelLarge: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  ),
+                ),
+              ),
+              outlinedButtonTheme: OutlinedButtonThemeData(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                ),
+              ),
+              iconTheme: const IconThemeData(color: Colors.red),
+            ),
+            routerConfig: goRouter,
+          ),
+        );
+      },
     );
   }
+
 }

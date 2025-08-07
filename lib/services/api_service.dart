@@ -26,6 +26,7 @@ class ApiService {
 
       return response.data;
     } on DioException catch (e) {
+      print('Response statusCode else: ${e}');
       print('responseloginelse ${e.response}');
       if (e.response != null) {
         return e.response?.data ?? {'error': 'Unknown error'};
@@ -915,7 +916,8 @@ class ApiService {
 
   Future<Map<String, dynamic>> getClientList(
     String token,
-  ) async {
+  ) async
+  {
     try {
       print('formData $token');
       final response = await _dio.post(
@@ -1922,7 +1924,8 @@ class ApiService {
     String month,
     String year,
     String token,
-  ) async {
+  ) async
+  {
     try {
       FormData formData = FormData.fromMap({
         'client_id': clientId,
@@ -1963,7 +1966,8 @@ class ApiService {
     String month,
     String year,
     String token,
-  ) async {
+  ) async
+  {
     try {
       FormData formData = FormData.fromMap({
         'client_id': clientId,
@@ -2096,6 +2100,83 @@ class ApiService {
         ),
       );
       print('Request URL: ${response.requestOptions.uri},$month,$year');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> getClientListClaimInvoiceFinance(
+      String token,
+      ) async
+  {
+    try {
+      print('formData $token');
+      final response = await _dio.post(
+        ApiConstant.financeClaimInvoiceClientList,
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
+      print('Response statusCode: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      print('Request URL: ${e.response!.realUri}');
+      print('responsetimesheetelse ${e.response!.statusCode}');
+      print('responsetimesheetelse ${e.response!.data}');
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> financeClaimClientConsultants(
+      String clientId,
+      String month,
+      String year,
+      String token,
+      ) async
+  {
+    try {
+
+      FormData formData = FormData.fromMap({
+        'client_id': clientId,
+        'month': month,
+        'year': year,
+      });
+      print('formData $token');
+      final response = await _dio.post(
+        ApiConstant.financeClaimInvoiceClientList,
+        data: formData,
+        options: Options(
+
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+        ),
+      );
+
+      print('Request URL: ${response.requestOptions.uri}');
       print('Response statusCode: ${response.statusCode}');
       print('Response data: ${response.data}');
 
