@@ -68,9 +68,13 @@ class ApiConstant {
       "hr/consultant-list-claim-tab";
   static const String consultantTimesheetFinanceTab = "finance/finanetab-api";
   static const String financeAddGroup= "finance/createGroup-api";
+  static const String financeEditGroup= "finance/editGroup-api";
+  static const String financeDeleteGroup= "finance/deleteGroup-api";
   static const String financeClaimInvoiceClientList= "finance/claimInvoiceClientListing-api";
   static const String financeClaimClientConsultants= "finance/claimClientConsultants-api";
   static const String financeGroupList= "finance/InvoiceGroupListing-api";
   static const String financeConsultantList= "finance/getClientConsultants-api";
+
+
 
 }
