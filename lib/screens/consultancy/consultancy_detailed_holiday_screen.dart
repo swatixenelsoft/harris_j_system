@@ -254,6 +254,7 @@ class _DetailedHolidayScreenState extends ConsumerState<DetailedHolidayScreen> {
                                           constraints: BoxConstraints(
                                               maxHeight: h * 0.8),
                                           child: EditHolidayForm(
+                                            userId: widget.userId,
                                             token: widget.token,
                                             id: holiday['id'].toString(),
                                             holidayData: {

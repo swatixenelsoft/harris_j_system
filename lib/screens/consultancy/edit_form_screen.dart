@@ -11,6 +11,7 @@ class EditHolidayForm extends ConsumerStatefulWidget {
   final Function(Map<String, dynamic>) onSubmit;
   final String token;
   final String id;
+  final dynamic userId;
 
   const EditHolidayForm({
     super.key,
@@ -18,6 +19,7 @@ class EditHolidayForm extends ConsumerStatefulWidget {
     required this.onSubmit,
     required this.token,
     required this.id,
+    required this.userId,
   });
 
   @override
@@ -102,6 +104,7 @@ class _EditHolidayFormState extends ConsumerState<EditHolidayForm> {
         validUpto: selectedRange!.end.year.toString(),
         holidayProfileStatus: holidayStatusValue,
         token: widget.token,
+        userId: widget.userId
       );
 
       if (response['success'] == true) {

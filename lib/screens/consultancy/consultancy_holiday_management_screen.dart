@@ -224,6 +224,7 @@ class _HolidayManagementScreenState
                                       child: EditHolidayForm(
                                         token: token,
                                         id: '',
+                                        userId: userId,
                                         holidayData: {
                                           'id': holiday['id'],
                                           'name': holiday['holiday_name'] ?? '',

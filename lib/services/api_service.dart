@@ -1726,6 +1726,8 @@ class ApiService {
     required int holidayProfileStatus,
     required String id,
     required String token,
+    //here user id is mandatory bcoz of api
+    required dynamic userId
   }) async {
     try {
       FormData formData = FormData.fromMap({
@@ -1735,6 +1737,7 @@ class ApiService {
         'valid_upto': validUpto,
         'status': holidayProfileStatus,
         'id': id,
+        'consultancy_id':userId //here user id will go
       });
 
       print('formData $token, ${formData.fields}');
