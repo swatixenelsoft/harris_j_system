@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harris_j_system/services/api_service.dart';
 
+import '../screens/finance/finance_invoice_screen.dart';
+
 final financeProvider =
 StateNotifierProvider<GetFinanceNotifier, GetFinanceState>((ref) {
   return GetFinanceNotifier(ApiService());
@@ -335,7 +337,6 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
           hrConsultantList: fullConsultants,
           selectedConsultantData: {},
         );
-
         if (previouslySelectedConsultant != null) {
           final selectedEmpId =
           previouslySelectedConsultant['consultant_info']?['user_id'];
@@ -424,7 +425,7 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      debugPrint("consult ${consultantIds}");
+      debugPrint("consult $consultantIds");
       final response = await apiService.createGroupFinance(
         clientId: clientId,
         groupName: groupName,
@@ -433,6 +434,58 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
       );
 
       state = state.copyWith(isLoading: false);
+      return response;
+    } catch (e) {
+      final errorMsg = e.toString();
+      state = state.copyWith(isLoading: false, error: errorMsg);
+      return {
+        'success': false,
+        'message': errorMsg,
+      };
+    }
+  }
+  Future<Map<String, dynamic>> editGroupFinance({
+    required String clientId,
+    required String groupName,
+    required List<String> consultantIds,
+    required String token,
+    required String groupId,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      debugPrint("consult $consultantIds");
+      final response = await apiService.editGroupFinance(
+        clientId: clientId,
+        groupName: groupName,
+        consultantIds: consultantIds,
+        token: token, groupId: groupId,
+      );
+
+      state = state.copyWith(isLoading: false);
+      groupListFinanceProvider(token: token);
+      return response;
+    } catch (e) {
+      final errorMsg = e.toString();
+      state = state.copyWith(isLoading: false, error: errorMsg);
+      return {
+        'success': false,
+        'message': errorMsg,
+      };
+    }
+  }
+  Future<Map<String, dynamic>> deleteGroupFinance({
+    required String token,
+    required String groupId,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await apiService.deleteGroupFinance(
+        token: token, groupId: groupId,
+      );
+
+      state = state.copyWith(isLoading: false);
+      groupListFinanceProvider(token: token);
       return response;
     } catch (e) {
       final errorMsg = e.toString();
@@ -455,8 +508,8 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
 
       if (status) {
         final List<Map<String, dynamic>> groupData =
-        (response['data'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+        (response['data'] as List<dynamic>).cast<Map<String, dynamic>>();
+        debugPrint("here is - $groupData");
         state = state.copyWith(
           isLoading: false,
           groupList: groupData,
@@ -467,6 +520,7 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
           error: response['message'] ?? 'Failed to fetch group list',
         );
       }
+
       return response;
     } catch (e) {
       final errorMsg = e.toString();

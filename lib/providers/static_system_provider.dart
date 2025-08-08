@@ -285,6 +285,8 @@ class StaticSettingNotifier extends StateNotifier<StaticSettingState> {
     required int holidayProfileStatus,
     required String id,
     required String token,
+    //here made user id require as it was mandatory in api
+    required dynamic userId,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -296,6 +298,7 @@ class StaticSettingNotifier extends StateNotifier<StaticSettingState> {
         holidayProfileStatus: holidayProfileStatus,
         id: id,
         token: token,
+        userId: userId
       );
       state = state.copyWith(isLoading: false);
       return response;

@@ -17,7 +17,6 @@ import 'package:harris_j_system/widgets/remark_section.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:harris_j_system/ulits/custom_loader.dart';
 
-
 class FinanceInvoiceScreen extends ConsumerStatefulWidget {
   const FinanceInvoiceScreen({super.key});
 
@@ -31,8 +30,10 @@ class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool areContactsVisible = true;
   String? token;
+  String? selectedClient; // Track selected client
+  List<Map<String, dynamic>> filteredGroupList = []; // Store filtered group data
 
-  // Sample consultancy data (unchanged)
+  // Sample consultancy data
   final List<Map<String, String>> consultancyData = [
     {
       'count': '200',
@@ -56,63 +57,27 @@ class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
     },
   ];
 
-  // Sample consultancies data (unchanged)
-  final List<Map<String, dynamic>> consultanciesData = [
-    {
-      'name': 'Bruce Lee',
-      'queueColor': const Color.fromRGBO(0, 123, 255, 1),
-      'numClaims': '2',
-      'totalAmount': '\$300',
-      'invoiceAmount': '\$250',
-      'invoiceNo': 'INV001',
-      'invoiceMonth': 'Aug 2024',
-      'status': 'Completed',
-    },
-    {
-      'name': 'Allison Schleifer',
-      'queueColor': const Color.fromRGBO(0, 123, 255, 1),
-      'numClaims': '2',
-      'totalAmount': '\$500',
-      'invoiceAmount': '\$450',
-      'invoiceNo': 'INV002',
-      'invoiceMonth': 'Aug 2024',
-      'status': 'Draft',
-    },
-    {
-      'name': 'Charlie Vetrovs',
-      'queueColor': const Color.fromRGBO(0, 123, 255, 1),
-      'numClaims': '3',
-      'totalAmount': '\$600',
-      'invoiceAmount': '\$550',
-      'invoiceNo': 'INV003',
-      'invoiceMonth': 'Aug 2024',
-      'status': 'Completed',
-    },
-    {
-      'name': 'Lincoln Geidt',
-      'queueColor': const Color.fromRGBO(0, 123, 255, 1),
-      'numClaims': '2',
-      'totalAmount': '\$800',
-      'invoiceAmount': '\$750',
-      'invoiceNo': 'INV004',
-      'invoiceMonth': 'Aug 2024',
-      'status': 'Draft',
-    },
-  ];
-
   OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
     super.initState();
-    _loadTokenAndFetchData();
+    loadTokenAndFetchData();
   }
 
-  Future<void> _loadTokenAndFetchData() async {
+  Future<void> loadTokenAndFetchData() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
     if (token != null) {
       await ref.read(financeProvider.notifier).groupListFinanceProvider(token: token!);
+      // Initialize filteredGroupList with all groups initially
+      final financeState = ref.read(financeProvider);
+      setState(() {
+        filteredGroupList = List.from(financeState.groupList);
+        selectedClient = financeState.groupList.isNotEmpty
+            ? financeState.groupList[0]['serving_client']
+            : null;
+      });
     } else {
       context.go('/login');
     }
@@ -170,8 +135,14 @@ class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
   }
 
   void _onClientChanged(String clientName, String? clientId, String? groupName) {
+    final financeState = ref.read(financeProvider);
     setState(() {
       _searchController.text = groupName != null ? '$clientName/$groupName' : clientName;
+      selectedClient = clientName;
+      // Filter groupList based on the selected client
+      filteredGroupList = financeState.groupList
+          .where((group) => group['serving_client'] == clientName)
+          .toList();
     });
   }
 
@@ -192,26 +163,11 @@ class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
                   'Error: ${financeState.error}',
                   style: GoogleFonts.montserrat(color: Colors.red),
                 ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    if (token != null) {
-                      ref.read(financeProvider.notifier).groupListFinanceProvider(token: token!);
-                    }
-                  },
-                  child: Text(
-                    'Retry',
-                    style: GoogleFonts.montserrat(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xffFF1901),
-                  ),
-                ),
+                // Removed the Retry button
               ],
             ),
           );
         }
-        final groupList = financeState.groupList;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
           decoration: const BoxDecoration(
@@ -277,11 +233,9 @@ class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
               ),
               const SizedBox(height: 15),
               CustomClientDropdown3(
-                clients: groupList,
+                clients: financeState.groupList,
                 onChanged: _onClientChanged,
-                initialClientName: groupList.isNotEmpty
-                    ? groupList[0]['serving_client']
-                    : 'Select Client',
+                initialClientName: selectedClient ?? 'Select Client',
               ),
             ],
           ),
@@ -627,12 +581,12 @@ class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
                 ),
               ),
             ],
-            rows: consultanciesData.asMap().entries.map((entry) {
-              final index = entry.key;
+            rows: filteredGroupList.asMap().entries.map((entry) {
               final item = entry.value;
               final name = item['name'] as String? ?? 'Unknown';
-              final queueColor = item['queueColor'] as Color? ??
-                  const Color.fromRGBO(0, 123, 255, 1);
+              final queueColor = item['queueColor'] != null
+                  ? Color(int.tryParse(item['queueColor'].toString()) ?? 0xFF007BFF)
+                  : const Color.fromRGBO(0, 123, 255, 1);
               final numClaims = item['numClaims'] as String? ?? '-';
               final totalAmount = item['totalAmount'] as String? ?? '-';
               final invoiceAmount = item['invoiceAmount'] as String? ?? '-';
@@ -858,32 +812,24 @@ class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Consumer(
-                              builder: (context, ref, child) {
-                                final financeState = ref.watch(financeProvider);
-                                final groupList = financeState.groupList;
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      groupList.isNotEmpty
-                                          ? groupList[0]['serving_client']
-                                          : 'Encore Films',
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Invoice Number: EM098789',
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  selectedClient ?? 'Encore Films',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  'Invoice Number: EM098789',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
                             ),
                             Row(
                               children: [
@@ -998,7 +944,6 @@ class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
                     location: 'X5JX+HX Chennai, Tamil Nadu',
                   ),
                 ),
-                const SizedBox(height: 12),
               ],
               const SizedBox(height: 16),
               _buildRemarksSection(),
