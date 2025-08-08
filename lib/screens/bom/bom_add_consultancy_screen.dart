@@ -61,22 +61,22 @@ class _BomAddConsultancyScreenState
   String? _paymentMode = '';
   bool reset_password_value = false;
   dynamic _selectedImage;
-  final List<String> _consultancyType = [
-    'Not Selected',
-    'Primary Consultancy',
-    'Silver Consultancy'
+  final List<Map<String, String>> _consultancyType = [
+    {'label': 'Not Selected', 'value': ''},
+    {'label': 'Primary Consultancy', 'value': 'type1'},
+    {'label': 'Silver Consultancy', 'value': 'type2'},
   ];
   final List<String> _consultancyStatus = [
     'Not Selected',
     'Active',
     'Disabled',
-    'Block',
-    'Deleted'
   ];
   final List<String> _feeStructure = [
     'Not Selected',
-    'Structure1',
-    'Structure2'
+    'Monthly',
+    'Quarterly',
+    'Half-Yearly',
+    'Yearly',
   ];
   final List<String> _lastPaidStatus = ['Not Selected', 'Pending', 'Paid'];
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -486,7 +486,7 @@ class _BomAddConsultancyScreenState
 
   @override
   Widget build(BuildContext context) {
-    print('_selectedImage $_confirmedAddress');
+    print('_selectedImage $_selectedFeeStructure');
     final isLoading = ref.watch(bomProvider).isLoading;
     return Scaffold(
       appBar: const CustomAppBar(
@@ -760,14 +760,23 @@ class _BomAddConsultancyScreenState
                           CustomDropdownField(
                             borderRadius: 8,
                             label: "Consultancy Type",
-                            items: _consultancyType,
-                            value: _selectedConsultancyType,
-                            onChanged: (value) {
+                            items: _consultancyType.map((e) => e['label']!).toList(),
+                            value: _consultancyType.firstWhere(
+                                  (element) => element['value'] == _selectedConsultancyType,
+                              orElse: () => _consultancyType[0],
+                            )['label'],
+                            onChanged: (label) {
+                              final selectedMap = _consultancyType.firstWhere(
+                                    (element) => element['label'] == label,
+                                orElse: () => _consultancyType[0],
+                              );
+
                               setState(() {
-                                _selectedConsultancyType = value;
+                                _selectedConsultancyType = selectedMap['value'];
                               });
                             },
                           ),
+
                           const SizedBox(height: 12),
                           CustomDropdownField(
                             borderRadius: 8,

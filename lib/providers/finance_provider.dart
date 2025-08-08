@@ -17,6 +17,11 @@ class GetFinanceState {
   final List<dynamic>? hrConsultantList;
   final Map<String, dynamic> selectedConsultantData;
   final List<Map<String, dynamic>> groupList; // Added for group data
+  final List<dynamic> claimInvoiceConsultantList;
+  final List<Map<String, dynamic>> selectedClientInvoiceSummary;
+  final Map<String, dynamic>? selectedConsultantDetail;
+  final List<dynamic>? selectedClientRemarks;
+
 
   GetFinanceState({
     this.isLoading = false,
@@ -26,6 +31,10 @@ class GetFinanceState {
     this.hrConsultantList,
     this.selectedConsultantData = const {},
     this.groupList = const [], // Initialize as empty list
+  this.claimInvoiceConsultantList=const[],
+    this.selectedClientInvoiceSummary=const [],
+    this.selectedConsultantDetail=const {},
+    this.selectedClientRemarks=const [],
   });
 
   GetFinanceState copyWith({
@@ -36,6 +45,10 @@ class GetFinanceState {
     List<dynamic>? hrConsultantList,
     Map<String, dynamic>? selectedConsultantData,
     List<Map<String, dynamic>>? groupList,
+    List<dynamic>? claimInvoiceConsultantList,
+    List<Map<String, dynamic>>? selectedClientInvoiceSummary,
+     Map<String, dynamic>? selectedConsultantDetail,
+    List<dynamic>? selectedClientRemarks,
   }) {
     return GetFinanceState(
       isLoading: isLoading ?? this.isLoading,
@@ -46,6 +59,10 @@ class GetFinanceState {
       selectedConsultantData:
       selectedConsultantData ?? this.selectedConsultantData,
       groupList: groupList ?? this.groupList,
+      claimInvoiceConsultantList: claimInvoiceConsultantList ?? this.claimInvoiceConsultantList,
+      selectedClientInvoiceSummary: selectedClientInvoiceSummary ?? this.selectedClientInvoiceSummary,
+      selectedConsultantDetail: selectedConsultantDetail ?? this.selectedConsultantDetail,
+      selectedClientRemarks: selectedClientRemarks ?? this.selectedClientRemarks,
     );
   }
 }
@@ -516,28 +533,68 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
 
 
   Future<void> financeClaimClientConsultants(String clientId,
-      String month,
-      String year,
-      String token) async {
+      int month,
+      int year,
+      String token) async
+  {
     state = state.copyWith(error: null);
     try {
       final response = await apiService.financeClaimClientConsultants(
         clientId, month, year, token,
       );
       final bool status = response['success'] ?? false;
-
+      print('responseconsultants ${response['data']}');
       if (status) {
-        final List<dynamic> consultants = response['data'] ?? [];
+        final List<dynamic> consultants = response['data']['consultants'] ?? [];
+        final List<dynamic> remarks = response['data']['remarks'] ?? [];
+        final Map<String,dynamic> totalSummary = response['data']['totalSummary'] ?? [];
+
+
+        final List<Map<String, dynamic>> formattedSummary = [
+          {
+            'count': '₹${totalSummary['previous_invoice_amount'] ?? 0}',
+            'label': 'Previous Invoice Amt',
+            'iconPath': 'assets/icons/total_consultants.svg',
+          },
+          {
+            'count': '₹${totalSummary['billing_amount'] ?? 0}',
+            'label': 'Billable Amount',
+            'iconPath': 'assets/icons/total_amount.svg',
+          },
+
+          {
+            'count': '${totalSummary['tax'] ?? 0}%',
+            'label': 'Tax %',
+            'iconPath': 'assets/icons/tax.svg',
+          },
+          {
+            'count': '₹${totalSummary['total_billing_amount'] ?? 0}',
+            'label': 'Total Billing Amt',
+            'iconPath': 'assets/icons/total_billing.svg',
+          },
+        ];
 
 
         print('consultants $consultants');
+        print('remarks $remarks');
+        print('totalSummary $totalSummary');
+        state=state.copyWith(
+            claimInvoiceConsultantList:consultants,
+            selectedClientInvoiceSummary:formattedSummary,
+            selectedClientRemarks: remarks,
+            selectedConsultantDetail: null,
+        );
+        print('claimInvoiceConsultantList ${state.claimInvoiceConsultantList}');
+
 
 
       } else {
         state = state.copyWith(
           error: response['message'] ?? 'Failed to fetch consultants',
-          consultantList: [],
-          hrConsultantList: [],
+          claimInvoiceConsultantList:[],
+          selectedClientInvoiceSummary:[],
+          selectedClientRemarks: [],
+          selectedConsultantDetail: null,
         );
       }
     } catch (e) {
@@ -547,4 +604,58 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
       );
     }
   }
+
+  void selectConsultantById(String consultantId) {
+    final consultantList = state.claimInvoiceConsultantList ?? [];
+
+    print('consultantList ${consultantList}');
+
+    final consultant = consultantList.firstWhere(
+          (c) => c['id'].toString() == consultantId,
+      orElse: () => null,
+    );
+
+    print('selectedConsultantDel ${consultant}');
+
+    if (consultant != null) {
+      selectConsultant(consultant);
+    } else {
+      print('Consultant with ID $consultantId not found');
+    }
+  }
+
+  void selectConsultant(Map<String, dynamic> consultant) {
+
+    // Build consultant summary (adjust keys if different)
+    final List<Map<String, dynamic>> consultantSummary = [
+      {
+        'count': '₹${consultant['previous_invoice_amount'] ?? 0}',
+        'label': 'Previous Invoice Amt',
+        'iconPath': 'assets/icons/total_consultants.svg',
+      },
+      {
+        'count': '₹${consultant['billing_amount'] ?? 0}',
+        'label': 'Billable Amount',
+        'iconPath': 'assets/icons/total_amount.svg',
+      },
+      {
+        'count': '${consultant['tax'] ?? 0}%',
+        'label': 'Tax %',
+        'iconPath': 'assets/icons/tax.svg',
+      },
+      {
+        'count': '₹${consultant['total_billing_amount'] ?? 0}',
+        'label': 'Total Billing Amt',
+        'iconPath': 'assets/icons/total_billing.svg',
+      },
+    ];
+
+    state = state.copyWith(
+      selectedConsultantDetail: consultant,
+      selectedClientInvoiceSummary: consultantSummary,
+      selectedClientRemarks:consultant['remarks'] ,
+    );
+    print('selectedConsultantDetail ${state.selectedConsultantDetail}');
+  }
+
 }

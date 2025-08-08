@@ -36,6 +36,8 @@ class ApiService {
     }
   }
 
+
+
   Future<Map<String, dynamic>> getConsultancy(String token) async {
     print('token $token');
     try {
@@ -49,6 +51,28 @@ class ApiService {
         ),
       );
 
+      print('response $response');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchBomDashboard(String token) async {
+    try {
+      final response = await _dio.post(
+        ApiConstant.bomDashboard,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+        ),
+      );
       print('response $response');
       return response.data;
     } on DioException catch (e) {
@@ -2151,8 +2175,8 @@ class ApiService {
 
   Future<Map<String, dynamic>> financeClaimClientConsultants(
       String clientId,
-      String month,
-      String year,
+      int month,
+      int year,
       String token,
       ) async
   {
@@ -2165,7 +2189,7 @@ class ApiService {
       });
       print('formData $token');
       final response = await _dio.post(
-        ApiConstant.financeClaimInvoiceClientList,
+        ApiConstant.financeClaimClientConsultants,
         data: formData,
         options: Options(
 
@@ -2177,7 +2201,7 @@ class ApiService {
       );
 
       print('Request URL: ${response.requestOptions.uri}');
-      print('Response statusCode: ${response.statusCode}');
+      print('Response fin statusCode: ${response.statusCode}');
       print('Response data: ${response.data}');
 
       return response.data;

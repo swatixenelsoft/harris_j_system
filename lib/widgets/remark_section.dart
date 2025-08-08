@@ -15,8 +15,9 @@ class RemarksSection extends StatelessWidget {
   final GetHrState? hrState;
   final GetOperatorState? operatorState;
   final GetFinanceState? financeState;
+  final List<dynamic>? selectedClientRemarks;
 
-  const RemarksSection({super.key, this.consultantState, this.hrState,this.operatorState,this.financeState});
+  const RemarksSection({super.key, this.consultantState, this.hrState,this.operatorState,this.financeState,this.selectedClientRemarks});
 
   List<dynamic> get _remarks {
     if (consultantState != null) {
@@ -28,6 +29,9 @@ class RemarksSection extends StatelessWidget {
     }
     else if (financeState != null) {
       return financeState!.selectedConsultantData['remarks'] ?? [];
+    }
+    else if(selectedClientRemarks!=null){
+      return selectedClientRemarks??[];
     }
     return [];
   }

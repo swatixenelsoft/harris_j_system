@@ -12,22 +12,27 @@ class GetBomState {
   final bool isLoading;
   final String? error;
   final List<Map<String, dynamic>>? consultancyList;
+  final Map<String,dynamic>? dashboardData;
 
   GetBomState({
     this.isLoading = false,
     this.error,
     this.consultancyList,
+    this.dashboardData,
   });
 
   GetBomState copyWith({
     bool? isLoading,
     String? error,
     List<Map<String, dynamic>>? consultancyList,
+    Map<String,dynamic>? dashboardData,
+
   }) {
     return GetBomState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
       consultancyList: consultancyList ?? this.consultancyList,
+      dashboardData: dashboardData ?? this.dashboardData,
     );
   }
 }
@@ -36,6 +41,31 @@ class GetBomNotifier extends StateNotifier<GetBomState> {
   final ApiService apiService;
 
   GetBomNotifier(this.apiService) : super(GetBomState());
+
+  Future<Map<String, dynamic>> getDashBoard(String token) async {
+    try {
+      final response = await apiService.fetchBomDashboard(token);
+      final bool status = response['status'] ?? false;
+
+      if (status) {
+        print('dashboardDataif ${status}');
+        state = state.copyWith(dashboardData: response);
+        print('dashboardData ${state.dashboardData}');
+      } else {
+        print('dashboardData ${status}');
+        state = state.copyWith(dashboardData: response,error: response['message'] ?? 'Failed to fetch consultant',);
+
+      }
+
+      return response;
+    } catch (e) {
+      final errorMsg = e.toString();
+      print('consultantList ${errorMsg}');
+      state = state.copyWith(isLoading: false, error: errorMsg);
+      return {'status': false, 'message': errorMsg};
+    }
+  }
+
 
   Future<void> fetchConsultancy(String token) async {
     state = state.copyWith(isLoading: true, error: null);

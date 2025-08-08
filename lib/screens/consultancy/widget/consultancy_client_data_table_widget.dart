@@ -59,10 +59,13 @@ class GenericDataSource extends DataGridSource {
           );
         } else if (columnName == 'status') {
           String queueValue = value.toString();
+          print('queueValue $queueValue');
           Color circleColor = queueValue == 'Active'
               ? const Color(0xff1F9254)
               : queueValue == 'Notice Period'
-                  ? const Color(0xff8D91A0)
+                  ? const Color(0xff8D91A0):
+          queueValue=='Approved'?const Color(0xff007BFF):
+          queueValue=='No Claims'?const Color(0xffffffff)
                   : const Color(0xffA30D11);
 
           child = Row(

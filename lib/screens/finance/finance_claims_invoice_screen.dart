@@ -1,16 +1,23 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/providers/finance_provider.dart';
+import 'package:harris_j_system/screens/consultancy/widget/consultancy_client_data_table_widget.dart';
 import 'package:harris_j_system/screens/finance/compose_button_page.dart';
 import 'package:harris_j_system/screens/finance/finance_edit_screen.dart';
+import 'package:harris_j_system/ulits/custom_loader.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_client_dropdown_claim_invoice.dart';
+import 'package:harris_j_system/widgets/custom_month_year.dart';
 import 'package:harris_j_system/widgets/remark_section.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
 class FinanceClaimsInvoiceScreen extends ConsumerStatefulWidget {
   const FinanceClaimsInvoiceScreen({super.key});
@@ -92,13 +99,15 @@ class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoic
   ];
   int selectedMonth = DateTime.now().month;
   int selectedYear = DateTime.now().year;
-
+DateTime selectedMonthYear=DateTime.now();
   OverlayEntry? _overlayEntry;
 
   List<String> _clientList = [];
   List<Map<String, dynamic>> _rawClientList = [];
   String? _selectedClient;
   String? _selectedClientId;
+  String? _selectedConsultant;
+  String? _selectedConsultantId;
 
   @override
   void initState() {
@@ -121,6 +130,7 @@ class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoic
     token = prefs.getString('token');
     ref.read(financeProvider.notifier).setLoading(true);
     await getClientList();
+    await financeClaimClientConsultants();
     ref.read(financeProvider.notifier).setLoading(false);
   }
 
@@ -151,11 +161,20 @@ class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoic
 
   Future<void> financeClaimClientConsultants() async {
     if (_selectedClientId != null && token != null) {
-      await ref.read(financeProvider.notifier).getConsultantClaimsByClientFinance(
+      await ref.read(financeProvider.notifier).financeClaimClientConsultants(
         _selectedClientId!,
-        selectedMonth.toString().padLeft(2, '0'),
-        selectedYear.toString(),
+        selectedMonth,
+        selectedYear,
         token!,
+      );
+
+    }
+  }
+
+  Future<void> financeClaimConsultantDetails(selectedConsultantId) async {
+    if (_selectedClientId != null && token != null) {
+       ref.read(financeProvider.notifier).selectConsultantById(
+      selectedConsultantId
       );
 
     }
@@ -228,11 +247,42 @@ class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoic
           ),
           const SizedBox(height: 15),
           if (_rawClientList.isNotEmpty && _selectedClient != null)
-          CustomClientDropDownClaimInvoice(
-            clients: _rawClientList,
-            initialClientName: _selectedClient,
+            CustomClientDropDownClaimInvoice(
+              clients: _rawClientList,
+              initialClientName: _selectedClient,
+              onChanged: (selectedClientName, selectedClientId) async {
+                FocusScope.of(context).unfocus();
+                final selectedClient = _rawClientList.firstWhere(
+                      (client) => client['id'].toString() == selectedClientId,
+                  orElse: () => {},
+                );
 
-          ),
+                if (selectedClient.isNotEmpty) {
+                  setState(() {
+                    _selectedClient = selectedClientName;
+                    _selectedClientId = selectedClientId;
+
+                    // Clear consultant selection on client change
+                    _selectedConsultant = null;
+                    _selectedConsultantId = null;
+                  });
+
+                  print('_selectedClientId $_selectedClientId');
+                  await financeClaimClientConsultants();
+                }
+              },
+              onConsultantChanged: (selectedConsultantName, selectedConsultantId) async {
+                setState(() {
+                  _selectedConsultant = selectedConsultantName;
+                  _selectedConsultantId = selectedConsultantId;
+                });
+
+                print('_selectedConsultantId $_selectedConsultantId');
+                // Call your provider method or logic to fetch/show consultant details here
+                await financeClaimConsultantDetails(_selectedConsultantId);
+              },
+            ),
+
         ],
       ),
     );
@@ -281,7 +331,7 @@ class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoic
                 label,
                 style: GoogleFonts.montserrat(
                   fontWeight: FontWeight.w500,
-                  fontSize: 8,
+                  fontSize: 7,
                   color: const Color(0xffA7A7A7),
                 ),
               ),
@@ -421,7 +471,7 @@ class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoic
     );
   }
 
-  Widget _buildRemarksSection() {
+  Widget _buildRemarksSection(List<dynamic> selectedClientRemarks) {
     return Container(
       height: 200,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -436,322 +486,178 @@ class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoic
           ),
         ],
       ),
-      child: const RemarksSection(),
+      child:  RemarksSection(selectedClientRemarks:selectedClientRemarks),
     );
   }
 
-  Widget _buildClaimsTable() {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double nameWidth = screenWidth * 0.25;
-    final double queueWidth = screenWidth * 0.2;
-    final double numClaimsWidth = screenWidth * 0.15;
-    final double totalAmountWidth = screenWidth * 0.20;
-    final double invoiceAmountWidth = screenWidth * 0.20;
-    final double invoiceNoWidth = screenWidth * 0.20;
-    final double invoiceMonthWidth = screenWidth * 0.20;
-    final double statusWidth = screenWidth * 0.2;
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: screenWidth * 1.35),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 0.0),
-          child: DataTable(
-            columnSpacing: 16,
-            headingRowHeight: 40,
-            dataRowHeight: 60,
-            headingRowColor: MaterialStateColor.resolveWith(
-                  (states) => const Color(0xFFF5F5F5),
-            ),
-            columns: [
-              DataColumn(
-                label: SizedBox(
-                  width: nameWidth,
-                  child: Text(
-                    'Name',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: queueWidth,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Queue',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xff000000),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      SvgPicture.asset(
-                        'assets/icons/queue.svg',
-                        width: 18,
-                        height: 18,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: numClaimsWidth,
-                  child: Text(
-                    '#Claims',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: invoiceMonthWidth,
-                  child: Text(
-                    'Claim No.',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: totalAmountWidth,
-                  child: Text(
-                    'Total Amt',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: invoiceAmountWidth,
-                  child: Text(
-                    'Invoice Amt',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              DataColumn(
-                label: SizedBox(
-                  width: invoiceNoWidth,
-                  child: Text(
-                    'Invoice No.',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-
-              DataColumn(
-                label: SizedBox(
-                  width: statusWidth,
-                  child: Text(
-                    'Invoice Status',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xff000000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-            rows: consultanciesData.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              final name = item['name'] as String? ?? 'Unknown';
-              final queueColor = item['queueColor'] as Color? ??
-                  const Color.fromRGBO(0, 123, 255, 1);
-              final numClaims = item['numClaims'] as String? ?? '-';
-              final totalAmount = item['totalAmount'] as String? ?? '-';
-              final invoiceAmount = item['invoiceAmount'] as String? ?? '-';
-              final invoiceNo = item['invoiceNo'] as String? ?? '-';
-              final invoiceMonth = item['invoiceMonth'] as String? ?? '-';
-              final status = item['status'] as String? ?? 'Unknown';
-              final isCompleted = status == 'Completed';
-
-              return DataRow(
-                cells: [
-                  DataCell(
-                    SizedBox(
-                      width: nameWidth,
-                      child: Text(
-                        name,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: queueWidth,
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: Container(
-                          width: 15,
-                          height: 15,
-                          decoration: BoxDecoration(
-                            color: queueColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: numClaimsWidth,
-                      child: Text(
-                        numClaims,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: totalAmountWidth,
-                      child: Text(
-                        totalAmount,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: invoiceAmountWidth,
-                      child: Text(
-                        invoiceAmount,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: invoiceNoWidth,
-                      child: Text(
-                        invoiceNo,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: invoiceMonthWidth,
-                      child: Text(
-                        invoiceMonth,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: 100,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isCompleted
-                              ? const Color(0xFFE6F0FA)
-                              : const Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: isCompleted ? Colors.blue : Colors.grey,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              status,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: isCompleted ? Colors.blue : Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
+  Widget _buildClaimsTable(List<dynamic> consultants) {
+    print('consultants $consultants');
+    return  SizedBox(
+      height: consultants.isEmpty ? 50 : 200,
+      child: consultants.isEmpty
+          ? const Center(
+        child: Text(
+          "No Consultant Found",
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
         ),
+      )
+          : SfDataGrid(
+        source: GenericDataSource(
+          data: consultants.expand<Map<String, dynamic>>((consultant) {
+            final empName = consultant['emp_name'] ?? 'N/A';
+            final claims = consultant['claimsData'] ?? [];
+
+            // If no claims, return one row with basic info
+            if (claims.isEmpty) {
+              return [
+                {
+                  'emp_name': empName,
+                  'status': 'No Claims',
+                  'claim_no': '-',
+                  'total_amount': '\$0',
+                  'invoice_amount': '\$0',
+                  'invoice_no': '-',
+                  'invoice_status':'-',
+                }
+              ];
+            }
+
+            // For each claim, make a row
+            return claims.map<Map<String, dynamic>>((claim) {
+              final record = claim['record'] ?? {};
+              return {
+                'emp_name': empName,
+                'status': claim['status'] ?? 'Pending',
+                'claim_no': claim['form_count'] ?? '-',
+                'total_amount': '\$${record['amount'] ?? '0'}',
+                'invoice_amount': '\$${record['amount'] ?? '0'}', // replace with actual if available
+                'invoice_no': record['claim_no'] ?? '-',
+                'invoice_status': claim['status'] ?? 'Pending',
+              };
+            });
+          }).toList(),
+
+          columns: [
+            'emp_name',
+            'status',
+            'claim_no',
+            'total_amount',
+            'invoice_amount',
+            'invoice_no',
+            'invoice_status'
+          ],
+          onZoomTap: (rowData) {
+            // _showConsultancyPopup(context, rowData['full_data']);
+          },
+
+        ),
+        columnWidthMode: ColumnWidthMode.auto,
+        headerRowHeight: 40,
+        rowHeight: 52,
+        selectionMode: SelectionMode.single,
+        onCellTap: (details) async {
+          final index = details.rowColumnIndex.rowIndex - 1;
+          if (index < 0 || index >= consultants.length) return;
+
+          final selectedData = consultants[index];
+          ref
+              .read(financeProvider.notifier)
+              .getSelectedConsultantDetails(selectedData);
+
+        },
+        columns: [
+          GridColumn(
+            columnName: 'emp_name',
+            width: 110,
+            label: _buildHeaderCell('Name',
+                iconPath: 'assets/icons/search_o.svg'),
+          ),
+          GridColumn(
+            columnName: 'status',
+            width: 80,
+            label: _buildHeaderCell('Queue',
+                iconPath: 'assets/icons/queue.svg',),
+          ),
+          GridColumn(
+            columnName: 'claim_no',
+            width: 80,
+            label: _buildHeaderCell('#Claims'),
+          ),
+          GridColumn(
+            columnName: 'total_amount',
+            width: 80,
+            label: _buildHeaderCell('Total Amt',
+                 ),
+          ),
+          GridColumn(
+            columnName: 'invoice_amount',
+            width: 80,
+            label: _buildHeaderCell('Invoice Amt',),
+          ),
+          GridColumn(
+            columnName: 'invoice_no',
+            width: 100,
+            label: _buildHeaderCell('Invoice No',
+            ),
+          ),
+            GridColumn(
+              columnName: 'invoice_status',
+              width: 100,
+              label: _buildHeaderCell('Invoice Status',
+              ),
+          ),
+
+
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderCell(String title,
+      {String? iconPath, Alignment alignment = Alignment.centerLeft}) {
+    return Align(
+      alignment: alignment,
+      child: Row(
+        mainAxisAlignment: alignment == Alignment.center
+            ? MainAxisAlignment.center
+            : MainAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xff000000),
+            ),
+          ),
+          if (iconPath != null) ...[
+            SizedBox(width: title == 'Name' ? 40 : 6),
+            SvgPicture.asset(iconPath, width: 15, height: 15),
+          ],
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+
+    final financeState = ref.watch(financeProvider);
+
+    final List<dynamic> fullConsultantData = financeState.claimInvoiceConsultantList ?? [];
+    final List<Map<String, dynamic>> selectedClientInvoiceSummary=financeState.selectedClientInvoiceSummary??[];
+    final List<dynamic> selectedClientRemarks=financeState.selectedClientRemarks??[];
+
+    final isConsultantSelected = _selectedConsultantId != null;
+    final isLoading = financeState.isLoading;
+    print('selectedClientRemarks $selectedClientRemarks');
+
+
+
     return Scaffold(
       floatingActionButton: CustomButton(
         text: 'Compose',
@@ -784,184 +690,251 @@ class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoic
           context.go('/login');
         },
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHeaderContent(),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                child: _buildClaimsTable(),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      topRight: Radius.circular(12),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color.fromRGBO(0, 0, 0, 0.25),
-                        blurRadius: 1,
-                        offset: Offset(0, 0),
-                      ),
-                    ],
-                  ),
-                  child: Column(
+      body: Stack(
+        children:[ SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildHeaderContent(),
+                Padding(
+                  padding: const EdgeInsets.only(right: 10.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Padding(
-                        padding:
-                        const EdgeInsets.only(left: 20, right: 15, top: 12),
+                      GestureDetector(
+                        onTap: () => _showMonthYearPicker(context),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Encore Films',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'Invoice Number: EM098789',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ],
+                            SvgPicture.asset(
+                              'assets/icons/month_calendar_icon.svg',
+                              height: 20,
+                              width: 20,
                             ),
-                            Row(
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.white,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.vertical(
-                                            top: Radius.circular(20)),
-                                      ),
-                                      builder: (context) {
-                                        return Padding(
-                                          padding: EdgeInsets.only(
-                                            bottom: MediaQuery.of(context)
-                                                .viewInsets
-                                                .bottom,
-                                          ),
-                                          child:
-                                          const EditInvoiceDetailDialog(),
-                                        );
-                                      },
-                                    );
-                                  },
-                                  child: SvgPicture.asset(
-                                    'assets/icons/editor.svg',
-                                    height: 25,
-                                    width: 25,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      areContactsVisible = !areContactsVisible;
-                                    });
-                                  },
-                                  child: SvgPicture.asset(
-                                    areContactsVisible
-                                        ? 'assets/icons/upside.svg'
-                                        : 'assets/icons/downside.svg',
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(width: 8),
+                            Text(
+                              DateFormat("MMMM - y").format(selectedMonthYear),
+                              style: GoogleFonts.montserrat(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xff5A5A5A),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Divider(
-                        color: Color(0xffE1E1E1),
-                        thickness: 1,
-                      ),
-                      const SizedBox(height: 10),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 10, right: 10, bottom: 15),
-                        child: GridView.builder(
-                          gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                            childAspectRatio: 2.0,
-                          ),
-                          itemCount: consultancyData.length,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            final item = consultancyData[index];
-                            return consultancyCard(
-                              count: item['count'] ?? '0',
-                              label: item['label'] ?? 'Unknown',
-                              iconPath: item['iconPath'] ??
-                                  'assets/icons/default.svg',
-                            );
-                          },
-                        ),
-                      ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: _buildClaimsTable(isConsultantSelected?[financeState.selectedConsultantDetail]:fullConsultantData),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color.fromRGBO(0, 0, 0, 0.25),
+                          blurRadius: 1,
+                          offset: Offset(0, 0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding:
+                          const EdgeInsets.only(left: 20, right: 15, top: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _selectedClient??"",
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Invoice Number: EM098789',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.white,
+                                        shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(20)),
+                                        ),
+                                        builder: (context) {
+                                          return Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom: MediaQuery.of(context)
+                                                  .viewInsets
+                                                  .bottom,
+                                            ),
+                                            child:
+                                            const EditInvoiceDetailDialog(),
+                                          );
+                                        },
+                                      );
+                                    },
+                                    child: SvgPicture.asset(
+                                      'assets/icons/editor.svg',
+                                      height: 25,
+                                      width: 25,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        areContactsVisible = !areContactsVisible;
+                                      });
+                                    },
+                                    child: SvgPicture.asset(
+                                      areContactsVisible
+                                          ? 'assets/icons/upside.svg'
+                                          : 'assets/icons/downside.svg',
+                                      height: 20,
+                                      width: 20,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Divider(
+                          color: Color(0xffE1E1E1),
+                          thickness: 1,
+                        ),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              left: 10, right: 10, bottom: 15),
+                          child: GridView.builder(
+                            gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 2.0,
+                            ),
+                            itemCount: selectedClientInvoiceSummary.length,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              final item = selectedClientInvoiceSummary[index];
+                              print('selectedClientInvoiceSummary $item');
+                              return consultancyCard(
+                                count: item['count'] ?? '0',
+                                label: item['label'] ?? 'Unknown',
+                                iconPath: item['iconPath'] ??
+                                    'assets/icons/default.svg',
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                if (areContactsVisible) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        _contactCard(
+                          label: 'Billing To',
+                          name: 'Alfonso Mango',
+                          address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
+                              'Tamil Nadu, India',
+                          location: 'X5JX+HX Chennai, Tamil Nadu',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                    child: _contactCard(
+                      label: 'Shipping To',
+                      name: 'Abram Culhane',
+                      address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
+                          'Tamil Nadu, India',
+                      location: 'X5JX+HX Chennai, Tamil Nadu',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                const SizedBox(height: 16),
+                _buildRemarksSection(selectedClientRemarks),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+          if (isLoading)
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 3.5, sigmaY: 3.5),
+                child: Container(
+                  color: Colors.black.withOpacity(0.2),
+                  alignment: Alignment.center,
+                  child: const CustomLoader(
+                    color: Color(0xffFF1901),
+                    size: 35,
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
-              if (areContactsVisible) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      _contactCard(
-                        label: 'Billing To',
-                        name: 'Alfonso Mango',
-                        address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
-                            'Tamil Nadu, India',
-                        location: 'X5JX+HX Chennai, Tamil Nadu',
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: _contactCard(
-                    label: 'Shipping To',
-                    name: 'Abram Culhane',
-                    address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
-                        'Tamil Nadu, India',
-                    location: 'X5JX+HX Chennai, Tamil Nadu',
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
-              const SizedBox(height: 16),
-              _buildRemarksSection(),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
+            ),
+        ],
       ),
     );
+  }
+
+  Future<void> _showMonthYearPicker(BuildContext context) async {
+    final selectedDate = await showDialog<DateTime>(
+      context: context,
+      builder: (context) => MonthYearPickerDialog(
+        initialDate: selectedMonthYear,
+      ),
+    );
+
+    if (selectedDate != null) {
+      setState(() {
+         selectedMonth = selectedDate.month;
+         selectedYear = selectedDate.year;
+         selectedMonthYear=selectedDate;
+      });
+
+      await financeClaimClientConsultants();
+
+    }
   }
 }

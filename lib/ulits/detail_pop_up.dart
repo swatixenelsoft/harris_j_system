@@ -53,6 +53,7 @@ class ConsultancyDetailPopup extends StatelessWidget {
                     children: [
                       GestureDetector(
                         onTap: () {
+                          context.pop();
                           context.push(Constant.bomAddConsultancyScreen,
                               extra: consultancy);
                         },

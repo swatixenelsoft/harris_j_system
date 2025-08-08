@@ -11,6 +11,7 @@ import 'package:harris_j_system/screens/navigation/constant.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_table.dart';
+import 'package:harris_j_system/widgets/logout_dialog.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -122,11 +123,17 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
                 showBackButton: false,
                 showProfileIcon: true,
                 image: 'assets/images/bom/bom_logo.png',
-                onProfilePressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.clear();
-                  context.pushReplacement(Constant.login);
-                },
+                  onProfilePressed: () async {
+                    final shouldLogout = await ConfirmLogoutDialog.show(context);
+
+                    if (shouldLogout) {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.clear();
+                      context.pushReplacement(Constant.login);
+                    }
+                  }
+
+
               ),
               // Notifications
        if(showNotificationSections)     Padding(
@@ -181,6 +188,8 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 10),
               // User Greeting & Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -214,45 +223,167 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
               ),
               // Work Hour Log
             if (showInfoSections) ...[
-              const SizedBox(height: 16),
-              consultancyCard(
-                count: "200",
-                label: "Active Consultancies",
-                iconPath: 'assets/icons/active.svg',
-              ),
-              const SizedBox(height: 16),
-              consultancyCard(
-                count: "100",
-                label: "Inactive Consultancies",
-                iconPath: 'assets/icons/inactive.svg',
-              ),
-              const SizedBox(height: 16),
-              FinanceChartCard(),
+              GestureDetector(
+                onLongPressStart: (_) => _onDashboardHoldStart(),
+                onLongPressEnd: (_) => _onDashboardHoldEnd(),
+                child: Column(children: [
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      height: 216,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 15,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Left side: Info
+                          SizedBox(
+                            height: 230,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Total No. Of Consultancy:",
+                                    style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                        color: Colors.black)),
+                                const SizedBox(height: 8),
+                                Container(
+                                  alignment: Alignment.center,
+                                  height: 20,
+                                  width: 95,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(4),
+                                    color: const Color(0xffE5F1FF),
+                                  ),
+                                  child: Text(
+                                      '300'
+                                          .toString(),
+                                      style: GoogleFonts.montserrat(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xff007BFF))),
+                                ),
+                                const SizedBox(height: 20),
+                                const LegendDot(
+                                  color: Color(0xff28A745),
+                                  label:
+                                  "Active: 5",
+                                ),
+                                const SizedBox(height: 8),
+                                const LegendDot(
+                                    color: Color(0xffFF8403),
+                                    label:
+                                    "Disabled:  0"),
+                                const SizedBox(height: 8),
+                                const LegendDot(
+                                    color: Color(0xffFF1901),
+                                    label:
+                                    "Blocked:0"),
+                                const SizedBox(height: 8),
+                                const LegendDot(
+                                    color:   Colors.blue,
+                                    label:
+                                    "Offboarded:  0"),
+                                const SizedBox(height: 8),
+                              ],
+                            ),
+                          ),
+                          // Right side: Pie Chart
+                          SizedBox(
+                            height: 220,
+                            width: 120,
+                            child: PieChart(
+                              dataMap: {
+                                "Active":
+                                (5)
+                                    .toDouble(),
+                                "Disabled": (0)
+                                    .toDouble(),
+                                "Blocked": (0)
+                                    .toDouble(),
+                                "Offboarded": (0)
+                                    .toDouble(),
+                              },
+                              chartType: ChartType.disc,
+                              baseChartColor: Colors.grey[200]!,
+                              colorList: const [
+                                Color(0xFF28A745),
+                                Color(0xffFF8403),
+                                Color(0xFFFD0D1B),
+                                Colors.blue,
+                              ],
+                              chartRadius: 160, // Bigger radius
+                              chartValuesOptions: const ChartValuesOptions(
+                                showChartValues: false,
+                              ),
+                              legendOptions: const LegendOptions(
+                                showLegends: false,
+                              ),
+                              centerText: '',
+                              ringStrokeWidth: 50,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  consultancyCard(
+                    count: "200",
+                    label: "Active Consultancies",
+                    iconPath: 'assets/icons/active.svg',
+                  ),
+                  const SizedBox(height: 16),
+                  consultancyCard(
+                    count: "100",
+                    label: "Disabled Consultancies",
+                    iconPath: 'assets/icons/inactive.svg',
+                  ),
+                  const SizedBox(height: 16),
+                  const FinanceChartCard(),
 
-              // Claims Summary
-              Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("List Of Consultancy",
-                        style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                            color: Colors.black)),
-                    CustomButton(
-                        isOutlined: true,
-                        height: 34,
-                        width: 91,
-                        text: "View All",
-                        icon: Icons.remove_red_eye_outlined,
-                        onPressed: () {}),
-                  ],
-                ),
+                  // Claims Summary
+                  Container(
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("List Of Consultancy",
+                            style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                color: Colors.black)),
+                        CustomButton(
+                            isOutlined: true,
+                            height: 34,
+                            width: 91,
+                            text: "View All",
+                            icon: Icons.remove_red_eye_outlined,
+                            onPressed: () {
+                              context.push(Constant.bomConsultancyScreen);
+                            }),
+                      ],
+                    ),
+                  ),
+
+                  CustomTableView(data: tableData, heading: heading),
+                ],),
               ),
 
-              CustomTableView(data: tableData, heading: heading),
             ],
 
 

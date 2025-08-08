@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:harris_j_system/screens/navigation/constant.dart';
+import 'package:harris_j_system/widgets/chart_widget.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 
@@ -33,7 +36,9 @@ class FinanceChartCard extends StatelessWidget {
                   width: 91,
                   text: "View All",
                   icon: Icons.remove_red_eye_outlined,
-                  onPressed: () {}),
+                  onPressed: () {
+                    context.push(Constant.bomFinanceScreen);
+                  }),
             ],
           ),
           const SizedBox(height: 16),
@@ -96,21 +101,7 @@ class FinanceChartCard extends StatelessWidget {
           const SizedBox(height: 16),
 
           /// Chart Placeholder (replace with actual chart)
-          AspectRatio(
-            aspectRatio: 1.6,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text(
-                  'Chart Placeholder',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-            ),
-          ),
+           const SimpleBarChart(),
         ],
       ),
     );

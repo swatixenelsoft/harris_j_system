@@ -39,7 +39,11 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
 
   final List<String> _addressType = [
     'Not Selected',
+    'Home',
     'Office',
+    'Billing',
+    'Shipping',
+    'Other'
   ];
   String? token;
 
@@ -70,6 +74,12 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
 
     _selectedCountry = addressMap['country'] ?? '';
     _postalCodeController.text = addressMap['postalCode'] ?? '';
+    _cityController.text = addressMap['city'] ?? '';
+    _townController.text = addressMap['townArea'] ?? '';
+    _landMarkController.text = addressMap['landMark'] ?? '';
+    _unitNumberController.text = addressMap['unitNumber'] ?? '';
+    _selectedAddressType =addressMap['addressType']??'';
+    _googleCodeController.text=addressMap['plusCode']??'';
 
     _apartmentNameController.text = addressMap['streetName'] ?? '';
     print('_apartmentNameController ${_apartmentNameController.text}');
@@ -77,9 +87,9 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
         .read(getCountryProvider.notifier)
         .fetchStates(_selectedCountry!, token!);
     _isVisible = true;
-    _selectedState = addressMap['city'] ?? '';
+    _selectedState = addressMap['state'] ?? '';
 // Now you can access values like:
-    print(addressMap['streetName']); // fft
+    print(addressMap); // fft
     print(addressMap['city']); // Badghis
     print(addressMap['country']); // Afghanistan
     print(addressMap['postalCode']);
