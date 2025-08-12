@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CustomTableView extends StatefulWidget {
-  final List<Map<String, dynamic>> data;
+  final List<dynamic> data;
   final List<Map<String, dynamic>> heading;
 
   const CustomTableView({
@@ -26,72 +26,83 @@ class _CustomTableViewState extends State<CustomTableView> {
 
   @override
   Widget build(BuildContext context) {
-    // print()
-    return DataTable(
-      columnSpacing: 25, // <-- add spacing between columns
-      headingRowHeight: 38,
-      dataRowMinHeight: 40,
-      dataRowMaxHeight: 40,
-      headingRowColor: MaterialStateProperty.all(const Color(0xFFF2F2F2)),
-      columns: List.generate(widget.heading.length, (index) {
-        final item = widget.heading[index];
-        final isFirstColumn = index == 0;
+    print('data a ${widget.data}');
 
-        return DataColumn(
-          label: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: isFirstColumn ? 90 : 70,  // match your cell widths here
-              maxWidth: isFirstColumn ? 140 : 100,
-            ),
-            child: Text(
-              item['label']!,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.w600,
-                fontSize: 10,
-                color: const Color(0xff1D212D),
-              ),
-            ),
-          ),
-        );
-      }),
+    // Limit to 5 rows (or fewer if data length < 5)
+    final limitedData = widget.data.take(3).toList();
 
-      rows: widget.data.map((row) {
-        return DataRow(
-          cells: widget.heading.map((item) {
-            final key = item['key']!;
-            final value = row[key];
-print('value $key $value');
-            if (key == 'status' && value is Map<String, dynamic>) {
-              return DataCell(StatusLabel(
-                label: value['label']?.toString() ?? '',
-                color: value['color'] as Color?,
-                containerColor: value['background'] as Color?,
-              ));
-            }
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal, // For horizontal scroll if needed
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        child: DataTable(
+          columnSpacing: 25,
+          headingRowHeight: 38,
+          dataRowMinHeight: 40,
+          dataRowMaxHeight: 40,
+          headingRowColor: MaterialStateProperty.all(const Color(0xFFF2F2F2)),
+          columns: List.generate(widget.heading.length, (index) {
+            final item = widget.heading[index];
+            final isFirstColumn = index == 0;
 
-            return DataCell(
-              ConstrainedBox(
-                constraints: const BoxConstraints(
-                  minWidth: 70, // adjust based on your layout
-                  maxWidth: 100, // prevent overflow
+            return DataColumn(
+              label: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: isFirstColumn ? 90 : 70,
+                  maxWidth: isFirstColumn ? 140 : 100,
                 ),
                 child: Text(
-                  value?.toString() ?? '',
+                  item['label']!,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     fontSize: 10,
                     color: const Color(0xff1D212D),
                   ),
                 ),
               ),
             );
+          }),
+          rows: limitedData.map((row) {
+            return DataRow(
+              cells: widget.heading.map((item) {
+                final key = item['key']!;
+                final value = row[key];
+                print('value $key $value');
+
+                if (key == 'status' && value is Map<String, dynamic>) {
+                  return DataCell(StatusLabel(
+                    label: value['label']?.toString() ?? '',
+                    color: value['color'] as Color?,
+                    containerColor: value['background'] as Color?,
+                  ));
+                }
+
+                return DataCell(
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: 70,
+                      maxWidth: 100,
+                    ),
+                    child: Text(
+                      value?.toString() ?? '',
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 10,
+                        color: const Color(0xff1D212D),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
           }).toList(),
-        );
-      }).toList(),
+        ),
+      ),
     );
   }
+
 }
 
 class TableHeader extends StatelessWidget {

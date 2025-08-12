@@ -37,6 +37,7 @@ class _OperatorDashboardScreenState
   String _selectedPeriod = 'Monthly';
 
   String? token;
+  String? userName;
 
   String? _selectedClient;
   String? _selectedClientId;
@@ -87,6 +88,8 @@ class _OperatorDashboardScreenState
   getClientList() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
+    userName = prefs.getString('name');
+
 
     final client =
         await ref.read(operatorProvider.notifier).getOperatorDashboard(token!);
@@ -165,11 +168,19 @@ class _OperatorDashboardScreenState
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Hi Bruce Lee",
+                        Expanded( // Allows the text to take remaining space and wrap/ellipsize
+                          child: Text(
+                            "Hi ${userName == '' ? 'Bruce Lee' : userName}",
                             style: GoogleFonts.montserrat(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xff5A5A5A))),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xff5A5A5A),
+                            ),
+                            overflow: TextOverflow.ellipsis, // Show ... if too long
+                            maxLines: 1, // Keep on one line
+                          ),
+                        ),
+                        const SizedBox(width: 8), // spacing between text & button
                         CustomButton(
                           text: "View Dashboard",
                           onPressed: () {
@@ -181,12 +192,14 @@ class _OperatorDashboardScreenState
                           width: 151,
                           isOutlined: true,
                           borderRadius: 8,
-                          textStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w500,fontSize: 12,),
+                          textStyle: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
                           icon: showInfoSections
                               ? Icons.keyboard_arrow_up_sharp
                               : Icons.keyboard_arrow_down_sharp,
                         ),
-
                       ],
                     ),
                   ),

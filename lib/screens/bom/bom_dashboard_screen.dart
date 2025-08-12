@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:harris_j_system/providers/bom_provider.dart';
 import 'package:harris_j_system/screens/bom/widget/finance_chart_widget.dart';
 import 'package:harris_j_system/screens/shared/login_screen.dart';
 import 'package:harris_j_system/screens/navigation/constant.dart';
@@ -64,27 +66,40 @@ final List<Map<String, dynamic>> tableData = [
 ];
 final List<Map<String, String>> heading = [
   {'label': 'Consultancy Name', 'key': 'consultancy_name'},
-  {'label': 'License Expiry', 'key': 'license_expiry'},
-  {'label': 'Status', 'key': 'status'},
+  {'label': 'License Expiry', 'key': 'license_end_date'},
+  {'label': 'Status', 'key': 'consultancy_status'},
 ];
 
 bool showInfoSections = true;
 bool showNotificationSections = true;
 Timer? _hideDashboardTimer;
 
-class BomDashboardScreen extends StatefulWidget {
+class BomDashboardScreen extends ConsumerStatefulWidget {
   const BomDashboardScreen({super.key});
 
   @override
-  State<BomDashboardScreen> createState() => _BomDashboardScreenState();
+  ConsumerState<BomDashboardScreen> createState() => _BomDashboardScreenState();
 }
 
-class _BomDashboardScreenState extends State<BomDashboardScreen> {
-
+class _BomDashboardScreenState extends ConsumerState<BomDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _fetchAllData();
     _startHideDashboardTimer();
+  }
+
+  Future<void> _getDashBoardData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    print('token $token');
+    await ref.read(bomProvider.notifier).getDashBoard(token!);
+  }
+
+  _fetchAllData() async {
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    await _getDashBoardData();
   }
 
   void _startHideDashboardTimer() {
@@ -92,7 +107,7 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
     _hideDashboardTimer = Timer(const Duration(seconds: 5), () {
       setState(() {
         showInfoSections = false;
-        showNotificationSections=false;
+        showNotificationSections = false;
       });
     });
   }
@@ -100,18 +115,22 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
   void _onDashboardHoldStart() {
     _hideDashboardTimer?.cancel();
     setState(() {
+      showNotificationSections = true;
       showInfoSections = true;
     });
   }
 
   void _onDashboardHoldEnd() {
     setState(() {
+      showNotificationSections = false;
       showInfoSections = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final bomDashboardState = ref.watch(bomProvider);
+    print('dashborr${bomDashboardState.dashboardData}');
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -120,74 +139,73 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CustomAppBar(
-                showBackButton: false,
-                showProfileIcon: true,
-                image: 'assets/images/bom/bom_logo.png',
+                  showBackButton: false,
+                  showProfileIcon: true,
+                  image: 'assets/images/bom/bom_logo.png',
                   onProfilePressed: () async {
-                    final shouldLogout = await ConfirmLogoutDialog.show(context);
+                    final shouldLogout =
+                        await ConfirmLogoutDialog.show(context);
 
                     if (shouldLogout) {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.clear();
                       context.pushReplacement(Constant.login);
                     }
-                  }
-
-
-              ),
+                  }),
               // Notifications
-       if(showNotificationSections)     Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  padding: const EdgeInsets.only(
-                      top: 12, left: 12, bottom: 12, right: 5),
-                  decoration: BoxDecoration(
-                    color: const Color(0xffE5F1FF),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xff007BFF)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: List.generate(3, (index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.check_circle_outline,
-                                    color: Color(0xff007BFF)),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Notification ${index + 1}',
+              if (showNotificationSections)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Container(
+                    padding: const EdgeInsets.only(
+                        top: 12, left: 12, bottom: 12, right: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffE5F1FF),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xff007BFF)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: List.generate(3, (index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.check_circle_outline,
+                                      color: Color(0xff007BFF)),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Notification ${index + 1}',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xff007BFF),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 32.0), // align with text after icon
+                                child: Text(
+                                  'Lorem ipsum dolor sit amet, consectetur elit.',
                                   style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xff007BFF),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xff037EFF),
                                   ),
                                 ),
-                              ],
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 32.0), // align with text after icon
-                              child: Text(
-                                'Lorem ipsum dolor sit amet, consectetur elit.',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color(0xff037EFF),
-                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
                   ),
                 ),
-              ),
 
               const SizedBox(height: 10),
               // User Greeting & Button
@@ -212,182 +230,185 @@ class _BomDashboardScreenState extends State<BomDashboardScreen> {
                       width: 151,
                       isOutlined: true,
                       borderRadius: 8,
-                      textStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w500,fontSize: 12,),
+                      textStyle: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
                       icon: showInfoSections
                           ? Icons.keyboard_arrow_up_sharp
                           : Icons.keyboard_arrow_down_sharp,
                     ),
-
                   ],
                 ),
               ),
               // Work Hour Log
-            if (showInfoSections) ...[
-              GestureDetector(
-                onLongPressStart: (_) => _onDashboardHoldStart(),
-                onLongPressEnd: (_) => _onDashboardHoldEnd(),
-                child: Column(children: [
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Container(
-                      height: 216,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 15,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 4),
+              if (showInfoSections) ...[
+                GestureDetector(
+                  onLongPressStart: (_) => _onDashboardHoldStart(),
+                  onLongPressEnd: (_) => _onDashboardHoldEnd(),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Container(
+                          height: 216,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 15,
+                                spreadRadius: 1,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Left side: Info
-                          SizedBox(
-                            height: 230,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("Total No. Of Consultancy:",
-                                    style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 13,
-                                        color: Colors.black)),
-                                const SizedBox(height: 8),
-                                Container(
-                                  alignment: Alignment.center,
-                                  height: 20,
-                                  width: 95,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(4),
-                                    color: const Color(0xffE5F1FF),
-                                  ),
-                                  child: Text(
-                                      '300'
-                                          .toString(),
-                                      style: GoogleFonts.montserrat(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Left side: Info
+                              SizedBox(
+                                height: 230,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("Total No. Of Consultancy:",
+                                        style: GoogleFonts.montserrat(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                            color: Colors.black)),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      alignment: Alignment.center,
+                                      height: 20,
+                                      width: 95,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(4),
+                                        color: const Color(0xffE5F1FF),
+                                      ),
+                                      child:Text(
+                                        (bomDashboardState.dashboardData?['data']?['total_consultancies'] ?? 0).toString(),
+                                        style: GoogleFonts.montserrat(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w700,
-                                          color: const Color(0xff007BFF))),
+                                          color: const Color(0xff007BFF),
+                                        ),
+                                      ),
+                                    ),
+                                        const SizedBox(height: 20),
+                                    LegendDot(
+                                      color: Color(0xff28A745),
+                                      label:
+                                      "Active: ${bomDashboardState.dashboardData?['data']?['status_counts']?['active'] ?? 0}",
+                                    ),
+                                    const SizedBox(height: 8),
+                                    LegendDot(
+                                        color: Color(0xffFF8403),
+                                        label:
+                                            "Disabled:${bomDashboardState.dashboardData?['data']['status_counts']?['disabled']??0}"),
+                                    const SizedBox(height: 8),
+                                    LegendDot(
+                                        color: Color(0xffFF1901),
+                                        label:
+                                            "Blocked:${bomDashboardState.dashboardData?['data']['status_counts']?['blocked']??0}"),
+                                    const SizedBox(height: 8),
+                                    LegendDot(
+                                        color: Colors.blue,
+                                        label:
+                                            "Offboarded:  ${bomDashboardState.dashboardData?['data']['status_counts']?['offboarded']??0}"),
+                                    const SizedBox(height: 8),
+                                  ],
                                 ),
-                                const SizedBox(height: 20),
-                                const LegendDot(
-                                  color: Color(0xff28A745),
-                                  label:
-                                  "Active: 5",
+                              ),
+                              // Right side: Pie Chart
+                              SizedBox(
+                                height: 220,
+                                width: 120,
+                                child: PieChart(
+                                  dataMap: {
+                                    "Active": (bomDashboardState.dashboardData?['data']?['status_counts']?['active'] ?? 0)
+                                        .toDouble(),
+                                    "Disabled": (bomDashboardState.dashboardData?['data']['status_counts']['disabled']??0).toDouble(),
+                                    "Blocked": (bomDashboardState.dashboardData?['data']['status_counts']['blocked']??0).toDouble(),
+                                    "Offboarded": (bomDashboardState.dashboardData?['data']['status_counts']['offboarded']??0).toDouble(),
+                                  },
+                                  chartType: ChartType.disc,
+                                  baseChartColor: Colors.grey[200]!,
+                                  colorList: const [
+                                    Color(0xFF28A745),
+                                    Color(0xffFF8403),
+                                    Color(0xFFFD0D1B),
+                                    Colors.blue,
+                                  ],
+                                  chartRadius: 160, // Bigger radius
+                                  chartValuesOptions: const ChartValuesOptions(
+                                    showChartValues: false,
+                                  ),
+                                  legendOptions: const LegendOptions(
+                                    showLegends: false,
+                                  ),
+                                  centerText: '',
+                                  ringStrokeWidth: 50,
                                 ),
-                                const SizedBox(height: 8),
-                                const LegendDot(
-                                    color: Color(0xffFF8403),
-                                    label:
-                                    "Disabled:  0"),
-                                const SizedBox(height: 8),
-                                const LegendDot(
-                                    color: Color(0xffFF1901),
-                                    label:
-                                    "Blocked:0"),
-                                const SizedBox(height: 8),
-                                const LegendDot(
-                                    color:   Colors.blue,
-                                    label:
-                                    "Offboarded:  0"),
-                                const SizedBox(height: 8),
-                              ],
-                            ),
+                              )
+                            ],
                           ),
-                          // Right side: Pie Chart
-                          SizedBox(
-                            height: 220,
-                            width: 120,
-                            child: PieChart(
-                              dataMap: {
-                                "Active":
-                                (5)
-                                    .toDouble(),
-                                "Disabled": (0)
-                                    .toDouble(),
-                                "Blocked": (0)
-                                    .toDouble(),
-                                "Offboarded": (0)
-                                    .toDouble(),
-                              },
-                              chartType: ChartType.disc,
-                              baseChartColor: Colors.grey[200]!,
-                              colorList: const [
-                                Color(0xFF28A745),
-                                Color(0xffFF8403),
-                                Color(0xFFFD0D1B),
-                                Colors.blue,
-                              ],
-                              chartRadius: 160, // Bigger radius
-                              chartValuesOptions: const ChartValuesOptions(
-                                showChartValues: false,
-                              ),
-                              legendOptions: const LegendOptions(
-                                showLegends: false,
-                              ),
-                              centerText: '',
-                              ringStrokeWidth: 50,
-                            ),
-                          )
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      consultancyCard(
+                        count: (bomDashboardState.dashboardData?['data']?['status_counts']?['active'] ?? 0).toString(),
+
+                        label: "Active Consultancies",
+                        iconPath: 'assets/icons/active.svg',
+                      ),
+                      const SizedBox(height: 16),
+                      consultancyCard(
+                        count: (bomDashboardState.dashboardData?['data']?['status_counts']?['disabled']??0).toString(),
+                        label: "Disabled Consultancies",
+                        iconPath: 'assets/icons/inactive.svg',
+                      ),
+                      const SizedBox(height: 16),
+                      const FinanceChartCard(),
+
+                      // Claims Summary
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("List Of Consultancy",
+                                style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                    color: Colors.black)),
+                            CustomButton(
+                                isOutlined: true,
+                                height: 34,
+                                width: 91,
+                                text: "View All",
+                                icon: Icons.remove_red_eye_outlined,
+                                onPressed: () {
+                                  context.push(Constant.bomConsultancyScreen);
+                                }),
+                          ],
+                        ),
+                      ),
+
+                      CustomTableView(
+                        data: bomDashboardState.dashboardData?['data']?['consultancies'] ?? [],
+                        heading: heading,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  consultancyCard(
-                    count: "200",
-                    label: "Active Consultancies",
-                    iconPath: 'assets/icons/active.svg',
-                  ),
-                  const SizedBox(height: 16),
-                  consultancyCard(
-                    count: "100",
-                    label: "Disabled Consultancies",
-                    iconPath: 'assets/icons/inactive.svg',
-                  ),
-                  const SizedBox(height: 16),
-                  const FinanceChartCard(),
+                ),
+              ],
 
-                  // Claims Summary
-                  Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("List Of Consultancy",
-                            style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                                color: Colors.black)),
-                        CustomButton(
-                            isOutlined: true,
-                            height: 34,
-                            width: 91,
-                            text: "View All",
-                            icon: Icons.remove_red_eye_outlined,
-                            onPressed: () {
-                              context.push(Constant.bomConsultancyScreen);
-                            }),
-                      ],
-                    ),
-                  ),
-
-                  CustomTableView(data: tableData, heading: heading),
-                ],),
-              ),
-
-            ],
-
-
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: MasonryGridView.builder(

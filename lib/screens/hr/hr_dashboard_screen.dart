@@ -141,6 +141,7 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
   fetchData() async {
     ref.read(hrProvider.notifier).setLoading(true);
     await getClientList();
+
     await getDashBoardByClient();
 
     ref.read(hrProvider.notifier).setLoading(false);
@@ -241,7 +242,7 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
                   ),
                 ),
 
-                if (showInfoSections) ...[
+                if (showInfoSections || _selectedClientId==null) ...[
                   const SizedBox(height: 10),
                   GestureDetector(
                     onLongPressStart: (_) => _onDashboardHoldStart(),

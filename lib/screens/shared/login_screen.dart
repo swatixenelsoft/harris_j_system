@@ -79,13 +79,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final String dashboardName = response['dashboard_name'] ?? '';
       final int roleId = response['user']?['role_id'] ?? 0;
       final int userId = response['user']?['id'] ?? 0;
-      final String token = response['token'] ?? "";
+      final String userName=response['user']?['name']??'';
+      final String consultancyLogo =
+          response['consultancy_logo'] ?? 'assets/icons/cons_logo.png';
 
+      final String token = response['token'] ?? "";
+print('userName $userName');
       if (status) {
         await CommonFunction().storeCustomerData(
           userId: userId,
           roleId: roleId,
           token: token,
+          consultancyLogo: consultancyLogo,
+          name:userName,
         );
 
         ToastHelper.showSuccess(
@@ -107,23 +113,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           context.push(Constant.bomDashBoardScreen);
         } else if (dashboardName == "Consultant Dashboard" && roleId == 11) {
           print('Navigating to Consultant Dashboard');
-          context.push(Constant.consultantDashBoardScreen);
+          context.push(Constant.basicInfo);
         } else if (dashboardName == "Consultancy Dashboard" && roleId == 7) {
           print('Navigating to Consultancy Dashboard');
           context.push(Constant.consultancyDashBoardScreen);
         } else if (dashboardName == "HR Dashboard" && roleId == 8) {
           print('Navigating to HR Dashboard');
           context.push(Constant.hrDashboardScreen);
-        }
-        else if (dashboardName == "Operator Dashboard" && roleId == 10) {
+        } else if (dashboardName == "Operator Dashboard" && roleId == 10) {
           print('Navigating to Operator Dashboard');
           context.push(Constant.operatorDashboardScreen);
-        }
-        else if (dashboardName == "Finance Dashboard" && roleId == 9) {
+        } else if (dashboardName == "Finance Dashboard" && roleId == 9) {
           print('Navigating to Finance Dashboard');
           context.push(Constant.financeDashboardScreen);
-        }
-        else {
+        } else {
           print('Dashboard routing error');
         }
       } else {

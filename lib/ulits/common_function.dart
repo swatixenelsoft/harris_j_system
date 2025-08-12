@@ -45,23 +45,34 @@ class CommonFunction {
       BuildContext context, TextEditingController controller) async {
     final DateTime now = DateTime.now();
     final DateTime lastSelectableDate = DateTime(2050);
+    DateTime initialDate = now;
+
+    // If user has already selected a date, use that as initial
+    if (controller.text.isNotEmpty) {
+      try {
+        initialDate = DateFormat('dd/MM/yyyy').parseStrict(controller.text);
+      } catch (_) {
+        // keep default now if parsing fails
+      }
+    }
 
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: now,
+      initialDate: initialDate,
       firstDate: DateTime(1900),
       lastDate: lastSelectableDate,
     );
 
     if (pickedDate != null) {
       final formattedDate =
-          DateFormat('dd/MM/yyyy').format(pickedDate.toLocal());
+      DateFormat('dd/MM/yyyy').format(pickedDate.toLocal());
       controller.text = formattedDate;
       return formattedDate;
     } else {
       return null;
     }
   }
+
 
   List<DateTime> getDaysInMonth(DateTime month) {
     int firstWeekday = DateTime(month.year, month.month, 1).weekday;
@@ -204,12 +215,14 @@ class CommonFunction {
   }
 
   Future<void> storeCustomerData(
-      {int? userId, int? roleId, String? token}) async {
+      {int? userId, int? roleId, String? token, String? consultancyLogo,String? name}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', userId ?? 0);
     await prefs.setInt('roleId', roleId ?? 0);
     await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('consultancyLogo',consultancyLogo??'assets/icons/cons_logo.png');
     await prefs.setString('token', token ?? '');
+    await prefs.setString('name',name??'');
   }
 
   void showPopupBelowWidget({

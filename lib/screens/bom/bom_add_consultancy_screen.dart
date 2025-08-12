@@ -915,6 +915,7 @@ class _BomAddConsultancyScreenState
                             validator: validateUserIdOrEmail,
                           ),
                           const SizedBox(height: 12),
+                        if (isEdit) ...[
                           CustomButton(
                             container: true,
                             containerIcon: reset_password_value,
@@ -926,7 +927,7 @@ class _BomAddConsultancyScreenState
                                 reset_password_value = !reset_password_value;
                               });
                             },
-                          ),
+                          )],
                           const SizedBox(height: 30),
                         ],
                       ),

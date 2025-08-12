@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -36,6 +37,10 @@ class ConsultantDashboardScreen extends ConsumerStatefulWidget {
 
 class _ConsultantDashboardScreenState
     extends ConsumerState<ConsultantDashboardScreen> {
+  bool showInfoSections = true;
+  bool showNotificationSections = true;
+  Timer? _hideDashboardTimer;
+
   final PageController _pageController = PageController();
   Future<void> requestAllPermissions() async {
     print('fgf');
@@ -72,7 +77,34 @@ class _ConsultantDashboardScreenState
   @override
   void initState() {
     _fetchAllData();
+    _startHideDashboardTimer();
     super.initState();
+  }
+
+  void _startHideDashboardTimer() {
+    _hideDashboardTimer?.cancel();
+    _hideDashboardTimer = Timer(const Duration(seconds: 5), () {
+      setState(() {
+        showNotificationSections = false;
+        showInfoSections = false;
+
+      });
+    });
+  }
+
+  void _onDashboardHoldStart() {
+    _hideDashboardTimer?.cancel();
+    setState(() {
+      showNotificationSections = true;
+      showInfoSections = true;
+    });
+  }
+
+  void _onDashboardHoldEnd() {
+    setState(() {
+      showNotificationSections = false;
+      showInfoSections = false;
+    });
   }
 
   @override
@@ -118,259 +150,275 @@ class _ConsultantDashboardScreenState
                       },
                     ),
                     // Notifications
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Container(
-                        padding: const EdgeInsets.only(
-                            top: 12, left: 12, bottom: 12, right: 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xffE5F1FF),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xff007BFF)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Image.asset('assets/icons/close.png', height: 20),
-                            ...List.generate(3, (index) {
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 6.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.check_circle_outline,
-                                            color: Color(0xff007BFF)),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Notification ${index + 1}',
+                    if(showNotificationSections)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Container(
+                          padding: const EdgeInsets.only(
+                              top: 12, left: 12, bottom: 12, right: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xffE5F1FF),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xff007BFF)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              GestureDetector(
+                                  onTap: (){
+                                    setState(() {
+                                      showNotificationSections=false;
+                                    });
+                                  },
+                                  child: Image.asset('assets/icons/close.png', height: 20)),
+                              ...List.generate(3, (index) {
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 6.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.check_circle_outline,
+                                              color: Color(0xff007BFF)),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Notification ${index + 1}',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xff007BFF),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 32.0),
+                                        child: Text(
+                                          'Lorem ipsum dolor sit amet, consectetur elit.',
                                           style: GoogleFonts.inter(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xff007BFF),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w400,
+                                            color: const Color(0xff037EFF),
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                    Padding(
-                                      padding:
-                                          const EdgeInsets.only(left: 32.0),
-                                      child: Text(
-                                        'Lorem ipsum dolor sit amet, consectetur elit.',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w400,
-                                          color: const Color(0xff037EFF),
-                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // User Greeting & Button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                          consultantDashboardState.consultantData?['name'] ??
-                              '',
-                          style: GoogleFonts.montserrat(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xff5A5A5A))),
-                    ),
-                    const SizedBox(height: 16),
-                    // Work Hour Log
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Container(
-                        height: 216,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 15,
-                              spreadRadius: 1,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Left side: Info
-                            SizedBox(
-                              height: 220,
-                              width: 170,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("Work Hour Log",
-                                      style: GoogleFonts.montserrat(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                          color: Colors.black)),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    alignment: Alignment.center,
-                                    height: 20,
-                                    width: 95,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(4),
-                                      color: const Color(0xffE5F1FF),
-                                    ),
-                                    child: Text(
-                                        consultantDashboardState
-                                                .workingLogGraphData?[
-                                                    'hours_logged']
-                                                .toString() ??
-                                            'N/A',
-                                        style: GoogleFonts.montserrat(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xff007BFF))),
+                                    ],
                                   ),
-                                  const SizedBox(height: 80),
-                                  LegendDot(
-                                      color: const Color(0xff28A745),
-                                      label:
-                                          "Hours Logged: ${consultantDashboardState.workingLogGraphData?['hours_logged'].toString() ?? "N/A"}"),
-                                  const SizedBox(height: 8),
-                                  LegendDot(
-                                      color: const Color(0xff007BFF),
-                                      label:
-                                          "Hours Forecasted : ${consultantDashboardState.workingLogGraphData?['hours_forecasted'].toString() ?? 'N/A'}"),
-                                ],
-                              ),
-                            ),
-                            // Right side: Pie Chart
-                            SizedBox(
-                              height: 220,
-                              width: 125,
-                              child: PieChart(
-                                dataMap: {
-                                  "Clocked-In": (consultantDashboardState
-                                                  .workingLogGraphData?[
-                                              'hours_logged'] ??
-                                          0)
-                                      .toDouble(),
-                                  "Left": (consultantDashboardState
-                                                  .workingLogGraphData?[
-                                              'hours_forecasted'] ??
-                                          0)
-                                      .toDouble(),
-                                },
-                                chartType: ChartType.disc,
-                                baseChartColor: Colors.grey[200]!,
-                                colorList: const [
-                                  Color(0xFF28A745),
-                                  Color(0xFF007BFF),
-                                ],
-                                chartRadius: 160, // Bigger radius
-                                chartValuesOptions: const ChartValuesOptions(
-                                  showChartValues: false,
-                                ),
-                                legendOptions: const LegendOptions(
-                                  showLegends: false,
-                                ),
-                                centerText: '',
-                                ringStrokeWidth: 50,
-                              ),
-                            )
-                          ],
+                                );
+                              }),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    // SizedBox(
-                    //   height: 240,
-                    //   child: PageView(
-                    //     controller: _pageController,
-                    //     children: [
-                    //       _graphWidget(consultantDashboardState),
-                    //       _graphWidget(consultantDashboardState),
-                    //     ],
-                    //   ),
-                    // ),
-
-                    const SizedBox(height: 16),
-
-                    // Leave Summary
-                    // Padding(
-                    //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    //   child: Text("Leave Summary",
-                    //       style: GoogleFonts.montserrat(
-                    //           fontWeight: FontWeight.w500, fontSize: 14)),
-                    // ),
-                    // Padding(
-                    //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    //   child: Container(
-                    //     margin: const EdgeInsets.symmetric(vertical: 12),
-                    //     padding: const EdgeInsets.symmetric(vertical: 16),
-                    //     decoration: BoxDecoration(
-                    //       color: const Color(0xffE8E8E8),
-                    //       borderRadius: BorderRadius.circular(4),
-                    //     ),
-                    //     child: const Row(
-                    //       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    //       children: [
-                    //         LeaveTile(count: "15", label: "Availed"),
-                    //         LeaveTile(count: "10", label: "AL"),
-                    //         LeaveTile(count: "03", label: "MC"),
-                    //         LeaveTile(count: "02", label: "Comp Off"),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // ),
-
-                    // Claims Summary
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 10),
-                      color: const Color(0xffF2F2F2),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Claims Summary",
+                          Text(
+                              consultantDashboardState
+                                  .consultantData?['name'] ??
+                                  '',
                               style: GoogleFonts.montserrat(
+                                  fontSize: 20,
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                  color: Colors.black)),
+                                  color: const Color(0xff5A5A5A))),
                           CustomButton(
-                            isOutlined: true,
-                            height: 34,
-                            width: 91,
-                            text: "View All",
-                            icon: Icons.remove_red_eye_outlined,
+                            text: "View Dashboard",
                             onPressed: () {
-                              _showFullClaimsPopup(
-                                  context,
-                                  consultantDashboardState
-                                      .claimSummaryTableData,
-                                  heading);
+                              setState(() {
+                                showInfoSections = !showInfoSections;
+                              });
                             },
+                            height: 38,
+                            width: 151,
+                            isOutlined: true,
+                            borderRadius: 8,
+                            textStyle: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
+                            icon: showInfoSections
+                                ? Icons.keyboard_arrow_up_sharp
+                                : Icons.keyboard_arrow_down_sharp,
                           ),
                         ],
                       ),
                     ),
 
-                    CustomTableView(
-                      data: consultantDashboardState.claimSummaryTableData
-                          .take(4)
-                          .toList(),
-                      heading: heading,
-                    ),
+                    // User Greeting & Button
+                    if (showInfoSections) ...[
+                      GestureDetector(
+                        onLongPressStart: (_) => _onDashboardHoldStart(),
+                        onLongPressEnd: (_) => _onDashboardHoldEnd(),
+                        child: Column(
+                          children: [
+
+
+                            const SizedBox(height: 16),
+                            // Work Hour Log
+
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Container(
+                                height: 216,
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 15,
+                                      spreadRadius: 1,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Left side: Info
+                                    SizedBox(
+                                      height: 220,
+                                      width: 170,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text("Work Hour Log",
+                                              style: GoogleFonts.montserrat(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                  color: Colors.black)),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            alignment: Alignment.center,
+                                            height: 20,
+                                            width: 95,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              color: const Color(0xffE5F1FF),
+                                            ),
+                                            child: Text(
+                                                consultantDashboardState
+                                                        .workingLogGraphData?[
+                                                            'hours_logged']
+                                                        .toString() ??
+                                                    'N/A',
+                                                style: GoogleFonts.montserrat(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: const Color(
+                                                        0xff007BFF))),
+                                          ),
+                                          const SizedBox(height: 80),
+                                          LegendDot(
+                                              color: const Color(0xff28A745),
+                                              label:
+                                                  "Hours Logged: ${consultantDashboardState.workingLogGraphData?['hours_logged'].toString() ?? "N/A"}"),
+                                          const SizedBox(height: 8),
+                                          LegendDot(
+                                              color: const Color(0xff007BFF),
+                                              label:
+                                                  "Hours Forecasted : ${consultantDashboardState.workingLogGraphData?['hours_forecasted'].toString() ?? 'N/A'}"),
+                                        ],
+                                      ),
+                                    ),
+                                    // Right side: Pie Chart
+                                    SizedBox(
+                                      height: 220,
+                                      width: 125,
+                                      child: PieChart(
+                                        dataMap: {
+                                          "Clocked-In": (consultantDashboardState
+                                                          .workingLogGraphData?[
+                                                      'hours_logged'] ??
+                                                  0)
+                                              .toDouble(),
+                                          "Left": (consultantDashboardState
+                                                          .workingLogGraphData?[
+                                                      'hours_forecasted'] ??
+                                                  0)
+                                              .toDouble(),
+                                        },
+                                        chartType: ChartType.disc,
+                                        baseChartColor: Colors.grey[200]!,
+                                        colorList: const [
+                                          Color(0xFF28A745),
+                                          Color(0xFF007BFF),
+                                        ],
+                                        chartRadius: 160, // Bigger radius
+                                        chartValuesOptions:
+                                            const ChartValuesOptions(
+                                          showChartValues: false,
+                                        ),
+                                        legendOptions: const LegendOptions(
+                                          showLegends: false,
+                                        ),
+                                        centerText: '',
+                                        ringStrokeWidth: 50,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 10),
+                              color: const Color(0xffF2F2F2),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("Claims Summary",
+                                      style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 15,
+                                          color: Colors.black)),
+                                  CustomButton(
+                                    isOutlined: true,
+                                    height: 34,
+                                    width: 91,
+                                    text: "View All",
+                                    icon: Icons.remove_red_eye_outlined,
+                                    onPressed: () {
+                                      _showFullClaimsPopup(
+                                          context,
+                                          consultantDashboardState
+                                              .claimSummaryTableData,
+                                          heading);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            CustomTableView(
+                              data: consultantDashboardState
+                                  .claimSummaryTableData
+                                  .take(4)
+                                  .toList(),
+                              heading: heading,
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+
                     const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),

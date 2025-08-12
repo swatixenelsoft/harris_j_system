@@ -157,10 +157,10 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
                 },
               ),
               ListTile(
-                title: Text('Inactive', style: GoogleFonts.montserrat()),
+                title: Text('Disabled', style: GoogleFonts.montserrat()),
                 onTap: () {
                   setState(() {
-                    _filterStatus = 'Inactive';
+                    _filterStatus = 'Disabled';
                   });
                   Navigator.pop(context);
                 },
@@ -395,7 +395,9 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
                                                               'consultancy_status'] ==
                                                           'Active'
                                                       ? const Color(0xFFEBF9F1)
-                                                      : const Color(0xFFFBE7E8),
+                                                      :consultancy[
+                                  'consultancy_status'] ==
+                                  'Disabled'?const Color(0xffF2F2F2): const Color(0xFFFBE7E8),
                                                   borderRadius:
                                                       BorderRadius.circular(6),
                                                 ),
@@ -411,7 +413,8 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
                                                               'Active'
                                                           ? const Color(
                                                               0xFF1F9254)
-                                                          : const Color(
+                                                          :consultancy[
+                                                      'consultancy_status'] == 'Disabled'?const Color(0xff8D91A0):const Color(
                                                               0xFFF5230C),
                                                     ),
                                                     const SizedBox(width: 4),
@@ -425,7 +428,8 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
                                                                 'Active'
                                                             ? const Color(
                                                                 0xFF1F9254)
-                                                            : const Color(
+                                                            :consultancy[
+                                  'consultancy_status'] == 'Disabled'?const Color(0xff8D91A0): const Color(
                                                                 0xFFF5230C),
                                                         fontWeight:
                                                             FontWeight.bold,

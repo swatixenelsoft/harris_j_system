@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:harris_j_system/providers/country_provider.dart';
 import 'package:harris_j_system/providers/hr_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
@@ -40,21 +41,29 @@ class HrAddConsultantScreen extends ConsumerStatefulWidget {
 class _HrAddConsultantScreenState extends ConsumerState<HrAddConsultantScreen> {
   String _primaryCountryCode = '+65'; // Default country code
   String _secondaryCountryCode = '+91'; // Default country code
-  final TextEditingController _employeeName = TextEditingController();
+  final TextEditingController _firstName = TextEditingController();
+  final TextEditingController _middleName = TextEditingController();
+  final TextEditingController _lastName = TextEditingController();
   final TextEditingController _employeeCode = TextEditingController();
   final TextEditingController _uenNumber = TextEditingController();
   final TextEditingController _primaryContactPerson = TextEditingController();
   final TextEditingController _mobileNumber = TextEditingController();
   final TextEditingController _emailAddress = TextEditingController();
+  final TextEditingController _accountManagerEmailAddress = TextEditingController();
+  final TextEditingController _operatorEmailAddress = TextEditingController();
+  final TextEditingController _clientAddress = TextEditingController();
   final TextEditingController _secondaryContactPerson = TextEditingController();
   final TextEditingController _secondaryMobileNumber = TextEditingController();
   final TextEditingController _secondaryEmailAddress = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _contractPeriodController =
       TextEditingController();
+  final TextEditingController _epDateController = TextEditingController();
   final TextEditingController _joiningDateController = TextEditingController();
   final TextEditingController _lastWorkingDateController =
       TextEditingController();
+  final TextEditingController _contractRenewalDateController =
+  TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _licenseNumber = TextEditingController();
   final TextEditingController _userCredential = TextEditingController();
@@ -62,28 +71,47 @@ class _HrAddConsultantScreenState extends ConsumerState<HrAddConsultantScreen> {
   final TextEditingController _billingAmountController =
       TextEditingController();
   final TextEditingController _workingHoursController = TextEditingController();
+  final TextEditingController _salaryController = TextEditingController();
+  final TextEditingController _bonusController = TextEditingController();
+  final TextEditingController _contractPeriod = TextEditingController();
+  final TextEditingController _annualLeaveController = TextEditingController();
+  final TextEditingController _medicalLeaveController = TextEditingController();
+  final TextEditingController _paidDayOffController = TextEditingController();
+  final TextEditingController _compOffController = TextEditingController();
+  final TextEditingController _unpaidController = TextEditingController();
   String? _selectedClient = 'Not Selected';
   String? _selectedClientId;
   String? _selectedEmployeeStatus = 'Not Selected';
+  String? _selectedEpStatus = 'Not Selected';
   String? _selectedHolidayStatus = 'Not Selected';
   String? _selectedResidentialStatus = 'Not Selected';
   String? _selectedContractStatus = 'Not Selected';
   String? _selectedDesignation = 'Not Selected';
   String? selectedGender = 'Male';
+  String? selectedContract = 'no';
   String? _selectedFeeStructure = 'Not Selected';
   String? _selectedLastPaidStatus = 'Not Selected';
   String? _lastPaidDate = '';
   String? _paymentMode = '';
-  bool reset_password_value = false;
+  bool reset_password_value = true;
   dynamic _selectedImage;
 
   List<String> _clientList = [];
   List<String> _residentialStatusNames = [];
   List<Map<String, dynamic>> _rawClientList = [];
+  String? _selectedCountry = 'Not Selected';
   final List<String> _holidayList = [
     'Not Selected',
     'Holiday 1',
     'Holiday 2',
+  ];
+
+  final List<String> _epList = [
+    'Not Selected',
+    'EP',
+    'DP',
+    'Adhaar No.',
+    'NRIC'
   ];
   final List<String> _employeeStatus = [
     'Not Selected',
@@ -126,7 +154,7 @@ class _HrAddConsultantScreenState extends ConsumerState<HrAddConsultantScreen> {
   void initState() {
     print('editcons ${widget.consultancy},$_selectedImage');
     if (isEdit) {
-      _employeeName.text = widget.consultancy!['consultancy_name'] ?? '';
+      _firstName.text = widget.consultancy!['consultancy_name'] ?? '';
       _employeeCode.text = widget.consultancy!['consultancy_id'] ?? '';
 
       _confirmedAddress = widget.consultancy!['show_address_input'] ?? '';
@@ -344,20 +372,41 @@ class _HrAddConsultantScreenState extends ConsumerState<HrAddConsultantScreen> {
 
   String? validateDOBDate(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return null; // Optional field
+      return 'Date of birth is required';
     }
 
     try {
-      final startDate = DateFormat('dd/MM/yyyy').parseStrict(value.trim());
-      //
-      // if(startDate==DateFormat('dd / MM / yyyy').format(DateTime.now())){
-      //   return 'start date ';
-      // }
-      return null;
+      final inputDate = DateFormat('dd/MM/yyyy').parseStrict(value.trim());
+      final currentDate = DateTime.now();
+
+      // Check if date is in the future
+      if (inputDate.isAfter(currentDate)) {
+        return 'Date of birth cannot be in the future';
+      }
+
+      // Calculate age
+      int age = currentDate.year - inputDate.year;
+      if (currentDate.month < inputDate.month ||
+          (currentDate.month == inputDate.month && currentDate.day < inputDate.day)) {
+        age--;
+      }
+
+      if (age < 21) {
+        _ageController.text = '';
+        return 'You must be at least 21 years old';
+
+      }
+
+      // ✅ Set age without setState
+      _ageController.text = age.toString();
+      return null; // Valid DOB
     } catch (e) {
-      return 'Invalid start date format (dd/MM/yyyy)';
+      return 'Invalid date format (dd/MM/yyyy)';
     }
   }
+
+
+
 
   String? validateLicenseEndDate(String? value) {
     final startValue = _dobController.text.trim();
@@ -410,14 +459,17 @@ class _HrAddConsultantScreenState extends ConsumerState<HrAddConsultantScreen> {
   }
 
   void _submitForm() async {
+
     final prefs = await SharedPreferences.getInstance();
     int userId = prefs.getInt('userId')!;
     final token = prefs.getString('token');
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) return;
-
-    final employeeName = _employeeName.text.trim();
+    print('dgh');
+    final employeeName = _firstName.text.trim();
+    final employeeMiddleName=_middleName.text.trim();
+    final employeeLastName=_lastName.text.trim();
     final employeeCode = _employeeCode.text.trim();
     final gender = selectedGender;
     final fullAddress = isEdit
@@ -430,7 +482,7 @@ class _HrAddConsultantScreenState extends ConsumerState<HrAddConsultantScreen> {
     final age = _ageController.text.trim();
     final mobileNumber = _mobileNumber.text.trim();
     final email = _emailAddress.text.trim();
-    final inputFormat = DateFormat(
+    final inputFormat  = DateFormat(
         'dd/MM/yyyy'); // or 'MM/dd/yyyy' depending on your actual format
     final outputFormat = DateFormat('yyyy-MM-dd');
     final joiningDate =
@@ -443,64 +495,105 @@ class _HrAddConsultantScreenState extends ConsumerState<HrAddConsultantScreen> {
     final selectedEmployeeStatus = _selectedEmployeeStatus;
     final selectedHolidayProfile = _selectedHolidayStatus;
     final selectedResidential = _selectedResidentialStatus;
-    final selectedContract = _selectedContractStatus;
     final selectedDesignation = _selectedDesignation;
     final billingAmount = _billingAmountController.text.trim();
-    final workingHours = '${_workingHoursController.text.trim()} hour';
+    final workingHours = _workingHoursController.text.trim();
     final adminCredential = _userCredential.text.trim();
     final primaryCountryCode = _primaryCountryCode.trim();
     final resetPassword = reset_password_value;
     final clientName = _selectedClient;
+    final annualLeaveCount = _annualLeaveController.text.trim();
+    final medicalLeaveCount = _medicalLeaveController.text.trim();
+    final paidDayOffCount = _paidDayOffController.text.trim();
+    final compOffCount = _compOffController.text.trim();
+    final unpaidCount = _unpaidController.text.trim();
+    final operatorEmailId=_operatorEmailAddress.text.trim();
+    final salary = _salaryController.text.trim();
+    final bonus  = _bonusController.text.trim();
+    final contractRenewal=selectedContract;
+    final contractPeriod=_contractPeriodController.text.trim();
+    final contractRenewalDate=_contractRenewalDateController.text.trim();
+    final clientCountry=_selectedCountry;
+    final clientAddress=_clientAddress.text.trim();
 
     print('''
-========= Employee Form Data =========
-employeeName           : $employeeName
-employeeCode           : $employeeCode
-gender                 : $gender
-fullAddress            : $fullAddress
-showInputAddress       : $showInputAddress
-age                    : $age
-mobileNumber           : $mobileNumber
-email                  : $email
-joiningDate            : $joiningDate
-dateOfBirth            : $dateOfBirth
-endDate                : $endDate
-selectedClient         : $selectedClient
-selectedEmployeeStatus : $selectedEmployeeStatus
-selectedHolidayProfile : $selectedHolidayProfile
-selectedResidential    : $selectedResidential
-selectedContract       : $selectedContract
-selectedDesignation    : $selectedDesignation
-billingAmount          : $billingAmount
-workingHours           : $workingHours
-adminCredential        : $adminCredential
-primaryCountryCode     : $primaryCountryCode
-resetPassword          : $resetPassword
-selectedClient          : $clientName
-======== Null/Empty Check =========
-${employeeName.isEmpty ? 'employeeName is EMPTY' : ''}
-${employeeCode.isEmpty ? 'employeeCode is EMPTY' : ''}
-${gender == null ? 'gender is NULL' : ''}
-${fullAddress.isEmpty ? 'fullAddress is EMPTY' : ''}
-${age.isEmpty ? 'age is EMPTY' : ''}
-${mobileNumber.isEmpty ? 'mobileNumber is EMPTY' : ''}
-${email.isEmpty ? 'email is EMPTY' : ''}
-${joiningDate.isEmpty ? 'joiningDate is EMPTY' : ''}
-${dateOfBirth.isEmpty ? 'dateOfBirth is EMPTY' : ''}
-${endDate.isEmpty ? 'endDate is EMPTY' : ''}
-${selectedClient == null ? 'selectedClient is NULL' : ''}
-${selectedEmployeeStatus == null ? 'selectedEmployeeStatus is NULL' : ''}
-${selectedHolidayProfile == null ? 'selectedHolidayProfile is NULL' : ''}
-${selectedResidential == null ? 'selectedResidential is NULL' : ''}
-${selectedContract == null ? 'selectedContract is NULL' : ''}
-${selectedDesignation == null ? 'selectedDesignation is NULL' : ''}
-${billingAmount.isEmpty ? 'billingAmount is EMPTY' : ''}
-${workingHours.isEmpty ? 'workingHours is EMPTY' : ''}
-${adminCredential.isEmpty ? 'adminCredential is EMPTY' : ''}
-${primaryCountryCode.isEmpty ? 'primaryCountryCode is EMPTY' : ''}
-${resetPassword == null ? 'resetPassword is NULL' : ''}
-=====================================
+============= Employee Form Data =============
+
+👤 Personal Info
+First Name             : $employeeName
+Middle Name            : $employeeMiddleName
+Last Name              : $employeeLastName
+Employee Code          : $employeeCode
+Gender                 : $gender
+Date of Birth          : $dateOfBirth
+Age                    : $age
+Mobile Number          : $mobileNumber
+Email                  : $email
+
+🏢 Employment Info
+Joining Date           : $joiningDate
+Last Working Date      : $endDate
+Client ID              : $selectedClient
+Client Name            : $clientName
+Designation            : $selectedDesignation
+Employee Status        : $selectedEmployeeStatus
+Holiday Profile        : $selectedHolidayProfile
+Residential Status     : $selectedResidential
+Contract Status        : $selectedContract
+Contract Renewal       : $contractRenewal
+Contract Renewal Date  : $contractRenewalDate
+
+💵 Compensation
+Salary                 : $salary
+Bonus                  : $bonus
+Billing Amount         : $billingAmount
+Working Hours          : $workingHours
+
+📍 Address Info
+Full Address           : $fullAddress
+Show Input Address     : $showInputAddress
+Client Address         : $clientAddress
+Client Country         : $clientCountry
+
+🔐 Admin Info
+Admin Credential       : $adminCredential
+Operator Email ID      : $operatorEmailId
+Primary Country Code   : $primaryCountryCode
+Reset Password         : $resetPassword
+
+📆 Leaves
+Annual Leave Count     : $annualLeaveCount
+Medical Leave Count    : $medicalLeaveCount
+Paid Day Off Count     : $paidDayOffCount
+Comp Off Count         : $compOffCount
+Unpaid Count           : $unpaidCount
+
+============= Null/Empty Check =============
+${employeeName.isEmpty ? '⚠️ employeeName is EMPTY' : ''}
+${employeeCode.isEmpty ? '⚠️ employeeCode is EMPTY' : ''}
+${gender == null ? '⚠️ gender is NULL' : ''}
+${fullAddress.isEmpty ? '⚠️ fullAddress is EMPTY' : ''}
+${age.isEmpty ? '⚠️ age is EMPTY' : ''}
+${mobileNumber.isEmpty ? '⚠️ mobileNumber is EMPTY' : ''}
+${email.isEmpty ? '⚠️ email is EMPTY' : ''}
+${joiningDate.isEmpty ? '⚠️ joiningDate is EMPTY' : ''}
+${dateOfBirth.isEmpty ? '⚠️ dateOfBirth is EMPTY' : ''}
+${endDate.isEmpty ? '⚠️ endDate is EMPTY' : ''}
+${selectedClient == null ? '⚠️ selectedClient is NULL' : ''}
+${selectedEmployeeStatus == null ? '⚠️ selectedEmployeeStatus is NULL' : ''}
+${selectedHolidayProfile == null ? '⚠️ selectedHolidayProfile is NULL' : ''}
+${selectedResidential == null ? '⚠️ selectedResidential is NULL' : ''}
+${selectedContract == null ? '⚠️ selectedContract is NULL' : ''}
+${selectedDesignation == null ? '⚠️ selectedDesignation is NULL' : ''}
+${billingAmount.isEmpty ? '⚠️ billingAmount is EMPTY' : ''}
+${workingHours.isEmpty ? '⚠️ workingHours is EMPTY' : ''}
+${adminCredential.isEmpty ? '⚠️ adminCredential is EMPTY' : ''}
+${primaryCountryCode.isEmpty ? '⚠️ primaryCountryCode is EMPTY' : ''}
+${resetPassword == null ? '⚠️ resetPassword is NULL' : ''}
+
+============================================
 ''');
+
 
     // final
     print('isEdit $isEdit');
@@ -535,31 +628,46 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
       //     _selectedImage!,token!)
       //     :
       final response = await ref.read(hrProvider.notifier).addConsultant(
-          employeeName,
-          employeeCode,
-          gender!,
-          fullAddress,
-          showInputAddress,
-          dateOfBirth,
-          age,
-          primaryCountryCode,
-          mobileNumber,
-          email,
-          joiningDate,
-          endDate,
-          selectedClient!,
-          selectedEmployeeStatus!,
-          selectedHolidayProfile!,
-          selectedResidential!,
-          selectedContract!,
-          selectedDesignation!,
-          billingAmount,
-          workingHours,
-          adminCredential,
-          resetPassword,
-          userId,
-          _selectedImage!,
-          token!);
+        employeeName,
+        employeeMiddleName,
+        employeeLastName,
+        employeeCode,
+        gender!,
+        fullAddress,
+        showInputAddress,
+        dateOfBirth,
+        age,
+        primaryCountryCode,
+        mobileNumber,
+        email,
+        joiningDate,
+        endDate,
+        selectedClient!,
+        selectedEmployeeStatus!,
+        selectedHolidayProfile!,
+        selectedResidential!,
+        contractPeriod,
+        selectedDesignation!,
+        billingAmount,
+        workingHours,
+        adminCredential,
+        resetPassword,
+        userId,
+        _selectedImage!,
+        token!,
+        operatorEmailId,
+        salary,
+        bonus,
+        contractRenewal!,
+        contractRenewalDate,
+        clientCountry!,
+        clientAddress,
+        annualLeaveCount,
+        medicalLeaveCount,
+        paidDayOffCount,
+        compOffCount,
+        unpaidCount,
+      );
 
       if (!mounted) return;
 
@@ -592,6 +700,7 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
 
   @override
   Widget build(BuildContext context) {
+    final countryState = ref.watch(getCountryProvider);
     final isLoading = ref.watch(hrProvider).isLoading;
     return Scaffold(
       appBar: const CustomAppBar(
@@ -620,22 +729,35 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                             keyboardType: TextInputType.name,
                             padding: 0,
                             borderRadius: 8,
-                            label: ' Employee Name *',
-                            hintText: ' Employee Name *',
-                            controller: _employeeName,
+                            label: ' First Name *',
+                            hintText: ' First Name *',
+                            controller: _firstName,
                             validator: validateEmployeeName,
                             textCapitalization: TextCapitalization.words,
                           ),
                           const SizedBox(height: 12),
                           CustomTextField(
+                            keyboardType: TextInputType.name,
                             padding: 0,
                             borderRadius: 8,
-                            label: 'Employee Code *',
-                            hintText: 'Employee Code *',
-                            controller: _employeeCode,
-                            validator: validateEmployeeCode,
-                            textCapitalization: TextCapitalization.none,
+                            label: ' Middle Name *',
+                            hintText: ' Middle Name *',
+                            controller: _middleName,
+                            validator: validateEmployeeName,
+                            textCapitalization: TextCapitalization.words,
                           ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            keyboardType: TextInputType.name,
+                            padding: 0,
+                            borderRadius: 8,
+                            label: ' Last Name *',
+                            hintText: ' Last Name *',
+                            controller: _lastName,
+                            validator: validateEmployeeName,
+                            textCapitalization: TextCapitalization.words,
+                          ),
+
                           const SizedBox(height: 12),
                           Text(
                             'Sex :',
@@ -687,6 +809,16 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Employee Code *',
+                            hintText: 'Employee Code *',
+                            controller: _employeeCode,
+                            validator: validateEmployeeCode,
+                            textCapitalization: TextCapitalization.none,
                           ),
                           const SizedBox(height: 12),
                           CountryCodePhoneField(
@@ -847,7 +979,7 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                                           )),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 8),
+                                            horizontal: 8, vertical: 5),
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
@@ -955,6 +1087,148 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                                 ),
 
                           const SizedBox(height: 12),
+                          CustomDropdownField(
+                            borderRadius: 8,
+                            label: "",
+                            items: _epList,
+                            value: _selectedEpStatus,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedEpStatus = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              child: SvgPicture.asset(
+                                'assets/icons/month_calendar_icon.svg',
+                                height: 10,
+                                width: 10,
+                              ),
+                            ),
+                            borderRadius: 8,
+                            label: 'Select EP Expire date',
+                            hintText: 'Select EP Expire date',
+                            controller: _epDateController,
+                            // validator: validator,
+                            readOnly: true,
+                            enableInteractiveSelection: false,
+                            onTap: () async {
+                              FocusScope.of(context).unfocus();
+                              final selected = await CommonFunction()
+                                  .selectDate(context, _epDateController);
+                              if (selected != null) {
+                                setState(() {
+                                  _epDateController.text = selected;
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Account Manager Email ID',
+                            hintText: 'Account Manager Email ID',
+                            controller: _accountManagerEmailAddress,
+                            validator: validateEmail,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Operator Email ID',
+                            hintText: 'COperator Email ID',
+                            controller: _operatorEmailAddress,
+                            validator: validateEmail,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+
+                          const SizedBox(height: 12),
+                          CustomDropdownField(
+                            borderRadius: 8,
+                            label: "Select Client",
+                            items: ['Not Selected', ..._clientList],
+                            value: _selectedClient,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedClient = value;
+
+                                // Find the client_id for the selected client name
+                                final selectedClient =
+                                _rawClientList.firstWhere(
+                                      (item) => item['serving_client'] == value,
+                                  orElse: () => {},
+                                );
+                                _selectedClientId =
+                                    selectedClient['id'].toString() ?? null;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomDropdownField(
+                            borderRadius: 8,
+                            label: "Country *",
+                            items: ["Not Selected", ...?countryState.countryList] ?? [],
+                            value: _selectedCountry,
+                            onChanged: (value) async {
+                              setState(() {
+                                _selectedCountry = value;
+                              });
+                            },
+                            // errorText: _isSubmitted && _selectedCountry == "Not Selected"
+                            //     ? "Country is required"
+                            //     : null,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Client Address',
+                            hintText: 'Client address',
+                            controller: _clientAddress,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomDropdownField(
+                            borderRadius: 8,
+                            label: "Select Consultant Status",
+                            items: _employeeStatus,
+                            value: _selectedEmployeeStatus,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedEmployeeStatus = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomDropdownField(
+                            borderRadius: 8,
+                            label: "Select Residential Status",
+                            items: ['Not Selected', ..._residentialStatusNames],
+                            value: _selectedResidentialStatusName,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedResidentialStatusName = value;
+                                if (value == 'Not Selected') {
+                                  // handle no selection if needed
+                                } else {
+                                  // Find id for selected name
+                                  final selected =
+                                  _residentialStatusList.firstWhere(
+                                        (element) => element['name'] == value,
+                                    orElse: () => {'id': '', 'name': ''},
+                                  );
+                                  _selectedResidentialStatus = selected['id'];
+                                  print(
+                                      'Selected id: $_selectedResidentialStatus');
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
                           CustomTextField(
                             prefixIcon: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 13),
@@ -1012,88 +1286,6 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                             },
                           ),
                           const SizedBox(height: 12),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Select Client",
-                            items: ['Not Selected', ..._clientList],
-                            value: _selectedClient,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedClient = value;
-
-                                // Find the client_id for the selected client name
-                                final selectedClient =
-                                    _rawClientList.firstWhere(
-                                  (item) => item['serving_client'] == value,
-                                  orElse: () => {},
-                                );
-                                _selectedClientId =
-                                    selectedClient['id'].toString() ?? null;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Select Employment Status",
-                            items: _employeeStatus,
-                            value: _selectedEmployeeStatus,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedEmployeeStatus = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Select Holiday Profile",
-                            items: _holidayList,
-                            value: _selectedHolidayStatus,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedHolidayStatus = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Select Residential Status",
-                            items: ['Not Selected', ..._residentialStatusNames],
-                            value: _selectedResidentialStatusName,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedResidentialStatusName = value;
-                                if (value == 'Not Selected') {
-                                  // handle no selection if needed
-                                } else {
-                                  // Find id for selected name
-                                  final selected =
-                                      _residentialStatusList.firstWhere(
-                                    (element) => element['name'] == value,
-                                    orElse: () => {'id': '', 'name': ''},
-                                  );
-                                  _selectedResidentialStatus = selected['id'];
-                                  print(
-                                      'Selected id: $_selectedResidentialStatus');
-                                }
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Select Contract Period",
-                            items: _contractStatus,
-                            value: _selectedContractStatus,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedContractStatus = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
                           _buildSectionTitle('Designation',
                               const Color(0xffFF1901), FontWeight.w700),
                           const SizedBox(height: 10),
@@ -1126,6 +1318,161 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                             label: 'Enter Working Hours',
                             hintText: 'Enter Working Hours',
                             controller: _workingHoursController,
+                            keyboardType: TextInputType.number,
+                            // validator: validateEmail,
+                            // validator: validateUserIdOrEmail,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Enter Salary',
+                            hintText: 'Enter Salary',
+                            controller: _salaryController,
+                            keyboardType: TextInputType.number,
+                            // validator: validateEmail,
+                            // validator: validateUserIdOrEmail,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Enter Bonus',
+                            hintText: 'Enter Bonus',
+                            controller: _bonusController,
+                            keyboardType: TextInputType.number,
+                            // validator: validateEmail,
+                            // validator: validateUserIdOrEmail,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Contract Renewal :',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xff828282),
+                                ),
+                              ),
+                              contractOption(
+                                label: 'Yes',
+                                value: 'yes',
+                              ),
+                              contractOption(
+                                label: 'No',
+                                value: 'no',
+                              ),
+
+                            ],
+                          ),
+                         if(selectedContract=='yes')...[ CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Add Contract Period',
+                            hintText: 'Add Contract Period',
+                            controller: _contractPeriod,
+                            keyboardType: TextInputType.number,
+                            // validator: validateEmail,
+                            // validator: validateUserIdOrEmail,
+                          ),
+
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              child: SvgPicture.asset(
+                                'assets/icons/month_calendar_icon.svg',
+                                height: 10,
+                                width: 10,
+                              ),
+                            ),
+                            borderRadius: 8,
+                            label: 'Select Contract renewal Date',
+                            hintText: 'Select Contract renewal Date',
+                            controller: _contractRenewalDateController,
+                            // validator: validator,
+                            readOnly: true,
+                            enableInteractiveSelection: false,
+                            onTap: () async {
+                              FocusScope.of(context).unfocus();
+                              final selected = await CommonFunction()
+                                  .selectDate(
+                                  context, _contractRenewalDateController);
+                              if (selected != null) {
+                                setState(() {
+                                  _contractRenewalDateController.text = selected;
+                                });
+                              }
+                            },
+                          ),],
+                          const SizedBox(height: 10),
+                          _buildSectionTitle('Holiday Assigned',
+                              const Color(0xffFF1901), FontWeight.w700),
+                          const SizedBox(height: 10),
+
+                          CustomDropdownField(
+                            borderRadius: 8,
+                            label: "Select Holiday Profile",
+                            items: _holidayList,
+                            value: _selectedHolidayStatus,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedHolidayStatus = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Enter Annual Leave Count',
+                            hintText: 'Enter Annual Leave Count',
+                            controller: _annualLeaveController,
+                            keyboardType: TextInputType.number,
+                            // validator: validateEmail,
+                            // validator: validateUserIdOrEmail,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Enter Medical Leave Count',
+                            hintText: 'Enter Medical Leave Count',
+                            controller: _medicalLeaveController,
+                            keyboardType: TextInputType.number,
+                            // validator: validateEmail,
+                            // validator: validateUserIdOrEmail,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Enter Paid day off Count',
+                            hintText: 'Enter Paid day off Count',
+                            controller: _paidDayOffController,
+                            keyboardType: TextInputType.number,
+                            // validator: validateEmail,
+                            // validator: validateUserIdOrEmail,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Enter Comp off Count',
+                            hintText: 'Enter Comp off Count',
+                            controller: _compOffController,
+                            keyboardType: TextInputType.number,
+                            // validator: validateEmail,
+                            // validator: validateUserIdOrEmail,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Enter unpaid Count',
+                            hintText: 'Enter unpaid Count',
+                            controller: _unpaidController,
                             keyboardType: TextInputType.number,
                             // validator: validateEmail,
                             // validator: validateUserIdOrEmail,
@@ -1336,7 +1683,8 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
     required String label,
     required String value,
     IconData? icon,
-  }) {
+  })
+  {
     bool isSelected = selectedGender == value;
     return GestureDetector(
       onTap: () => setState(() => selectedGender = value),
@@ -1350,6 +1698,40 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
             side: const BorderSide(color: Color(0xff828282)),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              color: const Color(0xff1D212D),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Icon(icon, color: isSelected ? Colors.blue : Colors.black54),
+        ],
+      ),
+    );
+  }
+
+  Widget contractOption({
+    required String label,
+    required String value,
+    IconData? icon,
+  })
+  {
+    bool isSelected = selectedContract == value;
+    return GestureDetector(
+      onTap: () => setState(() => selectedContract = value),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Checkbox(
+            value: isSelected,
+            onChanged: (val) => setState(() => selectedContract = value),
+            activeColor: Color(0xff007BFF),
+            side: const BorderSide(color: Color(0xff828282)),
+            shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
           ),
           Text(
             label,

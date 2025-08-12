@@ -327,6 +327,31 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getBasicInfo(String token) async {
+    print('token $token');
+    try {
+      final response = await _dio.post(
+        ApiConstant.getBasic,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+        ),
+      );
+
+      print('response $response');
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response?.data ?? {'error': 'Unknown error'};
+      } else {
+        return {'error': 'No response from server'};
+      }
+    }
+  }
+
+
   Future<Map<String, dynamic>> updateBasicInfo(
     String firstName,
     String middleName,
@@ -853,32 +878,46 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> addConsultant(
-    String employeeName,
-    String employeeCode,
-    String gender,
-    String fullAddress,
-    String showInputAddress,
-    String dob,
-    String age,
-    String countryCode,
-    String primaryMobile,
-    String primaryEmail,
-    String joiningDate,
-    String endDate,
-    String client,
-    String employeeStatus,
-    String holidayProfile,
-    String residential,
-    String contractPeriod,
-    String designation,
-    String billingAmount,
-    String workingHours,
-    String adminEmail,
-    bool resetPassword,
-    int userId,
-    File consultantImage,
-    String token, // Path to the image file
-  ) async {
+      String employeeName,
+      String employeeMiddleName,
+      String employeeLastName,
+      String employeeCode,
+      String gender,
+      String fullAddress,
+      String showInputAddress,
+      String dob,
+      String age,
+      String countryCode,
+      String primaryMobile,
+      String primaryEmail,
+      String joiningDate,
+      String endDate,
+      String client,
+      String employeeStatus,
+      String holidayProfile,
+      String residential,
+      String contractPeriod,
+      String designation,
+      String billingAmount,
+      String workingHours,
+      String adminEmail,
+      bool resetPassword,
+      int userId,
+      File consultantImage,
+      String token,
+      String operatorEmailId,
+      String salary,
+      String bonus,
+      String contractRenewal,
+      String contractRenewalDate,
+      String clientCountry,
+      String clientAddress,
+      String annualLeaveCount,
+      String medicalLeaveCount,
+      String paidDayOffCount,
+      String compOffCount,
+      String unpaidCount,
+      ) async {
     try {
       FormData formData = FormData.fromMap({
         'emp_name': employeeName,
@@ -892,7 +931,7 @@ class ApiService {
         'email': primaryEmail,
         'joining_date': joiningDate,
         'resignation_date': endDate,
-        'status': employeeStatus,
+        'status': 'Active',
         'select_holiday': holidayProfile,
         'designation': designation,
         'residential_status': residential,

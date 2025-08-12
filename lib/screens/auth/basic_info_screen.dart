@@ -19,6 +19,7 @@ import 'package:harris_j_system/widgets/custom_phone_number_field.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BasicInformationScreen extends ConsumerStatefulWidget {
   const BasicInformationScreen({super.key});
@@ -31,9 +32,12 @@ class BasicInformationScreen extends ConsumerStatefulWidget {
 class _BasicInformationScreenState
     extends ConsumerState<BasicInformationScreen> {
   final _formKey = GlobalKey<FormState>();
+  String _primaryCountryCode = '+65';
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _middleNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _citizenController = TextEditingController();
+  final TextEditingController _nationalityController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _contactNumberController =
@@ -49,6 +53,67 @@ class _BasicInformationScreenState
 
   File? _selectedImage;
   File? _selectedResume;
+  String? token;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getBasicInfo();
+    });
+  }
+
+  Future<void> getBasicInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+
+    final response = await ref.read(consultantProvider.notifier).getBasicInfo(token!);
+
+    if (response['success'] == true) {
+      final data = response['data'];
+
+      if (data['dob'] != null && data['dob'].toString().isNotEmpty) {
+        try {
+          DateTime parsedDate = DateTime.parse(data['dob']);
+          _dobController.text = DateFormat('dd/MM/yyyy').format(parsedDate);
+        } catch (e) {
+          _dobController.text = '';
+        }
+      } else {
+        _dobController.text = '';
+      }
+
+      // Text Controllers
+      _firstNameController.text = data['first_name'] ?? '';
+      _middleNameController.text = data['middle_name'] ?? '';
+      _lastNameController.text = data['last_name'] ?? '';
+      _addressController.text = data['address_by_user'] ?? '';
+      _contactNumberController.text = data['mobile_number'] ?? '';
+      _citizenController.text = data['citizen'] ?? '';
+      _nationalityController.text = data['nationality'] ?? '';
+      _resumeController.text = data['resume_file'] != null
+          ? data['resume_file'].toString().split('/').last
+          : '';
+
+      // Dropdown / selection variables
+      // _selectedCitizenType = data['citizen'] ?? 'Not Selected';
+      // _selectedNationalityType = data['nationality'] ?? 'Not Selected';
+
+      // Files
+      if (data['profile_image'] != null) {
+        _selectedImage = File(data['profile_image']);
+        // You might need to handle network image separately if this is just a path
+      }
+
+      if (data['resume_file'] != null) {
+        _selectedResume = File(data['resume_file']);
+        // Again, handle if it's a remote file (download or show name only)
+      }
+
+      setState(() {}); // Refresh UI
+    }
+  }
+
 
   // ✅ Name Validation
   String? _validateName(String? value) {
@@ -123,66 +188,82 @@ class _BasicInformationScreenState
 
   // ✅ Phone number Validation
   void _validateAndSubmit() async {
-    setState(() {
-      _citizenError = _selectedCitizenType == "Not Selected"
-          ? "Citizenship is required"
-          : null;
-      _nationalityError = _selectedNationalityType == "Not Selected"
-          ? "Nationality is required"
-          : null;
-    });
-
     final firstName = _firstNameController.text.trim();
     final middleName = _middleNameController.text.trim();
     final lastName = _lastNameController.text.trim();
     final dob = _dobController.text.trim();
-    final selectedCitizen = _selectedCitizenType;
-    final selectedNationality = _selectedNationalityType;
+    final selectedCitizen = _citizenController.text.trim();
+    final selectedNationality = _nationalityController.text.trim();
     final address = _addressController.text.trim();
     final mobileNumber = _contactNumberController.text.trim();
 
-    if (_formKey.currentState!.validate() &&
-        _citizenError == null &&
-        _nationalityError == null &&
-        _selectedImage == null) {
+    // 1️⃣ Validate form fields
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // 2️⃣ Check required files
+    if (_selectedImage == null) {
+      ToastHelper.showError(context, 'Please select a profile image');
+      return;
+    }
+
+    if (_selectedResume == null) {
+      ToastHelper.showError(context, 'Please upload a resume file');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    // 🔍 Debug print all values
+    print('--- BASIC INFO FORM DATA ---');
+    print('First Name: ${firstName.isEmpty ? "NULL" : firstName}');
+    print('Middle Name: ${middleName.isEmpty ? "NULL" : middleName}');
+    print('Last Name: ${lastName.isEmpty ? "NULL" : lastName}');
+    print('DOB: ${dob.isEmpty ? "NULL" : dob}');
+    print('Citizen: ${selectedCitizen.isEmpty ? "NULL" : selectedCitizen}');
+    print('Nationality: ${selectedNationality.isEmpty ? "NULL" : selectedNationality}');
+    print('Address: ${address.isEmpty ? "NULL" : address}');
+    print('Mobile Number: ${mobileNumber.isEmpty ? "NULL" : mobileNumber}');
+    print('Selected Image: $_selectedImage');
+    print('Selected Resume: $_selectedResume');
+    print('Token: ${token ?? "NULL"}');
+    print('---------------------------');
+
+    try {
+      final response = await ref.read(consultantProvider.notifier).updateBasicInfo(
+        firstName,
+        middleName,
+        lastName,
+        dob,
+        selectedCitizen,
+        selectedNationality,
+        address,
+        mobileNumber,
+        _selectedImage!,
+        _selectedResume!,
+        token!,
+      );
+
       setState(() {
-        _isLoading = true;
+        _isLoading = false;
       });
 
-      try {
-        final response =
-            await ref.read(consultantProvider.notifier).updateBasicInfo(
-                  firstName,
-                  middleName,
-                  lastName,
-                  dob,
-                  selectedCitizen!,
-                  selectedNationality!,
-                  address,
-                  mobileNumber,
-                  _selectedImage!,
-                  _selectedResume!,
-                  '',
-                );
+      ToastHelper.showSuccess(context, 'Basic information updated successfully!');
+      context.pushReplacement(Constant.consultantDashBoardScreen);
 
-        // If successful
-        setState(() {
-          _isLoading = false;
-        });
-
-        ToastHelper.showSuccess(
-            context, 'Basic information updated successfully!');
-        context.pushReplacement(
-            Constant.consultantDashBoardScreen); // Or desired screen
-      } catch (e) {
-        print('eror chat $e');
-        setState(() {
-          _isLoading = false;
-        });
-        ToastHelper.showError(context, 'Failed to update. Please try again.');
-      }
+    } catch (e) {
+      print('Error in updateBasicInfo: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      ToastHelper.showError(context, 'Failed to update. Please try again.');
     }
   }
+
+
 
   String? _validateResume(String? value) {
     if (value == null || value.isEmpty) {
@@ -365,41 +446,59 @@ class _BasicInformationScreenState
                   },
                 ),
                 const SizedBox(height: 15),
-                CustomDropdownField(
-                  label: "Citizen/SPR/EP",
-                  items: const ["Not Selected", "Citizen", "SPR", "EP"],
-                  value: _selectedCitizenType,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCitizenType = value;
-                    });
-                  },
-                  errorText:
-                      _isSubmitted && _selectedCitizenType == "Not Selected"
-                          ? "Citizenship is required"
-                          : null,
+                CustomTextField(
+                  label: 'Citizen',
+                  hintText: 'Enter Citizen',
+                  controller: _citizenController,
+                  // validator: _validateLastName,
+                  keyboardType: TextInputType.name,
+                  textCapitalization: TextCapitalization.sentences,
+                  autoValidateMode: AutovalidateMode.onUserInteraction,
                 ),
+                // CustomDropdownField(
+                //   label: "Citizen/SPR/EP",
+                //   items: const ["Not Selected", "Citizen", "SPR", "EP"],
+                //   value: _selectedCitizenType,
+                //   onChanged: (value) {
+                //     setState(() {
+                //       _selectedCitizenType = value;
+                //     });
+                //   },
+                //   errorText:
+                //       _isSubmitted && _selectedCitizenType == "Not Selected"
+                //           ? "Citizenship is required"
+                //           : null,
+                // ),
                 const SizedBox(height: 15),
-                CustomDropdownField(
-                  label: "Nationality",
-                  items: const [
-                    "Not Selected",
-                    "Indian",
-                    "American",
-                    "British",
-                    "Canadian"
-                  ],
-                  value: _selectedNationalityType,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedNationalityType = value;
-                    });
-                  },
-                  errorText:
-                      _isSubmitted && _selectedNationalityType == "Not Selected"
-                          ? "Nationality is required"
-                          : null,
+                CustomTextField(
+                  label: 'Nationality',
+                  hintText: 'Enter nationality',
+                  controller: _nationalityController,
+                  // validator: _validateLastName,
+                  keyboardType: TextInputType.name,
+                  textCapitalization: TextCapitalization.sentences,
+                  autoValidateMode: AutovalidateMode.onUserInteraction,
                 ),
+                // CustomDropdownField(
+                //   label: "Nationality",
+                //   items: const [
+                //     "Not Selected",
+                //     "Indian",
+                //     "American",
+                //     "British",
+                //     "Canadian"
+                //   ],
+                //   value: _selectedNationalityType,
+                //   onChanged: (value) {
+                //     setState(() {
+                //       _selectedNationalityType = value;
+                //     });
+                //   },
+                //   errorText:
+                //       _isSubmitted && _selectedNationalityType == "Not Selected"
+                //           ? "Nationality is required"
+                //           : null,
+                // ),
                 const SizedBox(height: 15),
                 CustomTextField(
                   label: 'Address',

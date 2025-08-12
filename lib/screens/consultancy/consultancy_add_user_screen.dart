@@ -50,17 +50,21 @@ class _ConsultancyAddUserScreen
   final TextEditingController _licenseNumber = TextEditingController();
   final TextEditingController _userCredential = TextEditingController();
   final TextEditingController _passwordCredential = TextEditingController();
+  final TextEditingController _departmentCredential = TextEditingController();
+  final TextEditingController _joiningDateController = TextEditingController();
+  final TextEditingController _lastWorkingDateController =
+  TextEditingController();
   String? _selectedUser = 'Not Selected';
   String? _selectedDesignation = 'Not Selected';
   String? selectedGender = 'Male';
-  bool reset_password_value = false;
+  bool reset_password_value = true;
   dynamic _selectedImage;
   final List<String> _userList = ['Not Selected', 'Active', 'Disabled'];
   final List<String> _designation = [
     'Not Selected',
-    'Designation1',
-    'Designation2',
+    'Finance',
     'HR',
+    'Operator'
   ];
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   dynamic _confirmedAddress;
@@ -272,18 +276,36 @@ class _ConsultancyAddUserScreen
 
   String? validateDOBDate(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return null; // Optional field
+      return 'Date of birth is required';
     }
 
     try {
-      final startDate = DateFormat('dd/MM/yyyy').parseStrict(value.trim());
-      //
-      // if(startDate==DateFormat('dd / MM / yyyy').format(DateTime.now())){
-      //   return 'start date ';
-      // }
-      return null;
+      final inputDate = DateFormat('dd/MM/yyyy').parseStrict(value.trim());
+      final currentDate = DateTime.now();
+
+      // Check if date is in the future
+      if (inputDate.isAfter(currentDate)) {
+        return 'Date of birth cannot be in the future';
+      }
+
+      // Calculate age
+      int age = currentDate.year - inputDate.year;
+      if (currentDate.month < inputDate.month ||
+          (currentDate.month == inputDate.month && currentDate.day < inputDate.day)) {
+        age--;
+      }
+
+      if (age < 21) {
+        _ageController.text = '';
+        return 'You must be at least 21 years old';
+
+      }
+
+      // ✅ Set age without setState
+      _ageController.text = age.toString();
+      return null; // Valid DOB
     } catch (e) {
-      return 'Invalid start date format (dd/MM/yyyy)';
+      return 'Invalid date format (dd/MM/yyyy)';
     }
   }
 
@@ -870,6 +892,71 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                               setState(() {
                                 _selectedDesignation = value;
                               });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            padding: 0,
+                            borderRadius: 8,
+                            label: 'Department',
+                            hintText: 'Department',
+                            controller: _departmentCredential,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              child: SvgPicture.asset(
+                                'assets/icons/month_calendar_icon.svg',
+                                height: 10,
+                                width: 10,
+                              ),
+                            ),
+                            borderRadius: 8,
+                            label: 'Start Date / Joining Date',
+                            hintText: 'Start Date / Joining Date',
+                            controller: _joiningDateController,
+                            // validator: validator,
+                            readOnly: true,
+                            enableInteractiveSelection: false,
+                            onTap: () async {
+                              FocusScope.of(context).unfocus();
+                              final selected = await CommonFunction()
+                                  .selectDate(context, _joiningDateController);
+                              if (selected != null) {
+                                setState(() {
+                                  _joiningDateController.text = selected;
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextField(
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              child: SvgPicture.asset(
+                                'assets/icons/month_calendar_icon.svg',
+                                height: 10,
+                                width: 10,
+                              ),
+                            ),
+                            borderRadius: 8,
+                            label: 'Select Expire / Last working date',
+                            hintText: 'Select Expire / Last working date',
+                            controller: _lastWorkingDateController,
+                            // validator: validator,
+                            readOnly: true,
+                            enableInteractiveSelection: false,
+                            onTap: () async {
+                              FocusScope.of(context).unfocus();
+                              final selected = await CommonFunction()
+                                  .selectDate(
+                                  context, _lastWorkingDateController);
+                              if (selected != null) {
+                                setState(() {
+                                  _lastWorkingDateController.text = selected;
+                                });
+                              }
                             },
                           ),
                           const SizedBox(height: 12),

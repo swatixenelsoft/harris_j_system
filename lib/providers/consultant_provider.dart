@@ -115,6 +115,41 @@ class GetConsultantNotifier extends StateNotifier<GetConsultantState> {
 
   GetConsultantNotifier(this.apiService) : super(GetConsultantState());
 
+
+  Future<Map<String,dynamic>> getBasicInfo(String token) async {
+    state = state.copyWith(isLoading: true, error: null);
+    print('vghgj');
+
+    try {
+      final response = await apiService.getBasicInfo(token);
+
+      final bool status = response['success'] ?? false;
+      if (status) {
+
+        state = state.copyWith(isLoading: false, basicInfo: response['data']);
+
+        return response;
+        print('basicinfostate ${state.basicInfo}');
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: response['message'] ?? 'Unknown error',
+        );
+        return response;
+      }
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        error: error.toString(),
+      );
+      return {
+        "success": false,
+        "message": error.toString()
+        // Add other default values as per your model
+      };
+    }
+  }
+
   Future<Map<String, dynamic>> updateBasicInfo(
     String firstName,
     String middleName,
