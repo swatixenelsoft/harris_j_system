@@ -11,7 +11,88 @@ import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:harris_j_system/widgets/custom_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/providers/finance_provider.dart';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
 
+// -------------------- TOAST HELPER --------------------
+class ToastHelper {
+  static void showSuccess(BuildContext context, String message) {
+    _showCustomToast(
+      context,
+      message,
+      icon: Icons.check_circle,
+      iconColor: Colors.green,
+      containerColor: Colors.green.shade100,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  static void showError(BuildContext context, String message) {
+    _showCustomToast(
+      context,
+      message,
+      icon: Icons.error,
+      iconColor: Colors.red,
+      containerColor: Colors.red.shade100,
+      duration: const Duration(seconds: 4),
+    );
+  }
+
+  static void showInfo(BuildContext context, String message) {
+    _showCustomToast(
+      context,
+      message,
+      icon: Icons.info,
+      iconColor: Colors.blue,
+      containerColor: Colors.blue.shade100,
+      duration: const Duration(seconds: 3),
+    );
+  }
+
+  static void _showCustomToast(
+      BuildContext context,
+      String message, {
+        required IconData icon,
+        required Color iconColor,
+        required Color containerColor,
+        required Duration duration,
+      }) {
+    DelightToastBar(
+      builder: (context) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+          decoration: BoxDecoration(
+            color: containerColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: iconColor, size: 20),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  message,
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      position: DelightSnackbarPosition.bottom,
+      autoDismiss: true,
+      snackbarDuration: duration,
+    ).show(context);
+  }
+}
+
+// -------------------- MAIN SCREEN --------------------
 class FinanceEditGroupScreen extends ConsumerStatefulWidget {
   final String groupName;
   final Map<String, dynamic> groupData;
@@ -23,10 +104,12 @@ class FinanceEditGroupScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<FinanceEditGroupScreen> createState() => _FinanceEditGroupScreenState();
+  ConsumerState<FinanceEditGroupScreen> createState() =>
+      _FinanceEditGroupScreenState();
 }
 
-class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen> {
+class _FinanceEditGroupScreenState
+    extends ConsumerState<FinanceEditGroupScreen> {
   final TextEditingController groupNameController = TextEditingController();
   List<Map<String, dynamic>> clientList = [];
   List<Map<String, String>> consultantList = [];
@@ -42,23 +125,19 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
   @override
   void initState() {
     super.initState();
-    debugPrint('Init groupData: ${widget.groupData}');
-    groupNameController.text = widget.groupName.isNotEmpty ? widget.groupName : '';
+    groupNameController.text =
+    widget.groupName.isNotEmpty ? widget.groupName : '';
     groupId = widget.groupData['id']?.toString();
     selectedClientId = widget.groupData['client_id']?.toString();
     selectedClientName = widget.groupData['client_name']?.toString() ?? '';
-    selectedConsultants = (widget.groupData['consultants'] as List<dynamic>?)?.cast<String>() ?? [];
+    selectedConsultants =
+        (widget.groupData['consultants'] as List<dynamic>?)
+            ?.cast<String>() ??
+            [];
 
     if (groupId == null || selectedClientId == null) {
-      debugPrint('Error: Missing groupId or clientId');
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid group data provided'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        ToastHelper.showError(context, 'Invalid group data provided');
       });
     }
 
@@ -71,16 +150,13 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
   }
 
   Future<void> fetchClients() async {
-    setState(() {
-      isClientLoading = true;
-    });
+    setState(() => isClientLoading = true);
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
-    debugPrint('Fetching clients with token: $token');
-    final response = await ref.read(financeProvider.notifier).clientList(token);
+    final response =
+    await ref.read(financeProvider.notifier).clientList(token);
 
-    debugPrint('Client response: $response');
     if (response['success'] == true && response['data'] != null) {
       final data = response['data'] as List<dynamic>;
       setState(() {
@@ -91,24 +167,16 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
                 (client) => client['id'].toString() == selectedClientId,
             orElse: () => {'serving_client': selectedClientName},
           );
-          selectedClientName = selectedClient['serving_client']?.toString() ?? selectedClientName;
+          selectedClientName =
+              selectedClient['serving_client']?.toString() ??
+                  selectedClientName;
         }
       });
     } else {
-      setState(() {
-        isClientLoading = false;
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message'] ?? 'Failed to load clients'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      });
+      setState(() => isClientLoading = false);
+      ToastHelper.showError(
+          context, response['message'] ?? 'Failed to load clients');
     }
-    debugPrint('Updated clientList: ${clientList.length}, selectedClientName: $selectedClientName');
   }
 
   Future<void> fetchConsultantsByClient(String clientId) async {
@@ -119,10 +187,10 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
-    debugPrint('Fetching consultants for clientId: $clientId');
-    final response = await ref.read(financeProvider.notifier).getConsultantsByClientFinance(clientId, token);
+    final response = await ref
+        .read(financeProvider.notifier)
+        .getConsultantsByClientFinance(clientId, token);
 
-    debugPrint('Consultant response: $response');
     if (response['status'] == true && response['data'] != null) {
       final List<dynamic> consultants = response['data'];
       setState(() {
@@ -132,7 +200,10 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
             'emp_name': e['emp_name'] ?? '',
           };
         }).toList();
-        selectedConsultants = selectedConsultants.where((name) => consultantList.any((c) => c['emp_name'] == name)).toList();
+        selectedConsultants = selectedConsultants
+            .where((name) =>
+            consultantList.any((c) => c['emp_name'] == name))
+            .toList();
         isConsultantLoading = false;
       });
     } else {
@@ -140,42 +211,29 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
         consultantList = [];
         isConsultantLoading = false;
       });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message'] ?? 'Failed to load consultants'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      });
+      ToastHelper.showError(
+          context, response['message'] ?? 'Failed to load consultants');
     }
-    debugPrint('Updated consultantList: ${consultantList.length}, selectedConsultants: $selectedConsultants');
   }
 
   Future<void> handleSave() async {
     final groupName = groupNameController.text.trim();
-    if (selectedClientId == null || groupName.isEmpty || selectedConsultants.isEmpty || groupId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill all fields'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
+    if (selectedClientId == null ||
+        groupName.isEmpty ||
+        selectedConsultants.isEmpty ||
+        groupId == null) {
+      ToastHelper.showError(context, 'Please fill all fields');
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
-    debugPrint('Saving group: clientId=$selectedClientId, groupName=$groupName, consultants=$selectedConsultants, groupId=$groupId');
 
-    setState(() {
-      isClientLoading = true;
-    });
+    setState(() => isClientLoading = true);
 
     final selectedConsultantIds = consultantList
-        .where((consultant) => selectedConsultants.contains(consultant['emp_name']))
+        .where((consultant) =>
+        selectedConsultants.contains(consultant['emp_name']))
         .map((e) => e['id']!)
         .toList();
 
@@ -187,19 +245,10 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
       groupId: groupId!,
     );
 
-    debugPrint('Edit group response: $response');
-    setState(() {
-      isClientLoading = false;
-    });
+    setState(() => isClientLoading = false);
 
-    if (response['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Group updated successfully'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 1),
-        ),
-      );
+    if (response['success'] == true || response['status'] == true) {
+      ToastHelper.showSuccess(context, 'Group updated successfully');
       await Future.delayed(const Duration(seconds: 1));
       if (mounted) {
         Navigator.of(context).pop({
@@ -211,74 +260,43 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
         });
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response['message'] ?? 'Failed to update group'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      ToastHelper.showError(
+          context, response['message'] ?? 'Failed to update group');
     }
   }
 
   Future<void> handleDelete() async {
     if (groupId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid group ID'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      ToastHelper.showError(context, 'Invalid group ID');
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
-    debugPrint('Deleting group: groupId=$groupId');
 
-    setState(() {
-      isClientLoading = true;
-    });
+    setState(() => isClientLoading = true);
 
-    final response = await ref.read(financeProvider.notifier).deleteGroupFinance(
-      token: token,
-      groupId: groupId!,
-    );
+    final response = await ref
+        .read(financeProvider.notifier)
+        .deleteGroupFinance(token: token, groupId: groupId!);
 
-    debugPrint('Delete group response: $response');
-    setState(() {
-      isClientLoading = false;
-    });
+    setState(() => isClientLoading = false);
 
     if (response['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Group deleted successfully'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 1),
-        ),
-      );
+      ToastHelper.showSuccess(context, 'Group deleted successfully');
       await Future.delayed(const Duration(seconds: 1));
       if (mounted) {
         Navigator.of(context).pop();
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response['message'] ?? 'Failed to delete group'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      ToastHelper.showError(
+          context, response['message'] ?? 'Failed to delete group');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     ref.watch(financeProvider);
-    debugPrint('Building UI, isClientLoading: $isClientLoading, isConsultantLoading: $isConsultantLoading, selectedClientName: $selectedClientName, selectedConsultants: $selectedConsultants');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -315,9 +333,7 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
+                        onTap: () => Navigator.of(context).pop(),
                         child: SvgPicture.asset(
                           'assets/icons/back.svg',
                           height: 15,
@@ -365,20 +381,20 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
                   const SizedBox(height: 6),
                   Consumer(
                     builder: (context, ref, child) {
-                      debugPrint('Client dropdown rebuild, clientList: ${clientList.length}, selectedClientName: $selectedClientName');
                       return isClientLoading
-                          ? const Center(child: CustomLoader(color: Color(0xffFF1901), size: 25))
+                          ? const Center(
+                          child: CustomLoader(
+                              color: Color(0xffFF1901), size: 25))
                           : clientList.isEmpty
                           ? const Text(
                         'No clients available',
                         style: TextStyle(color: Colors.grey),
                       )
                           : CustomClientDropdown(
-                        key: ValueKey(selectedClientName), // Force rebuild
+                        key: ValueKey(selectedClientName),
                         clients: clientList,
                         initialClientName: selectedClientName,
                         onChanged: (clientName, clientId) {
-                          debugPrint('Client selected: $clientName, $clientId');
                           setState(() {
                             selectedClientName = clientName;
                             selectedClientId = clientId;
@@ -399,30 +415,28 @@ class _FinanceEditGroupScreenState extends ConsumerState<FinanceEditGroupScreen>
                     useUnderlineBorder: false,
                     padding: 0,
                     borderRadius: 12,
-                    onChanged: (value) {
-                      debugPrint('Group name updated: $value');
-                      setState(() {});
-                    },
                   ),
                   const SizedBox(height: 20),
                   Consumer(
                     builder: (context, ref, child) {
-                      debugPrint('Consultant dropdown rebuild, consultantList: ${consultantList.length}, selectedConsultants: $selectedConsultants');
                       return isConsultantLoading
-                          ? const Center(child: CustomLoader(color: Color(0xffFF1901), size: 25))
+                          ? const Center(
+                          child: CustomLoader(
+                              color: Color(0xffFF1901), size: 25))
                           : consultantList.isEmpty
                           ? const Text(
                         'No consultants available',
                         style: TextStyle(color: Colors.grey),
                       )
                           : SimpleTapMultiSelectDropdown(
-                        key: ValueKey(selectedConsultants.join()), // Force rebuild
+                        key: ValueKey(selectedConsultants.join()),
                         label: 'Consultants',
                         hint: 'Select consultants',
-                        items: consultantList.map((e) => e['emp_name']!).toList(),
+                        items: consultantList
+                            .map((e) => e['emp_name']!)
+                            .toList(),
                         selectedItems: selectedConsultants,
                         onChanged: (newList) {
-                          debugPrint('Selected consultants updated: $newList');
                           setState(() {
                             selectedConsultants = newList;
                           });
