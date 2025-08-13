@@ -278,7 +278,7 @@ class GetConsultantNotifier extends StateNotifier<GetConsultantState> {
       print('token $token,$month,$year');
       final consultantTimeSheetResponse =
           await apiService.consultantLeaveWorkLog(token, month, year);
-
+      log('payOffLog ${consultantTimeSheetResponse}');
       state = state.copyWith(
         isLoading: false,
         isEditable: false,

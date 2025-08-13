@@ -230,40 +230,99 @@ class _HrConsultantTimeSheetScreenState
       fetchData();
     });
   }
-
   Map<DateTime, CalendarData> parseTimelineData(List<dynamic> apiResponse) {
     final Map<DateTime, CalendarData> data = {};
 
-    if ((apiResponse).isNotEmpty) {
+    if (apiResponse.isNotEmpty) {
       final days = apiResponse;
 
       for (var dayData in days) {
         final details = dayData['record'] ?? {};
-        final dateStr = details['applyOnCell']; // e.g., "05 / 05 / 2025"
+        final dateStr = details['applyOnCell'];
         if (dateStr == null) continue;
+
         final parts = dateStr.split(' / ');
-        final day = int.tryParse(parts[0] ?? '');
-        final month = int.tryParse(parts[1] ?? '');
-        final year = int.tryParse(parts[2] ?? '');
+        if (parts.length != 3) continue;
+
+        final day = int.tryParse(parts[0].trim());
+        final month = int.tryParse(parts[1].trim());
+        final year = int.tryParse(parts[2].trim());
         if (day == null || month == null || year == null) continue;
 
         final dateKey = DateTime(year, month, day);
 
+        print('details $details');
+
         // Leave case
         if (details.containsKey('leaveType') && details['leaveType'] != null) {
-          final leaveType = details['leaveType'];
-          data[dateKey] = CalendarData(
-            widget: Text(
-              leaveType,
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xff007BFF),
+          final leaveType = details['leaveType'].toString();
+          final leaveHour = details['leaveHour']?.toString();
+
+          bool isCustom = leaveType.startsWith('Custom');
+          String shortLeaveType = isCustom
+              ? leaveType.replaceFirst('Custom', '').toUpperCase()
+              : leaveType.toUpperCase();
+
+          String? suffix;
+          if (leaveHour == 'First half workday (HD1)') {
+            suffix = 'HD1';
+          } else if (leaveHour == 'Second half workday (HD2)') {
+            suffix = 'HD2';
+          } else if (isCustom || leaveHour?.toLowerCase() == 'custom') {
+            suffix = 'cust';
+          }
+
+          // Show RichText if Custom or ML/AL with suffix
+          if (isCustom ||
+              ((shortLeaveType == 'ML' || shortLeaveType == 'AL') &&
+                  suffix != null)) {
+            data[dateKey] = CalendarData(
+              widget: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: shortLeaveType,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xff007BFF),
+                      ),
+                    ),
+                    WidgetSpan(
+                      child: Transform.translate(
+                        offset: const Offset(-2, -6),
+                        child: Text(
+                          suffix!,
+                          textScaleFactor: 0.7,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 9, // same as your first function
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xff007BFF),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            type: 'leave',
-          );
+              type: 'leave',
+            );
+          } else {
+            // Regular leave text
+            data[dateKey] = CalendarData(
+              widget: Text(
+                shortLeaveType,
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xff007BFF),
+                ),
+              ),
+              type: 'leave',
+            );
+          }
         }
+
         // Work case
         else if (details.containsKey('workingHours') &&
             details['workingHours'] != null) {
@@ -274,7 +333,7 @@ class _HrConsultantTimeSheetScreenState
               style: GoogleFonts.montserrat(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: int.parse(workingHours) != 8
+                color: int.tryParse(workingHours) != 8
                     ? const Color(0xffFF1901)
                     : const Color(0xff000000),
               ),
@@ -287,6 +346,8 @@ class _HrConsultantTimeSheetScreenState
 
     return data;
   }
+
+
 
   @override
   Widget build(BuildContext context) {

@@ -668,7 +668,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               },
 
               child: Container(
-                padding: const EdgeInsets.only(top: 6, left: 10),
+                padding: const EdgeInsets.only(top: 5, left: 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border(

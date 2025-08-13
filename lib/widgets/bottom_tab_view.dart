@@ -343,6 +343,7 @@ class _BottomTabViewState extends State<BottomTabView> {
                       // Determine which list to use based on _selectedIndex
                       child: Builder(
                         builder: (context) {
+
                           final list = _selectedIndex == 4
                               ? getCopies
                               : _selectedIndex == 0
@@ -855,7 +856,7 @@ class _BottomTabViewState extends State<BottomTabView> {
   }
 
   Widget _buildPayOffItem(dynamic remark) {
-    print('remark $remark');
+    print('remark111 $remark');
     return TimelineTile(
       alignment: TimelineAlign.start,
       beforeLineStyle: const LineStyle(thickness: 2, color: Colors.white),
@@ -997,7 +998,7 @@ class _BottomTabViewState extends State<BottomTabView> {
                   ),
                 ),
                 const SizedBox(width: 5),
-                Container(
+               if(remark["label"]=='') Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 2, horizontal: 3),
                   decoration: BoxDecoration(
@@ -1005,7 +1006,7 @@ class _BottomTabViewState extends State<BottomTabView> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    remark["label"]!,
+                    remark["label"]??'',
                     style: GoogleFonts.montserrat(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
