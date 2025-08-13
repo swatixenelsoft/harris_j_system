@@ -11,6 +11,7 @@ import 'package:harris_j_system/widgets/custom_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_search_dropdown.dart';
 import '../../providers/finance_provider.dart';
+import 'package:harris_j_system/ulits/toast_helper.dart'; // Make sure you add your ToastHelper import
 
 class FinanceAddGroupScreen extends ConsumerStatefulWidget {
   const FinanceAddGroupScreen({super.key});
@@ -50,7 +51,6 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
       error = null;
     });
 
-    print('loading');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
     final response = await ref.read(financeProvider.notifier).clientList(token);
@@ -62,7 +62,6 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
         isClientLoading = false;
       });
       ref.read(financeProvider.notifier).setLoading(false);
-      print('clientList: $clientList');
     } else {
       setState(() {
         isClientLoading = false;
@@ -87,6 +86,9 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
         .getConsultantsByClientFinance(clientId, token);
 
     final bool status = response['status'] ?? false;
+    print(" status value: $status");
+    print(" response: $response");
+
 
     if (status && response['data'] != null) {
       final List<dynamic> consultants = response['data'];
@@ -97,7 +99,6 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
             'emp_name': e['emp_name'] ?? '',
           };
         }).toList();
-        debugPrint("herrere ${consultantList}");
         isConsultantLoading = false;
       });
     } else {
@@ -108,18 +109,13 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
     }
   }
 
-  Future<void> handleSave() async   {
+  Future<void> handleSave() async {
     final groupName = groupNameController.text.trim();
 
     if (selectedClientId == null ||
         groupName.isEmpty ||
         selectedConsultants.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill all fields'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ToastHelper.showError(context, 'Please fill all fields');
       return;
     }
 
@@ -131,7 +127,8 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
     });
 
     // Map selected consultant names to their IDs
-    final selectedConsultantIds = consultantList.where((consultant) =>
+    final selectedConsultantIds = consultantList
+        .where((consultant) =>
         selectedConsultants.contains(consultant['emp_name']))
         .map((e) => e['id']!)
         .toList();
@@ -147,35 +144,17 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
       isClientLoading = false;
     });
 
-    if (response['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Group created successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      groupNameController.clear();
-      setState(() {
-        selectedClientName = null;
-        selectedClientId = null;
-        selectedConsultants = [];
-        consultantList = [];
-      });
+    if (response['success'] == true || response['status'] == true) {
+      ToastHelper.showSuccess(context, 'Group created successfully');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response['message'] ?? 'Failed to create group'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ToastHelper.showError(context, response['message'] ?? 'Failed to create group');
     }
+
   }
 
   @override
   Widget build(BuildContext context) {
     final financeState = ref.watch(financeProvider);
-    print('financeState $clientList');
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
@@ -297,7 +276,8 @@ class _FinanceAddGroupScreenState extends ConsumerState<FinanceAddGroupScreen> {
                   SimpleTapMultiSelectDropdown(
                     label: "Consultants",
                     hint: "Select consultants",
-                    items: consultantList.map((e) => e['emp_name']!).toList(),
+                    items:
+                    consultantList.map((e) => e['emp_name']!).toList(),
                     selectedItems: selectedConsultants,
                     onChanged: (newList) {
                       setState(() {
