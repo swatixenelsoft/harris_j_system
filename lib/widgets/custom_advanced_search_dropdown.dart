@@ -256,7 +256,7 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                                           style: GoogleFonts.montserrat(
                                               fontSize: 10, fontWeight: FontWeight.w700, color: Colors.black)),
                                       TextSpan(
-                                          text: client['inactive'].toString(),
+                                          text: client['inactive']?.toString() ?? '0', // Replace null with '0'
                                           style: GoogleFonts.montserrat(
                                               fontSize: 10,
                                               fontWeight: FontWeight.w700,
@@ -266,7 +266,7 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                                           style: GoogleFonts.montserrat(
                                               fontSize: 10, fontWeight: FontWeight.w700, color: Colors.black)),
                                       TextSpan(
-                                          text: client['active'].toString(),
+                                          text: client['active']?.toString() ?? '0', // Replace null with '0'
                                           style: GoogleFonts.montserrat(
                                               fontSize: 10,
                                               fontWeight: FontWeight.w700,
@@ -276,13 +276,13 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                                           style: GoogleFonts.montserrat(
                                               fontSize: 10, fontWeight: FontWeight.w700, color: Colors.black)),
                                       TextSpan(
-                                          text: client['notice'].toString(),
+                                          text: client['notice']?.toString() ?? '0', // Replace null with '0'
                                           style: GoogleFonts.montserrat(
                                               fontSize: 10,
                                               fontWeight: FontWeight.w700,
                                               color: const Color(0xff8D91A0))),
                                       TextSpan(
-                                          text: ' ) / ${client['all']}',
+                                          text: ' ) / ${client['all']?.toString() ?? '0'}', // Replace null with '0'
                                           style: GoogleFonts.montserrat(
                                               fontSize: 10, fontWeight: FontWeight.w700, color: Colors.black)),
                                     ],
@@ -292,17 +292,15 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                                   onTap: () => _toggleClientExpansion(client['serving_client']),
                                   child: Row(
                                     children: [
-                                      const SizedBox(width: 10), // ← adds spacing before arrow
+                                      const SizedBox(width: 10),
                                       Icon(
                                         isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                        size: 30, // ← bigger arrow
+                                        size: 30,
                                         color: const Color(0xff8D91A0),
                                       ),
                                     ],
                                   ),
                                 ),
-
-
                               ],
                             ),
                           ),
@@ -310,7 +308,7 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                         if (client['finance_group'] != null && isExpanded)
                           ...client['finance_group'].map<Widget>((group) {
                             final color = getStatusColor(group['status']);
-                            return GestureDetector(// Gesture Button  should be changed
+                            return GestureDetector(
                               onTap: () => _selectGroup(group),
                               onLongPress: () => _navigateToEditGroupScreen(group),
                               child: Container(
@@ -364,7 +362,7 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                                               style: GoogleFonts.montserrat(
                                                   fontSize: 9, fontWeight: FontWeight.w700, color: Colors.black)),
                                           TextSpan(
-                                              text: group['inactive'].toString(),
+                                              text: group['inactive']?.toString() ?? '0', // Replace null with '0'
                                               style: GoogleFonts.montserrat(
                                                   fontSize: 9,
                                                   fontWeight: FontWeight.w700,
@@ -374,7 +372,7 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                                               style: GoogleFonts.montserrat(
                                                   fontSize: 9, fontWeight: FontWeight.w700, color: Colors.black)),
                                           TextSpan(
-                                              text: group['active'].toString(),
+                                              text: group['active']?.toString() ?? '0', // Replace null with '0'
                                               style: GoogleFonts.montserrat(
                                                   fontSize: 9,
                                                   fontWeight: FontWeight.w700,
@@ -384,13 +382,13 @@ class _CustomClientDropdown3State extends State<CustomClientDropdown3> {
                                               style: GoogleFonts.montserrat(
                                                   fontSize: 9, fontWeight: FontWeight.w700, color: Colors.black)),
                                           TextSpan(
-                                              text: group['notice'].toString(),
+                                              text: group['notice']?.toString() ?? '0', // Replace null with '0'
                                               style: GoogleFonts.montserrat(
                                                   fontSize: 9,
                                                   fontWeight: FontWeight.w700,
                                                   color: const Color(0xff8D91A0))),
                                           TextSpan(
-                                              text: ' ) / ${group['all']}',
+                                              text: ' ) / ${group['all']?.toString() ?? '0'}', // Replace null with '0'
                                               style: GoogleFonts.montserrat(
                                                   fontSize: 9, fontWeight: FontWeight.w700, color: Colors.black)),
                                         ],

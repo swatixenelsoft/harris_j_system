@@ -282,7 +282,8 @@ class _FinanceEditGroupScreenState
 
     setState(() => isClientLoading = false);
 
-    if (response['success'] == true) {
+    // ✅ FIX: Allow both success and status checks
+    if (response['success'] == true || response['status'] == true) {
       ToastHelper.showSuccess(context, 'Group deleted successfully');
       await Future.delayed(const Duration(seconds: 1));
       if (mounted) {

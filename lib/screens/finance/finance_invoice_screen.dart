@@ -70,10 +70,28 @@ class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
     token = prefs.getString('token');
     if (token != null) {
       await ref.read(financeProvider.notifier).groupListFinanceProvider(token: token!);
-      // Initialize filteredGroupList with all groups initially
       final financeState = ref.read(financeProvider);
       setState(() {
-        filteredGroupList = List.from(financeState.groupList);
+        // Preprocess groupList to replace null values with '0'
+        filteredGroupList = financeState.groupList.map((client) {
+          final financeGroups = (client['finance_group'] as List<dynamic>?)?.map((group) {
+            return {
+              ...group as Map<String, dynamic>,
+              'inactive': group['inactive']?.toString() ?? '0',
+              'active': group['active']?.toString() ?? '0',
+              'notice': group['notice']?.toString() ?? '0',
+              'all': group['all']?.toString() ?? '0',
+            };
+          }).toList() ?? [];
+          return {
+            ...client,
+            'inactive': client['inactive']?.toString() ?? '0',
+            'active': client['active']?.toString() ?? '0',
+            'notice': client['notice']?.toString() ?? '0',
+            'all': client['all']?.toString() ?? '0',
+            'finance_group': financeGroups,
+          };
+        }).toList();
         selectedClient = financeState.groupList.isNotEmpty
             ? financeState.groupList[0]['serving_client']
             : null;
@@ -139,10 +157,28 @@ class _FinanceInvoiceScreenState extends ConsumerState<FinanceInvoiceScreen> {
     setState(() {
       _searchController.text = groupName != null ? '$clientName/$groupName' : clientName;
       selectedClient = clientName;
-      // Filter groupList based on the selected client
+      // Filter groupList and replace null values with '0'
       filteredGroupList = financeState.groupList
           .where((group) => group['serving_client'] == clientName)
-          .toList();
+          .map((client) {
+        final financeGroups = (client['finance_group'] as List<dynamic>?)?.map((group) {
+          return {
+            ...group as Map<String, dynamic>,
+            'inactive': group['inactive']?.toString() ?? '0',
+            'active': group['active']?.toString() ?? '0',
+            'notice': group['notice']?.toString() ?? '0',
+            'all': group['all']?.toString() ?? '0',
+          };
+        }).toList() ?? [];
+        return {
+          ...client,
+          'inactive': client['inactive']?.toString() ?? '0',
+          'active': client['active']?.toString() ?? '0',
+          'notice': client['notice']?.toString() ?? '0',
+          'all': client['all']?.toString() ?? '0',
+          'finance_group': financeGroups,
+        };
+      }).toList();
     });
   }
 
