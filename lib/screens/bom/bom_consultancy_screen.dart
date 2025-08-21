@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -15,6 +14,7 @@ import 'package:harris_j_system/ulits/delete_pop_up.dart';
 import 'package:harris_j_system/ulits/detail_pop_up.dart';
 import 'package:harris_j_system/ulits/toast_helper.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
+import 'package:harris_j_system/widgets/custom_app_bar2.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:intl/intl.dart';
@@ -45,56 +45,26 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
   }
 
   Future<void> _getConsultancyData() async {
-    print('ghkjhk');
-
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
     await ref.read(bomProvider.notifier).fetchConsultancy(token!);
   }
 
-  // void _showConsultancyPopup(BuildContext context, Consultancy consultancy) {
-  //   showDialog(
-  //     context: context,
-  //     barrierColor: Colors.black.withOpacity(0.5),
-  //     builder: (BuildContext context) {
-  //       return Stack(
-  //         children: [
-  //           BackdropFilter(
-  //             filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-  //             child: Container(color: Colors.transparent),
-  //           ),
-  //           Center(
-  //             child: ConsultancyPopup(
-  //               consultancy: consultancy,
-  //               onDelete: () {
-  //                 setState(() {
-  //                   consultancies.removeWhere((c) => c.name == consultancy.name);
-  //                 });
-  //               },
-  //             ),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
   OverlayEntry? _overlayEntry;
 
   void _showImportExportPopupBelow(BuildContext context, GlobalKey key) {
     final RenderBox renderBox =
-        key.currentContext!.findRenderObject() as RenderBox;
+    key.currentContext!.findRenderObject() as RenderBox;
     final position = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Calculate responsive left position
-    double leftPosition = screenWidth * 0.40;
+    // Center the popup horizontally
+    double leftPosition = (screenWidth - 200) / 2; // Adjust 200 to popup width
 
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
-          // Background blur with dismiss
           GestureDetector(
             onTap: () {
               _overlayEntry?.remove();
@@ -103,14 +73,12 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
               child: Container(
-                color: Colors.black.withOpacity(0.1), // Light overlay
+                color: Colors.black.withOpacity(0.1),
                 width: double.infinity,
                 height: double.infinity,
               ),
             ),
           ),
-
-          // Positioned popup
           Positioned(
             left: leftPosition,
             top: position.dy + size.height + 10,
@@ -172,25 +140,6 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
     );
   }
 
-  // void _showImportExportPopup(BuildContext context) {
-  //
-  //   showDialog(
-  //     context: context,
-  //     barrierColor: Colors.black.withOpacity(0.5),
-  //     builder: (BuildContext context) {
-  //       return Stack(
-  //         children: [
-  //           BackdropFilter(
-  //             filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-  //             child: Container(color: Colors.transparent),
-  //           ),
-  //           ImportExportMenu(),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
   void _showConsultancyPopup(
       BuildContext context, Map<String, dynamic> consultancy) {
     showDialog(
@@ -202,7 +151,7 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
               child: Container(
-                color: Colors.black.withOpacity(0.2), // Optional dim effect
+                color: Colors.black.withOpacity(0.2),
               ),
             ),
             Center(
@@ -211,8 +160,7 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
                 onDelete: () {
                   setState(() {
                     consultancies.removeWhere((c) =>
-                        c['consultancy_name'] ==
-                        consultancy['consultancy_name']);
+                    c['consultancy_name'] == consultancy['consultancy_name']);
                   });
                 },
               ),
@@ -231,9 +179,6 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Filter consultancies based on search and status
-    final searchQuery = _searchController.text.toLowerCase();
-
     final consultancyState = ref.watch(bomProvider);
     final consultancies = consultancyState.consultancyList ?? [];
 
@@ -241,19 +186,15 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
       final name =
           consultancy['consultancy_name']?.toString().toLowerCase() ?? '';
       final type = consultancy['consultancy_status']?.toString() ?? '';
-
-      final matchesSearch =
-          searchQuery.isEmpty || name.contains(searchQuery.toLowerCase());
+      final matchesSearch = _searchController.text.isEmpty ||
+          name.contains(_searchController.text.toLowerCase());
       final matchesStatus = _filterStatus == 'All' || type == _filterStatus;
-
       return matchesSearch && matchesStatus;
     }).toList();
 
-    print('filteredConsultancies $filteredConsultancies');
-
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(
+      appBar: const CustomAppBar2(
           showBackButton: false, image: 'assets/images/bom/bom_logo.png'),
       body: SafeArea(
         child: NestedScrollView(
@@ -261,276 +202,164 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return <Widget>[
               SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    _buildHeaderContent(),
-                  ],
-                ),
+                child: _buildHeaderContent(),
               ),
             ];
           },
           body: consultancyState.isLoading
-              ? const CustomLoader(
-                  color: Color(0xffFF1901),
-                  size: 35,
-                )
+              ? const Center(
+            child: CustomLoader(
+              color: Color(0xffFF1901),
+              size: 35,
+            ),
+          )
               : filteredConsultancies.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No consultancies found',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          color: Colors.grey,
+              ? Center(
+            child: Text(
+              'No consultancies found',
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+          )
+              : LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: constraints.maxWidth,
+                  ),
+                  child: DataTable(
+                    columnSpacing: 16,
+                    headingRowHeight: 40,
+                    dataRowMinHeight: 56,
+                    dataRowMaxHeight: 56,
+                    headingRowColor:
+                    MaterialStateProperty.all(const Color(0xFFF2F2F2)),
+                    dataTextStyle: GoogleFonts.montserrat(
+                        fontSize: 12, color: const Color(0xff1D212D)),
+                    columns: [
+                      DataColumn(
+                        label: Container(
+                          width: 140, // Fixed width for alignment
+                          child: Text(
+                            'Consultancy Name',
+                            style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black),
+                            textAlign: TextAlign.left,
+                          ),
                         ),
                       ),
-                    )
-                  : LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SizedBox(
-                            width: constraints.maxWidth,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.vertical,
-                              child: DataTable(
-                                columnSpacing: 8,
-                                headingRowHeight: 38,
-                                dataRowMinHeight: 52,
-                                dataRowMaxHeight: 52,
-                                headingRowColor: MaterialStateProperty.all(
-                                    const Color(0xFFF2F2F2)),
-                                columns: [
-                                  DataColumn(
-                                    label: Text(
-                                      'Consultancy Name',
-                                      style: GoogleFonts.montserrat(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'License Expiry & Status',
-                                      style: GoogleFonts.montserrat(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Actions',
-                                      style: GoogleFonts.montserrat(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black),
-                                    ),
-                                  ),
-                                ],
-                                rows: filteredConsultancies.map((consultancy) {
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(
-                                        ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                              minWidth: 110, maxWidth: 110),
-                                          child: Text(
-                                            consultancy['consultancy_name'],
-                                            overflow: TextOverflow.ellipsis,
-                                            style: GoogleFonts.montserrat(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w500,
-                                                color: const Color(0xff1D212D)),
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                              minWidth: 130, maxWidth: 130),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Text(
-                                                    DateFormat('dd / MM / yyyy')
-                                                        .format(DateTime.parse(
-                                                            consultancy[
-                                                                'license_end_date'])),
-                                                    style:
-                                                        GoogleFonts.montserrat(
-                                                            fontSize: 10,
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                            color: const Color(
-                                                                0xff1D212D)),
-                                                  ),
-                                                  const SizedBox(width: 2),
-                                                  // Text(
-                                                  //   consultancy.expiryDate
-                                                  //       .split(' ')[1],
-                                                  //   style:
-                                                  //       GoogleFonts.montserrat(
-                                                  //           fontSize: 10,
-                                                  //           fontWeight:
-                                                  //               FontWeight.w500,
-                                                  //           color: const Color(
-                                                  //               0xff1D212D)),
-                                                  // ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: consultancy[
-                                                              'consultancy_status'] ==
-                                                          'Active'
-                                                      ? const Color(0xFFEBF9F1)
-                                                      :consultancy[
-                                  'consultancy_status'] ==
-                                  'Disabled'?const Color(0xffF2F2F2): const Color(0xFFFBE7E8),
-                                                  borderRadius:
-                                                      BorderRadius.circular(6),
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    Icon(
-                                                      Icons.circle,
-                                                      size: 8,
-                                                      color: consultancy[
-                                                                  'consultancy_status'] ==
-                                                              'Active'
-                                                          ? const Color(
-                                                              0xFF1F9254)
-                                                          :consultancy[
-                                                      'consultancy_status'] == 'Disabled'?const Color(0xff8D91A0):const Color(
-                                                              0xFFF5230C),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      consultancy[
-                                                          'consultancy_status'],
-                                                      style: GoogleFonts
-                                                          .spaceGrotesk(
-                                                        color: consultancy[
-                                                                    'consultancy_status'] ==
-                                                                'Active'
-                                                            ? const Color(
-                                                                0xFF1F9254)
-                                                            :consultancy[
-                                  'consultancy_status'] == 'Disabled'?const Color(0xff8D91A0): const Color(
-                                                                0xFFF5230C),
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 10,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                              minWidth: 120, maxWidth: 120),
-                                          child: Row(
-                                            children: [
-                                              GestureDetector(
-                                                  onTap: () =>
-                                                      _showConsultancyPopup(
-                                                          context, consultancy),
-                                                  child: const CustomIconContainer(
-                                                      path:
-                                                          'assets/icons/zoom.svg')),
-                                              const SizedBox(width: 7),
-                                              GestureDetector(
-                                                onTap: () {
-                                                  context.push(
-                                                      Constant
-                                                          .bomAddConsultancyScreen,
-                                                      extra: consultancy);
-                                                },
-                                                child: const CustomIconContainer(
-                                                    path:
-                                                        'assets/icons/edit_pen.svg',
-                                                    bgColor: Color(0xffF5230C)),
-                                              ),
-                                              const SizedBox(width: 7),
-                                              GestureDetector(
-                                                onTap: () =>
-                                                    DeleteConfirmationDialog.show(
-                                                        context: context,
-                                                        itemName: 'consultancy',
-                                                        onConfirm: () async {
-                                                          final deleteResponse =
-                                                              await ref
-                                                                  .read(bomProvider
-                                                                      .notifier)
-                                                                  .deleteConsultancy(
-                                                                      consultancy[
-                                                                          'id'],
-                                                                      token!);
-
-                                                          if (deleteResponse[
-                                                                  'status'] ==
-                                                              true) {
-                                                            ToastHelper
-                                                                .showSuccess(
-                                                              context,
-                                                              deleteResponse[
-                                                                      'message'] ??
-                                                                  'Consultancy deleted successfully',
-                                                            );
-                                                          } else {
-                                                            ToastHelper
-                                                                .showError(
-                                                              context,
-                                                              deleteResponse[
-                                                                      'message'] ??
-                                                                  'Failed to delete consultancy',
-                                                            );
-                                                          }
-                                                        }),
-                                                child: const CustomIconContainer(
-                                                    path:
-                                                        'assets/icons/red_delete_icon.svg'),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }).toList(),
+                      DataColumn(
+                        label: Container(
+                          width: 80,
+                          child: Text(
+                            'Status',
+                            style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Container(
+                          width: 60,
+                          child: Text(
+                            'Actions',
+                            style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
+                    rows: filteredConsultancies.map((consultancy) {
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Container(
+                              width: 140,
+                              child: Text(
+                                consultancy['consultancy_name'],
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.montserrat(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xff1D212D)),
                               ),
                             ),
                           ),
-                        );
-                      },
-                    ),
+                          DataCell(
+                            Container(
+                              width: 80,
+                              alignment: Alignment.center,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: consultancy[
+                                  'consultancy_status'] ==
+                                      'Active'
+                                      ? const Color(0xFFEBF9F1)
+                                      : consultancy[
+                                  'consultancy_status'] ==
+                                      'Disabled'
+                                      ? const Color(0xffF2F2F2)
+                                      : const Color(0xFFFBE7E8),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.circle,
+                                  size: 12,
+                                  color: consultancy[
+                                  'consultancy_status'] ==
+                                      'Active'
+                                      ? const Color(0xFF1F9254)
+                                      : consultancy[
+                                  'consultancy_status'] ==
+                                      'Disabled'
+                                      ? const Color(0xff8D91A0)
+                                      : const Color(0xFFF5230C),
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Container(
+                              width: 60,
+                              alignment: Alignment.center,
+                              child: GestureDetector(
+                                onTap: () => _showConsultancyPopup(
+                                    context, consultancy),
+                                child: const CustomIconContainer(
+                                    path: 'assets/icons/zoom.svg'),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
   }
-
   Widget _buildHeaderContent() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: const BorderRadius.only(
           topRight: Radius.circular(20),
           topLeft: Radius.circular(20),
@@ -541,89 +370,75 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 GestureDetector(
-                    onTap: () {
-                      context.pop();
-                    },
-                    child:
-                        SvgPicture.asset('assets/icons/back.svg', height: 15)),
-                const SizedBox(width: 10),
+                  onTap: () {
+                    context.pop();
+                  },
+                  child: SvgPicture.asset('assets/icons/back.svg', height: 18),
+                ),
+                const SizedBox(width: 12),
                 isSearchBarVisible
                     ? Expanded(
-                        child: CustomTextField(
-                          label: "Search",
-                          hintText: "Search Consultancies...",
-                          controller: _searchController,
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.close,
-                                size: 20, color: Colors.grey),
-                            onPressed: () {
-                              setState(() {
-                                _searchController.clear();
-                                isSearchBarVisible = false;
-                              });
-                            },
-                          ),
-                        ),
-                      )
-                    : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                isSearchBarVisible = true;
-                              });
-                            },
-                            child: SvgPicture.asset(
-                                'assets/icons/search_icon.svg',
-                                height: 15),
-                          ),
-                          const SizedBox(width: 15),
-                          GestureDetector(
-                            onTap: () {
-                              _showFilterDialog(context);
-                            },
-                            child: SvgPicture.asset(
-                                'assets/icons/filter_icon.svg',
-                                height: 15),
-                          ),
-                          const SizedBox(width: 15),
-                          CustomButton(
-                            svgAsset: 'assets/icons/add_icon.svg',
-                            text: 'Add Consultancy',
-                            onPressed: () async {
-                              final response = await context
-                                  .push(Constant.bomAddConsultancyScreen);
-
-                              if (response == true) {
-                                _getConsultancyData();
-                              }
-                            },
-                            height: 39,
-                            width: 160,
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            key: _menuIconKey,
-                            onTap: () => _showImportExportPopupBelow(
-                                context, _menuIconKey),
-                            behavior: HitTestBehavior.translucent,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              child: SvgPicture.asset(
-                                'assets/icons/menu.svg',
-                                height: 20,
-                                width: 20,
-                              ),
-                            ),
-                          ),
-                        ],
+                  child: CustomTextField(
+                    label: "Search",
+                    hintText: "Search Consultancies...",
+                    controller: _searchController,
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.close,
+                          size: 20, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          _searchController.clear();
+                          isSearchBarVisible = false;
+                        });
+                      },
+                    ),
+                  ),
+                )
+                    : Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isSearchBarVisible = true;
+                          });
+                        },
+                        child: SvgPicture.asset(
+                            'assets/icons/search_icon.svg',
+                            height: 18),
                       ),
+                      const SizedBox(width: 16),
+                      GestureDetector(
+                        onTap: () {
+                          _showFilterDialog(context);
+                        },
+                        child: SvgPicture.asset(
+                            'assets/icons/filter_icon.svg',
+                            height: 18),
+                      ),
+                      const SizedBox(width: 16),
+                      CustomButton(
+                        svgAsset: 'assets/icons/add_icon.svg',
+                        text: 'Add Consultancy',
+                        onPressed: () async {
+                          final response = await context
+                              .push(Constant.bomAddConsultancyScreen);
+                          if (response == true) {
+                            _getConsultancyData();
+                          }
+                        },
+                        height: 40,
+                        width: 180,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

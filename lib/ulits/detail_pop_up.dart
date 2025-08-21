@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:harris_j_system/screens/bom/bom_consultancy_screen.dart';
 import 'package:harris_j_system/screens/navigation/constant.dart';
 import 'package:harris_j_system/ulits/custom_icon_container.dart';
-import 'package:intl/intl.dart';
 
 class ConsultancyDetailPopup extends StatelessWidget {
   final Map<String, dynamic> consultancy;
@@ -62,8 +61,8 @@ class ConsultancyDetailPopup extends StatelessWidget {
                             bgColor: Color(0xffF5230C)),
                       ),
                       SizedBox(width: 7),
-                      CustomIconContainer(
-                          path: 'assets/icons/red_delete_icon.svg'),
+                      // CustomIconContainer(
+                      //     path: 'assets/icons/red_delete_icon.svg'),
                     ],
                   ),
                 ],
@@ -99,8 +98,6 @@ class ConsultancyDetailPopup extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 2),
-
-                        // const SizedBox(width: 4),
                         Text(
                           consultancy['country'],
                           style: GoogleFonts.montserrat(
@@ -124,68 +121,27 @@ class ConsultancyDetailPopup extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // License Expiry & Status
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'License Expiry & Status',
-                        style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                            color: Colors.black),
+                  // Status on the left (only colored dot with background)
+                  _buildFieldPair(
+                    leftLabel: 'Status',
+                    leftWidget: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: consultancy['consultancy_status'] == 'Active'
+                            ? const Color(0xFFEBF9F1)
+                            : const Color(0xFFFBE7E8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            DateFormat('dd / MM / yyyy').format(DateTime.parse(
-                                consultancy['license_end_date'])),
-                            style: GoogleFonts.montserrat(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xff1D212D)),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color:
-                                  consultancy['consultancy_status'] == 'Active'
-                                      ? const Color(0xFFEBF9F1)
-                                      : const Color(0xFFFBE7E8),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.circle,
-                                  size: 8,
-                                  color: consultancy['consultancy_status'] ==
-                                          'Active'
-                                      ? const Color(0xFF1F9254)
-                                      : const Color(0xFFF5230C),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  consultancy['consultancy_status'],
-                                  style: GoogleFonts.spaceGrotesk(
-                                    color: consultancy['consultancy_status'] ==
-                                            'Active'
-                                        ? const Color(0xFF1F9254)
-                                        : const Color(0xFFF5230C),
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                      child: Icon(
+                        Icons.circle,
+                        size: 8,
+                        color: consultancy['consultancy_status'] == 'Active'
+                            ? const Color(0xFF1F9254)
+                            : const Color(0xFFF5230C),
                       ),
-                    ],
+                    ),
+                    rightLabel: '',
+                    rightValue: '',
                   ),
                 ],
               ),

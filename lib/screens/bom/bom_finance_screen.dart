@@ -8,6 +8,7 @@ import 'package:harris_j_system/screens/bom/bom_add_consultancy_screen.dart';
 import 'package:harris_j_system/screens/bom/widget/finance_popup.dart';
 import 'package:harris_j_system/screens/bom/widget/import_export.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
+import 'package:harris_j_system/widgets/custom_app_bar2.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:harris_j_system/widgets/remark_section.dart';
@@ -22,6 +23,7 @@ class BomFinanceScreen extends StatefulWidget {
 class _BomFinanceScreenState extends State<BomFinanceScreen> {
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey _menuIconKey = GlobalKey();
+  bool _isPrimarySelected = true; // State managed at the State level
 
   final List<Map<String, String>> consultancyData = [
     {
@@ -49,7 +51,7 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
 
   void _showImportExportPopupBelow(BuildContext context, GlobalKey key) {
     final RenderBox renderBox =
-        key.currentContext!.findRenderObject() as RenderBox;
+    key.currentContext!.findRenderObject() as RenderBox;
     final position = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -97,7 +99,8 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(
+
+      appBar: const CustomAppBar2(
         showBackButton: false,
         image: 'assets/images/bom/bom_logo.png',
       ),
@@ -131,12 +134,12 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                           ],
                         ),
                         const SizedBox(width: 13),
-                        CustomButton(
-                          text: 'Terms And Conditions',
-                          onPressed: () async {},
-                          height: 39,
-                          width: 140,
-                        ),
+                        // CustomButton(
+                        //   text: 'Terms And Conditions',
+                        //   onPressed: () async {},
+                        //   height: 39,
+                        //   width: 140,
+                        // ),
                         const SizedBox(width: 10),
                         GestureDetector(
                           key: _menuIconKey,
@@ -162,12 +165,12 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10.0),
                     child: GridView.builder(
                       gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
+                      const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
                         childAspectRatio:
-                            2.0, // Controls width-to-height ratio (e.g., 180/90 = 2.0)
+                        2.0, // Controls width-to-height ratio (e.g., 180/90 = 2.0)
                       ),
                       itemCount: consultancyData.length,
                       shrinkWrap: true,
@@ -202,37 +205,41 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                             thickness: 1,
                             endIndent: 3,
                             indent: 5,
-                            // height: 20,
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
+                  // Single Contact Card with Tabs
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10.0),
                     child: _contactCard(
-                      label: 'Primary Contact Person',
-                      name: 'Alfonso Mango',
-                      phone: '+65 7863 4563',
-                      email: 'sales877@gmail.com',
+                      onTabChanged: (isPrimary) {
+                        setState(() {
+                          _isPrimarySelected = isPrimary;
+                        });
+                      },
+                      primaryName: 'Alfonso Mango',
+                      primaryPhone: '+65 7863 4563',
+                      primaryEmail: 'sales877@gmail.com',
+                      primaryAddress1:
+                      'No.22, Abcd Street, RR Nagar, Chennai-600016, Tamil Nadu, India',
+                      primaryAddress2: 'X5JX+HX Chennai, Tamil Nadu',
+                      secondaryName: 'Jane Doe',
+                      secondaryPhone: '+65 1234 5678',
+                      secondaryEmail: 'jane.doe@example.com',
+                      secondaryAddress1:
+                      'No.10, XYZ Street, Bangalore-560001, Karnataka, India',
+                      secondaryAddress2: 'P5QX+MW Bangalore, Karnataka',
+                      isPrimarySelected: _isPrimarySelected,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: _contactCard(
-                      label: 'Secondary Contact Person',
-                      name: 'Abram Culhane',
-                      phone: '+65 8963 9863',
-                      email: 'sales98@gmail.com',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: _addressCard(),
-                  ),
+                  // Padding(
+                  //   padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  //   child: _addressCard(),
+                  // ),
                   const SizedBox(height: 12),
                   _buildRemarksSection(),
 
@@ -324,13 +331,10 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     const BoxShadow(
-                                      color: Color.fromRGBO(0, 0, 0,
-                                          0.25), // Adjust opacity as needed
-                                      blurRadius: 7, // Controls the blur effect
-                                      spreadRadius:
-                                          1, // Controls the size of the shadow
-                                      offset: Offset(
-                                          0, 0), // Moves the shadow downward
+                                      color: Color.fromRGBO(0, 0, 0, 0.25),
+                                      blurRadius: 7,
+                                      spreadRadius: 1,
+                                      offset: Offset(0, 0),
                                     ),
                                   ],
                                 ),
@@ -400,15 +404,13 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                                       style: GoogleFonts.montserrat(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w400,
-                                          color: const Color(
-                                              0xff767676))), // Reduce space
+                                          color: const Color(0xff767676))),
                                   TextSpan(
                                       text: '#EM098789',
                                       style: GoogleFonts.montserrat(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w400,
-                                          color: Colors.black)), // Reduce space
-                                  // Reduce space further
+                                          color: Colors.black)),
                                 ],
                               ),
                             ),
@@ -431,15 +433,13 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                                       style: GoogleFonts.montserrat(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w400,
-                                          color: const Color(
-                                              0xff767676))), // Reduce space
+                                          color: const Color(0xff767676))),
                                   TextSpan(
                                       text: '01-04-2025',
                                       style: GoogleFonts.montserrat(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w400,
-                                          color: Colors.black)), // Reduce space
-                                  // Reduce space further
+                                          color: Colors.black)),
                                 ],
                               ),
                             ),
@@ -456,15 +456,13 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                                       style: GoogleFonts.montserrat(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w400,
-                                          color: const Color(
-                                              0xff767676))), // Reduce space
+                                          color: const Color(0xff767676))),
                                   TextSpan(
                                       text: '01-04-2025',
                                       style: GoogleFonts.montserrat(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w400,
-                                          color: Colors.black)), // Reduce space
-                                  // Reduce space further
+                                          color: Colors.black)),
                                 ],
                               ),
                             ),
@@ -660,7 +658,7 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                       context.pop();
                     },
                     child:
-                        SvgPicture.asset('assets/icons/back.svg', height: 15)),
+                    SvgPicture.asset('assets/icons/back.svg', height: 15)),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -697,7 +695,7 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
             ),
             prefixIcon: Padding(
               padding:
-                  const EdgeInsets.all(14.0), // optional padding for spacing
+              const EdgeInsets.all(14.0), // optional padding for spacing
               child: SizedBox(
                 height: 10,
                 width: 10,
@@ -767,84 +765,188 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
   }
 
   Widget _contactCard({
-    required String label,
-    required String name,
-    required String phone,
-    required String email,
+    required Function(bool) onTabChanged,
+    required String primaryName,
+    required String primaryPhone,
+    required String primaryEmail,
+    required String primaryAddress1,
+    required String primaryAddress2,
+    required String secondaryName,
+    required String secondaryPhone,
+    required String secondaryEmail,
+    required String secondaryAddress1,
+    required String secondaryAddress2,
+    required bool isPrimarySelected,
   }) {
     return Container(
-      height: 100,
-      width: MediaQuery.of(context).size.width,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: const [
           BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.25), // Adjust opacity as needed
-            blurRadius: 7, // Controls the blur effect
-            spreadRadius: 1, // Controls the size of the shadow
-            offset: Offset(0, 0), // Moves the shadow downward
+            color: Color.fromRGBO(0, 0, 0, 0.1),
+            blurRadius: 10,
+            offset: Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-              width: 160,
-              height: 30,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color(0xffFF1901),
-                borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(12),
-                    topLeft: Radius.circular(6)),
+          // Top Tabs Header
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onTabChanged(true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isPrimarySelected
+                          ? const Color(0xFFFF1901)
+                          : const Color(0xffDADADA),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Primary Contact',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isPrimarySelected
+                              ? Colors.white
+                              : const Color(0xff000000),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              child: Text(
-                label,
-                style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white),
-              )),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Text(
-              name,
-              style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                color: Colors.black,
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onTabChanged(false),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: !isPrimarySelected
+                          ? const Color(0xFFFF1901)
+                          : const Color(0xffDADADA),
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(8),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Secondary Contact',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: !isPrimarySelected
+                              ? Colors.white
+                              : const Color(0xff000000),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
-            ),
+            ],
           ),
+
+          // Content Section
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Name
+                Text(
+                  isPrimarySelected ? primaryName : secondaryName,
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Phone + Email in same row
                 Row(
                   children: [
-                    SvgPicture.asset('assets/icons/phone_icon.svg'),
-                    const SizedBox(width: 4),
+                    SvgPicture.asset(
+                      'assets/icons/phone_icon.svg',
+                      height: 16,
+                      width: 16,
+                    ),
+                    const SizedBox(width: 8),
                     Text(
-                      phone,
+                      isPrimarySelected ? primaryPhone : secondaryPhone,
                       style: GoogleFonts.spaceGrotesk(
-                          fontSize: 12, fontWeight: FontWeight.w500),
-                      overflow: TextOverflow.ellipsis,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    SvgPicture.asset(
+                      'assets/icons/mail_icon.svg',
+                      height: 16,
+                      width: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        isPrimarySelected ? primaryEmail : secondaryEmail,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
+
+                // Address with location icon
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SvgPicture.asset('assets/icons/mail_icon.svg'),
-                    const SizedBox(width: 4),
-                    Text(
-                      email,
-                      style: GoogleFonts.spaceGrotesk(
-                          fontSize: 12, fontWeight: FontWeight.w500),
-                      overflow: TextOverflow.ellipsis,
+                    SvgPicture.asset(
+                      'assets/icons/location_marker.svg',
+                      height: 16,
+                      width: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isPrimarySelected
+                                ? primaryAddress1
+                                : secondaryAddress1,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 12,
+                              color: const Color(0xff181818),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isPrimarySelected
+                                ? primaryAddress2
+                                : secondaryAddress2,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 12,
+                              color: const Color(0xff181818),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -855,7 +957,6 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
       ),
     );
   }
-
   Widget _addressCard() {
     return Container(
       height: 140,
@@ -865,10 +966,10 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
         borderRadius: BorderRadius.circular(6),
         boxShadow: const [
           BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.25), // Adjust opacity as needed
-            blurRadius: 7, // Controls the blur effect
-            spreadRadius: 1, // Controls the size of the shadow
-            offset: Offset(0, 0), // Moves the shadow downward
+            color: Color.fromRGBO(0, 0, 0, 0.25),
+            blurRadius: 7,
+            spreadRadius: 1,
+            offset: Offset(0, 0),
           ),
         ],
       ),
@@ -904,30 +1005,29 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0xffE5F1FF), // Adjust opacity as needed
-                        blurRadius: 4, // Controls the blur effect
-                        spreadRadius: 0, // Controls the size of the shadow
-                        offset: Offset(0, 0), // Moves the shadow downward
+                        color: Color(0xffE5F1FF),
+                        blurRadius: 4,
+                        spreadRadius: 0,
+                        offset: Offset(0, 0),
                       ),
                     ],
                   ),
                   child: Center(
                       child: SvgPicture.asset(
-                    'assets/icons/location_marker.svg',
-                    height: 20,
-                    width: 20,
-                  )),
+                        'assets/icons/location_marker.svg',
+                        height: 20,
+                        width: 20,
+                      )),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    "No.22,Abcd Street,RR Nager,Chennai-600016,Tamil Nadu,India",
+                    "No.22,Abcd Street,RR Nagar,Chennai-600016,Tamil Nadu,India X5JX+HX Chennai, Tamil Nadu",
                     style: GoogleFonts.spaceGrotesk(
                       fontWeight: FontWeight.w400,
                       fontSize: 12,
                       color: const Color(0xff181818),
                     ),
-                    // overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -945,31 +1045,29 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0xffE5F1FF), // Adjust opacity as needed
-                        blurRadius: 4, // Controls the blur effect
-                        spreadRadius: 0, // Controls the size of the shadow
-                        offset: Offset(0, 0), // Moves the shadow downward
+                        color: Color(0xffE5F1FF),
+                        blurRadius: 4,
+                        spreadRadius: 0,
+                        offset: Offset(0, 0),
                       ),
                     ],
                   ),
                   child: Center(
                       child: SvgPicture.asset(
-                    'assets/icons/google_code.svg',
-                    height: 20,
-                    width: 20,
-                    color: const Color(0xffFF1901),
-                  )),
+                        'assets/icons/google_code2.svg',
+                        height: 20,
+                        width: 20,
+                      )),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    "No.22,Abcd Street,RR Nager,Chennai-600016,Tamil Nadu,India",
+                    "X5JX+HX Chennai, Tamil Nadu",
                     style: GoogleFonts.spaceGrotesk(
                       fontWeight: FontWeight.w400,
                       fontSize: 12,
                       color: const Color(0xff181818),
                     ),
-                    // overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -985,8 +1083,7 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
       height: 200,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color:
-            Colors.white, // If color is null, it will be transparent (default)
+        color: Colors.white,
         borderRadius: BorderRadius.circular(3),
         boxShadow: [
           BoxShadow(
