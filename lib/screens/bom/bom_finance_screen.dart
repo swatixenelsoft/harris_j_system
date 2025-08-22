@@ -99,7 +99,24 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
+floatingActionButton:Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4),
+  child: SizedBox(
+    height: 42, // ✅ Reduced button height
+    width: 160, // ✅ Optional: make button compact in width too
+    child: CustomButton(
+      text: 'View Invoice',
+      onPressed: () {
+        _showPopup(context);
+      },
+      borderRadius: 8, // ✅ Slightly smaller corners
+      textStyle: GoogleFonts.montserrat(
+        fontSize: 14, // ✅ Smaller font size
+        fontWeight: FontWeight.w500,
+      ),
+    ),
+  ),
+),
       appBar: const CustomAppBar2(
         showBackButton: false,
         image: 'assets/images/bom/bom_logo.png',
@@ -118,33 +135,31 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Encore Films',
-                              style: GoogleFonts.montserrat(
-                                  fontSize: 18, fontWeight: FontWeight.w800),
-                            ),
-                            Text(
-                              'Invoice Number: EM098789',
-                              style: GoogleFonts.montserrat(
-                                  fontSize: 10, fontWeight: FontWeight.w400),
-                            ),
-                          ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Encore Films',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              Text(
+                                'Invoice Number: EM098789',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 13),
-                        // CustomButton(
-                        //   text: 'Terms And Conditions',
-                        //   onPressed: () async {},
-                        //   height: 39,
-                        //   width: 140,
-                        // ),
                         const SizedBox(width: 10),
                         GestureDetector(
                           key: _menuIconKey,
-                          onTap: () => _showImportExportPopupBelow(
-                              context, _menuIconKey),
+                          onTap: () => _showImportExportPopupBelow(context, _menuIconKey),
                           behavior: HitTestBehavior.translucent,
                           child: Container(
                             padding: const EdgeInsets.all(8),
@@ -158,6 +173,7 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                       ],
                     ),
                   ),
+
 
                   const SizedBox(height: 16),
                   // Metrics Cards
@@ -243,21 +259,7 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                   const SizedBox(height: 12),
                   _buildRemarksSection(),
 
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 28.0, vertical: 20),
-                    child: CustomButton(
-                      text: 'View Invoice',
-                      onPressed: () {
-                        _showPopup(context);
-                      },
-                      borderRadius: 12,
-                      textStyle: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  )
+
                 ],
               ),
             ),
@@ -781,7 +783,7 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFFAFAFA), // Updated background color
         borderRadius: BorderRadius.circular(8),
         boxShadow: const [
           BoxShadow(
@@ -791,8 +793,9 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
           ),
         ],
       ),
+
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:CrossAxisAlignment.start,
         children: [
           // Top Tabs Header
           Row(
@@ -807,7 +810,8 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                           ? const Color(0xFFFF1901)
                           : const Color(0xffDADADA),
                       borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
                       ),
                     ),
                     child: Center(
@@ -835,7 +839,8 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                           ? const Color(0xFFFF1901)
                           : const Color(0xffDADADA),
                       borderRadius: const BorderRadius.only(
-                        topRight: Radius.circular(8),
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
                       ),
                     ),
                     child: Center(
@@ -855,7 +860,6 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
               ),
             ],
           ),
-
           // Content Section
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -873,7 +877,7 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Phone + Email in same row
+                // Phone + Email + Google icon
                 Row(
                   children: [
                     SvgPicture.asset(
@@ -906,50 +910,68 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 8),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
 
-                // Address with location icon
-                Row(
+                // Address with location icon + Google icon near second line
+                // Address with location + Google code icon
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SvgPicture.asset(
-                      'assets/icons/location_marker.svg',
-                      height: 16,
-                      width: 16,
+                    // First Row → Location icon + First address line
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/icons/location_marker.svg',
+                          height: 16,
+                          width: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            isPrimarySelected ? primaryAddress1 : secondaryAddress1,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 12,
+                              color: const Color(0xff181818),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isPrimarySelected
-                                ? primaryAddress1
-                                : secondaryAddress1,
+                    const SizedBox(height: 25),
+
+                    // Second Row → Google icon + Second address line
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(width: 18), // To align Google icon under address text
+                        SvgPicture.asset(
+                          'assets/icons/google_code2.svg',
+                          height: 20,
+                          width: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            isPrimarySelected ? primaryAddress2 : secondaryAddress2,
                             style: GoogleFonts.spaceGrotesk(
                               fontWeight: FontWeight.w400,
                               fontSize: 12,
                               color: const Color(0xff181818),
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            isPrimarySelected
-                                ? primaryAddress2
-                                : secondaryAddress2,
-                            style: GoogleFonts.spaceGrotesk(
-                              fontWeight: FontWeight.w400,
-                              fontSize: 12,
-                              color: const Color(0xff181818),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
+                )
+
+
               ],
             ),
           ),
@@ -957,126 +979,126 @@ class _BomFinanceScreenState extends State<BomFinanceScreen> {
       ),
     );
   }
-  Widget _addressCard() {
-    return Container(
-      height: 140,
-      width: MediaQuery.of(context).size.width,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.25),
-            blurRadius: 7,
-            spreadRadius: 1,
-            offset: Offset(0, 0),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-              width: 160,
-              height: 30,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color(0xffFF1901),
-                borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(12),
-                    topLeft: Radius.circular(6)),
-              ),
-              child: Text(
-                "Address Information",
-                style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white),
-              )),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                Container(
-                  height: 30,
-                  width: 30,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0xffE5F1FF),
-                        blurRadius: 4,
-                        spreadRadius: 0,
-                        offset: Offset(0, 0),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                      child: SvgPicture.asset(
-                        'assets/icons/location_marker.svg',
-                        height: 20,
-                        width: 20,
-                      )),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    "No.22,Abcd Street,RR Nagar,Chennai-600016,Tamil Nadu,India X5JX+HX Chennai, Tamil Nadu",
-                    style: GoogleFonts.spaceGrotesk(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12,
-                      color: const Color(0xff181818),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                Container(
-                  height: 30,
-                  width: 30,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0xffE5F1FF),
-                        blurRadius: 4,
-                        spreadRadius: 0,
-                        offset: Offset(0, 0),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                      child: SvgPicture.asset(
-                        'assets/icons/google_code2.svg',
-                        height: 20,
-                        width: 20,
-                      )),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    "X5JX+HX Chennai, Tamil Nadu",
-                    style: GoogleFonts.spaceGrotesk(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12,
-                      color: const Color(0xff181818),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _addressCard() {
+  //   return Container(
+  //     height: 140,
+  //     width: MediaQuery.of(context).size.width,
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(6),
+  //       boxShadow: const [
+  //         BoxShadow(
+  //           color: Color.fromRGBO(0, 0, 0, 0.25),
+  //           blurRadius: 7,
+  //           spreadRadius: 1,
+  //           offset: Offset(0, 0),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Container(
+  //             width: 160,
+  //             height: 30,
+  //             alignment: Alignment.center,
+  //             decoration: const BoxDecoration(
+  //               color: Color(0xffFF1901),
+  //               borderRadius: BorderRadius.only(
+  //                   bottomRight: Radius.circular(12),
+  //                   topLeft: Radius.circular(6)),
+  //             ),
+  //             child: Text(
+  //               "Address Information",
+  //               style: GoogleFonts.montserrat(
+  //                   fontSize: 10,
+  //                   fontWeight: FontWeight.w600,
+  //                   color: Colors.white),
+  //             )),
+  //         Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  //           child: Row(
+  //             children: [
+  //               Container(
+  //                 height: 30,
+  //                 width: 30,
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.white,
+  //                   borderRadius: BorderRadius.circular(15),
+  //                   boxShadow: const [
+  //                     BoxShadow(
+  //                       color: Color(0xffE5F1FF),
+  //                       blurRadius: 4,
+  //                       spreadRadius: 0,
+  //                       offset: Offset(0, 0),
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 child: Center(
+  //                     child: SvgPicture.asset(
+  //                       'assets/icons/location_marker.svg',
+  //                       height: 20,
+  //                       width: 20,
+  //                     )),
+  //               ),
+  //               const SizedBox(width: 10),
+  //               Expanded(
+  //                 child: Text(
+  //                   "No.22,Abcd Street,RR Nagar,Chennai-600016,Tamil Nadu,India X5JX+HX Chennai, Tamil Nadu",
+  //                   style: GoogleFonts.spaceGrotesk(
+  //                     fontWeight: FontWeight.w400,
+  //                     fontSize: 12,
+  //                     color: const Color(0xff181818),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  //           child: Row(
+  //             children: [
+  //               Container(
+  //                 height: 30,
+  //                 width: 30,
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.white,
+  //                   borderRadius: BorderRadius.circular(15),
+  //                   boxShadow: const [
+  //                     BoxShadow(
+  //                       color: Color(0xffE5F1FF),
+  //                       blurRadius: 4,
+  //                       spreadRadius: 0,
+  //                       offset: Offset(0, 0),
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 child: Center(
+  //                     child: SvgPicture.asset(
+  //                       'assets/icons/google_code2.svg',
+  //                       height: 20,
+  //                       width: 20,
+  //                     )),
+  //               ),
+  //               const SizedBox(width: 10),
+  //               Expanded(
+  //                 child: Text(
+  //                   "X5JX+HX Chennai, Tamil Nadu",
+  //                   style: GoogleFonts.spaceGrotesk(
+  //                     fontWeight: FontWeight.w400,
+  //                     fontSize: 12,
+  //                     color: const Color(0xff181818),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildRemarksSection() {
     return Container(

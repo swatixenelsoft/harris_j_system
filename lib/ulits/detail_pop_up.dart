@@ -9,8 +9,11 @@ class ConsultancyDetailPopup extends StatelessWidget {
   final Map<String, dynamic> consultancy;
   final VoidCallback onDelete; // Callback to notify parent of deletion
 
-  const ConsultancyDetailPopup(
-      {super.key, required this.consultancy, required this.onDelete});
+  const ConsultancyDetailPopup({
+    super.key,
+    required this.consultancy,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,10 +60,11 @@ class ConsultancyDetailPopup extends StatelessWidget {
                               extra: consultancy);
                         },
                         child: CustomIconContainer(
-                            path: 'assets/icons/edit_pen.svg',
-                            bgColor: Color(0xffF5230C)),
+                          path: 'assets/icons/edit_pen.svg',
+                          bgColor: const Color(0xffF5230C),
+                        ),
                       ),
-                      SizedBox(width: 7),
+                      const SizedBox(width: 7),
                       // CustomIconContainer(
                       //     path: 'assets/icons/red_delete_icon.svg'),
                     ],
@@ -101,7 +105,9 @@ class ConsultancyDetailPopup extends StatelessWidget {
                         Text(
                           consultancy['country'],
                           style: GoogleFonts.montserrat(
-                              fontSize: 12, fontWeight: FontWeight.w500),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -121,24 +127,17 @@ class ConsultancyDetailPopup extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Status on the left (only colored dot with background)
+                  // Status → only a small colored dot now ✅
                   _buildFieldPair(
                     leftLabel: 'Status',
-                    leftWidget: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: consultancy['consultancy_status'] == 'Active'
-                            ? const Color(0xFFEBF9F1)
-                            : const Color(0xFFFBE7E8),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        Icons.circle,
-                        size: 8,
-                        color: consultancy['consultancy_status'] == 'Active'
-                            ? const Color(0xFF1F9254)
-                            : const Color(0xFFF5230C),
-                      ),
+                    leftWidget: Icon(
+                      Icons.circle,
+                      size: 12,
+                      color: consultancy['consultancy_status'] == 'Active'
+                          ? const Color(0xFF1F9254) // Green dot for Active
+                          : consultancy['consultancy_status'] == 'Disabled'
+                          ? const Color(0xff8D91A0) // Grey dot for Disabled
+                          : const Color(0xFFF5230C), // Red dot for Others
                     ),
                     rightLabel: '',
                     rightValue: '',
@@ -151,7 +150,6 @@ class ConsultancyDetailPopup extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildFieldPair({
     required String leftLabel,
     String? leftValue,
@@ -181,7 +179,6 @@ class ConsultancyDetailPopup extends StatelessWidget {
       ],
     );
   }
-
   Widget _buildField({
     required String label,
     String? value,
@@ -202,11 +199,13 @@ class ConsultancyDetailPopup extends StatelessWidget {
             Text(
               value ?? '',
               style: GoogleFonts.montserrat(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xff1D212D)),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xff1D212D),
+              ),
             ),
       ],
     );
+    // details of consultancy is here
   }
 }

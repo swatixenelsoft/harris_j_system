@@ -237,13 +237,15 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
                     dataRowMinHeight: 56,
                     dataRowMaxHeight: 56,
                     headingRowColor:
-                    MaterialStateProperty.all(const Color(0xFFF2F2F2)),
+                    MaterialStateProperty.all(
+                        const Color(0xFFF2F2F2)),
                     dataTextStyle: GoogleFonts.montserrat(
-                        fontSize: 12, color: const Color(0xff1D212D)),
+                        fontSize: 12,
+                        color: const Color(0xff1D212D)),
                     columns: [
                       DataColumn(
                         label: Container(
-                          width: 140, // Fixed width for alignment
+                          width: 140,
                           child: Text(
                             'Consultancy Name',
                             style: GoogleFonts.montserrat(
@@ -293,41 +295,28 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
                                 style: GoogleFonts.montserrat(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
-                                    color: const Color(0xff1D212D)),
+                                    color:
+                                    const Color(0xff1D212D)),
                               ),
                             ),
                           ),
+                          // ✅ Updated Status Column → Single Clean Dot
                           DataCell(
                             Container(
                               width: 80,
                               alignment: Alignment.center,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: consultancy[
-                                  'consultancy_status'] ==
-                                      'Active'
-                                      ? const Color(0xFFEBF9F1)
-                                      : consultancy[
-                                  'consultancy_status'] ==
-                                      'Disabled'
-                                      ? const Color(0xffF2F2F2)
-                                      : const Color(0xFFFBE7E8),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.circle,
-                                  size: 12,
-                                  color: consultancy[
-                                  'consultancy_status'] ==
-                                      'Active'
-                                      ? const Color(0xFF1F9254)
-                                      : consultancy[
-                                  'consultancy_status'] ==
-                                      'Disabled'
-                                      ? const Color(0xff8D91A0)
-                                      : const Color(0xFFF5230C),
-                                ),
+                              child: Icon(
+                                Icons.circle,
+                                size: 12,
+                                color: consultancy[
+                                'consultancy_status'] ==
+                                    'Active'
+                                    ? const Color(0xFF1F9254)
+                                    : consultancy[
+                                'consultancy_status'] ==
+                                    'Disabled'
+                                    ? const Color(0xff8D91A0)
+                                    : const Color(0xFFF5230C),
                               ),
                             ),
                           ),
@@ -355,6 +344,7 @@ class _BomConsultancyScreenState extends ConsumerState<BomConsultancyScreen> {
       ),
     );
   }
+
   Widget _buildHeaderContent() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

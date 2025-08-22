@@ -157,11 +157,27 @@ class _HrConsultantTimeSheetScreenState
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
     ref.read(hrProvider.notifier).setLoading(true);
+
     await getClientList();
     await getConsultantTimesheetByClient();
-    await updateActiveIndexFromStatus();
+    final hrState = ref.read(hrProvider);
+    final fullConsultantData = hrState.hrConsultantList ?? [];
+    if (fullConsultantData.isNotEmpty) {
+      setState(() {
+        _selectedRowIndex = 0;
+        selectedFullData = fullConsultantData[0];
+        customData = parseTimelineData(
+          fullConsultantData[0]['timesheet_data'] ?? [],
+        );
+      });
+      ref.read(hrProvider.notifier)
+          .getSelectedConsultantDetails(fullConsultantData[0]);
+      await updateActiveIndexFromStatus();
+    }
+
     ref.read(hrProvider.notifier).setLoading(false);
   }
+
 
   Future<void> _refreshData() async {
     print('selectedMonth $selectedMonth');
@@ -283,7 +299,7 @@ class _HrConsultantTimeSheetScreenState
                     TextSpan(
                       text: shortLeaveType,
                       style: GoogleFonts.montserrat(
-                        fontSize: 10,
+                        fontSize: 8,
                         fontWeight: FontWeight.w800,
                         color: const Color(0xff007BFF),
                       ),
@@ -313,16 +329,15 @@ class _HrConsultantTimeSheetScreenState
               widget: Text(
                 shortLeaveType,
                 style: GoogleFonts.montserrat(
-                  fontSize: 14,
+                  fontSize: 8,
                   fontWeight: FontWeight.w800,
                   color: const Color(0xff007BFF),
-                ),
+                ), //hex , rgb  ,
               ),
               type: 'leave',
             );
-          }
+          }//leave
         }
-
         // Work case
         else if (details.containsKey('workingHours') &&
             details['workingHours'] != null) {
@@ -331,7 +346,7 @@ class _HrConsultantTimeSheetScreenState
             widget: Text(
               workingHours,
               style: GoogleFonts.montserrat(
-                fontSize: 16,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: int.tryParse(workingHours) != 8
                     ? const Color(0xffFF1901)
@@ -346,8 +361,6 @@ class _HrConsultantTimeSheetScreenState
 
     return data;
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -822,16 +835,13 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   final double height;
   final dynamic customData;
-
   FixedHeaderDelegate({
     required this.child,
     required this.height,
     required this.customData,
   });
-
   @override
   double get minExtent => height;
-
   @override
   double get maxExtent => height;
 
