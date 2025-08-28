@@ -725,7 +725,7 @@ class BottomCard extends StatelessWidget {
               "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore ",
               style: GoogleFonts.montserrat(
                   fontWeight: FontWeight.w300, fontSize: 12, color: textColor)),
-          SizedBox(height: (index == 1 || index == 2) ? 50 : 15),
+          SizedBox(height: (index == 1 || index == 2) ? 30 : 15),
           Image(
             image: AssetImage(image),
             fit: BoxFit.fill,

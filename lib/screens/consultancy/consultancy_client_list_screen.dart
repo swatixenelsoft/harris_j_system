@@ -122,32 +122,7 @@ class _ConsultancyClientListScreenState
                   context.push(Constant.consultancyAddClientScreen,
                       extra: client);
                 },
-                onDelete: () {
-                  print('fhgfd');
-                  DeleteConfirmationDialog.show(
-                      context: context,
-                      itemName: 'client',
-                      onConfirm: () async {
-                        final deleteResponse = await ref
-                            .read(consultancyProvider.notifier)
-                            .deleteClient(client['id'], token!);
 
-                        if (deleteResponse['status'] == true) {
-                          Navigator.of(context).pop();
-                          ToastHelper.showSuccess(
-                            context,
-                            deleteResponse['message'] ??
-                                'Client deleted successfully',
-                          );
-                        } else {
-                          ToastHelper.showError(
-                            context,
-                            deleteResponse['message'] ??
-                                'Failed to delete client',
-                          );
-                        }
-                      });
-                },
               ),
             ),
           ],
@@ -219,6 +194,7 @@ class _ConsultancyClientListScreenState
                                   columns: [
                                     'serving_client',
                                     'consultant_count',
+                                    'client_status',
                                     'actions'
                                   ],
                                   onZoomTap: (client) {
@@ -251,7 +227,7 @@ class _ConsultancyClientListScreenState
                                   ),
                                   GridColumn(
                                     columnName: 'consultant_count',
-                                    width: 130, // 👈 Increase this width
+                                    width: 100, // 👈 Increase this width
                                     label: Container(
                                       alignment: Alignment.centerLeft,
                                       padding: const EdgeInsets.symmetric(
@@ -259,6 +235,24 @@ class _ConsultancyClientListScreenState
                                       color: const Color(0xFFF2F2F2),
                                       child: Text(
                                         'Consultants',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  GridColumn(
+                                    columnName: 'client_status',
+                                    width: 60,
+                                    label: Container(
+                                      alignment: Alignment.centerLeft,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8),
+                                      color: const Color(0xFFF2F2F2),
+                                      child: Text(
+                                        'Status',
                                         style: GoogleFonts.montserrat(
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,

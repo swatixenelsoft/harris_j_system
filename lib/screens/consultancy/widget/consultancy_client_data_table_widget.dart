@@ -57,7 +57,7 @@ class GenericDataSource extends DataGridSource {
             }, // assuming first cell is full consultancy data
             child: const CustomIconContainer(path: 'assets/icons/zoom.svg'),
           );
-        } else if (columnName == 'status') {
+        } else if (columnName == 'status' || columnName=='client_status') {
           String queueValue = value.toString();
           print('queueValue $queueValue');
           Color circleColor = queueValue == 'Active'

@@ -7,14 +7,11 @@ import 'package:intl/intl.dart';
 class ConsultancyClientDetailPopup extends StatelessWidget {
   final Map<String, dynamic> client;
   final VoidCallback onEdit; // Callback to notify parent of edit
-  final VoidCallback onDelete; // Callback to notify parent of deletion
 
   const ConsultancyClientDetailPopup(
       {super.key,
       required this.client,
-      required this.onEdit,
-      required this.onDelete});
-
+      required this.onEdit,});
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -57,18 +54,11 @@ class ConsultancyClientDetailPopup extends StatelessWidget {
                         onTap: () {
                           onEdit();
                         },
-                        child: CustomIconContainer(
+                        child: const CustomIconContainer(
                             path: 'assets/icons/edit_pen.svg',
                             bgColor: Color(0xffF5230C)),
                       ),
-                      SizedBox(width: 7),
-                      GestureDetector(
-                        onTap: () {
-                          onDelete();
-                        },
-                        child: CustomIconContainer(
-                            path: 'assets/icons/red_delete_icon.svg'),
-                      ),
+                      const SizedBox(width: 7),
                     ],
                   ),
                 ],

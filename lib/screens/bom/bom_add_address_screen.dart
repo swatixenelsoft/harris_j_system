@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +36,7 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
   String? _selectedState = 'Not Selected';
   bool _isSubmitted = false;
   bool _isVisible = false;
+  List<Map<String, dynamic>> _addressList = [];
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool get isEdit => widget.address != null;
 
@@ -59,9 +62,10 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
 
   fetchData() async {
     await _getCountryData();
-
+    await _loadAddresses();
     if (isEdit) {
       await _editData();
+
     }
   }
 
@@ -78,8 +82,8 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
     _townController.text = addressMap['townArea'] ?? '';
     _landMarkController.text = addressMap['landMark'] ?? '';
     _unitNumberController.text = addressMap['unitNumber'] ?? '';
-    _selectedAddressType =addressMap['addressType']??'';
-    _googleCodeController.text=addressMap['plusCode']??'';
+    _selectedAddressType = addressMap['addressType'] ?? '';
+    _googleCodeController.text = addressMap['plusCode'] ?? '';
 
     _apartmentNameController.text = addressMap['streetName'] ?? '';
     print('_apartmentNameController ${_apartmentNameController.text}');
@@ -102,14 +106,69 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
     await ref.read(getCountryProvider.notifier).fetchCountries(token!);
   }
 
+
+  Future<void> _loadAddresses() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String>? stringList = prefs.getStringList('addresses');
+
+    if (stringList != null) {
+      setState(() {
+        _addressList = stringList
+            .map((address) => jsonDecode(address) as Map<String, dynamic>)
+            .toList();
+      });
+    }
+  }
+
+  Future<void> _saveAddresses() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> stringList =
+    _addressList.map((address) => jsonEncode(address)).toList();
+    await prefs.setStringList('addresses', stringList);
+  }
+
   void _submitForm() async {
+    debugPrint('submit');
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isVisible = true;
+    // If default is selected, unset previous defaults
+    // // if (_isVisible) {
+    //   for (var addr in _addressList) {
+    //     addr['isDefault'] = false;
+    //   }
+    // }
+
+    // Add new address
+    _addressList.add({
+      'addressType': _selectedAddressType,
+      'apartmentName': _apartmentNameController.text,
+      'unitNumber': _unitNumberController.text,
+      'landMark': _landMarkController.text,
+      'town': _townController.text,
+      'city': _cityController.text,
+      'state': _selectedState,
+      'country': _selectedCountry,
+      'postalCode': _postalCodeController.text,
+      'googleCode': _googleCodeController.text,
+      'isDefault': _isVisible, // default if checked
     });
+
+    await _saveAddresses();
+
+    // Clear form
+    _apartmentNameController.clear();
+    _unitNumberController.clear();
+    _landMarkController.clear();
+    _townController.clear();
+    _cityController.clear();
+    _postalCodeController.clear();
+    _googleCodeController.clear();
+    _selectedAddressType = "Not Selected";
+    _selectedCountry = "Not Selected";
+    _selectedState = "Not Selected";
+    _isVisible = false;
   }
 
   String? validatePostalCode(String? value) {
@@ -424,15 +483,6 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
                 ),
               ),
               const SizedBox(height: 10),
-              CustomTextField(
-                padding: 10,
-                borderRadius: 8,
-                label: 'Google map plus code',
-                hintText: 'Google map plus code',
-                controller: _googleCodeController,
-                validator: validatePlusCode,
-              ),
-              const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Text(
@@ -444,78 +494,87 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
                 ),
               ),
               const SizedBox(height: 8),
-              if (_isVisible == true)
+              if (_addressList.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 10),
-                  height: 110,
+                  height: 200, // adjust as needed
                   width: MediaQuery.of(context).size.width,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    boxShadow: [BoxShadow(blurRadius: 3, color: Colors.grey)],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                          width: 70,
-                          height: 35,
-                          padding: const EdgeInsets.symmetric(horizontal: 5),
-                          decoration: const BoxDecoration(
-                            color: Color.fromRGBO(255, 150, 27, 0.3),
-                            borderRadius: BorderRadius.only(
-                                bottomRight: Radius.circular(12),
-                                topLeft: Radius.circular(12)),
+                  child: ListView.builder(
+                    itemCount: _addressList.length,
+                    itemBuilder: (context, index) {
+                      final address = _addressList[index];
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            for (var addr in _addressList) {
+                              addr['isDefault'] = false;
+                            }
+                            address['isDefault'] = true;
+                          });
+                          _saveAddresses();
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [BoxShadow(blurRadius: 3, color: Colors.grey)],
                           ),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(
-                                Icons.location_pin,
-                                color: Color(0xffFF1901),
-                                size: 15,
+                              if (address['isDefault'] == true)
+                                Container(
+                                    width: 70,
+                                    height: 35,
+                                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                                    decoration: const BoxDecoration(
+                                      color: Color.fromRGBO(255, 150, 27, 0.3),
+                                      borderRadius: BorderRadius.only(
+                                          bottomRight: Radius.circular(12),
+                                          topLeft: Radius.circular(12)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.location_pin,
+                                          color: Color(0xffFF1901),
+                                          size: 15,
+                                        ),
+                                        Text(
+                                          'Default',
+                                          style: GoogleFonts.montserrat(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w500,
+                                              color: const Color(0xffFF1901)),
+                                        ),
+                                      ],
+                                    )),
+                              const SizedBox(height: 5),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10,right:10,top: 5),
+                                child: Text(
+                                  '${address['apartmentName']}, ${address['unitNumber']}, ${address['landMark']}, ${address['town']}, ${address['city']}',
+                                  style:GoogleFonts.spaceGrotesk(fontSize: 12,fontWeight: FontWeight.w500,color: Color(0xff181818)),
+                                ),
                               ),
-                              Text(
-                                'Default',
-                                style: GoogleFonts.montserrat(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xffFF1901)),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10,right:10,top: 5,bottom: 5),
+                                child: Text(
+                                  '${address['state']}, ${address['country']} - ${address['postalCode']}',
+                                  style:GoogleFonts.spaceGrotesk(fontSize: 12,fontWeight: FontWeight.w500,color: Color(0xff181818)),
+
+                                ),
                               ),
                             ],
-                          )),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0, vertical: 5),
-                        child: Text(
-                            '${_apartmentNameController.text},${_unitNumberController.text},${_landMarkController.text},$_selectedState,$_selectedCountry-${_postalCodeController.text}'),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0, vertical: 8),
-                        child: Row(
-                          children: [
-                            Container(
-                              height: 25,
-                              width: 25,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                  child: SvgPicture.asset(
-                                'assets/icons/google_code.svg',
-                                height: 15,
-                                width: 15,
-                                color: Colors.red,
-                              )),
-                            ),
-                            Text(_googleCodeController.text),
-                          ],
+                          ),
                         ),
-                      )
-                    ],
+                      );
+                    },
                   ),
                 ),
+
+
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -538,24 +597,31 @@ class _AddAddressBottomSheetState extends ConsumerState<AddAddressBottomSheet> {
                         width: 110),
                     CustomButton(
                       text: 'Confirm',
-                      onPressed: () {
-                        final confirmedData = {
-                          'apartmentName': _apartmentNameController.text,
-                          'unitNumber': _unitNumberController.text,
-                          'landMark': _landMarkController.text,
-                          'state': _selectedState,
-                          'country': _selectedCountry,
-                          'postalCode': _postalCodeController.text,
-                          'googleCode': _googleCodeController.text,
-                        };
+                      onPressed: () async {
+                        // 1️⃣ Find the default address in the list
+                        final defaultAddress = _addressList.firstWhere(
+                              (addr) => addr['isDefault'] == true,
+                          orElse: () => {}, // empty if none
+                        );
 
-                        Navigator.pop(context, confirmedData);
+                        if (defaultAddress.isNotEmpty) {
+                          // 2️⃣ Pop screen and return the default address
+                          Navigator.pop(context, defaultAddress);
+                        } else {
+                          // optional: show a message if no default is selected
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please select a default address")),
+                          );
+                        }
                       },
                       width: 110,
-                    ),
+                    )
+
+
                   ],
                 ),
               ),
+              const SizedBox(height: 10),
             ],
           ),
         ),

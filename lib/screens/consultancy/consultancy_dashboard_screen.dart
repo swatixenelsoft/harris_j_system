@@ -59,14 +59,14 @@ class _ConsultancyDashboardScreenState
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 6),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.8,
+                    height: MediaQuery.sizeOf(context).height * 0.9,
                     child: MasonryGridView.builder(
-                        itemCount: 6,
-                        // physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 3,
+                        physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
                         gridDelegate:
                             const SliverSimpleGridDelegateWithFixedCrossAxisCount(
@@ -75,6 +75,7 @@ class _ConsultancyDashboardScreenState
                         mainAxisSpacing: 12,
                         crossAxisSpacing: 12,
                         itemBuilder: (context, index) {
+                          debugPrint('index $index');
                           Widget card;
                           switch (index) {
                             case 0:
@@ -110,38 +111,6 @@ class _ConsultancyDashboardScreenState
                               );
                               break;
                             case 2:
-                              card = GestureDetector(
-                                onTap: () {
-                                  context
-                                      .push(Constant.consultancyReportScreen);
-                                },
-                                child: BottomCard(
-                                  title: "Reports",
-                                  white: true,
-                                  bgColor: const Color.fromRGBO(0, 0, 0, 0.1),
-                                  textColor: const Color(0xff5A5A5A),
-                                  image: 'assets/images/gridView3.png',
-                                  index: index,
-                                ),
-                              );
-                              break;
-                            case 3:
-                              card = GestureDetector(
-                                onTap: () {
-                                  context
-                                      .push(Constant.consultancySettingsScreen);
-                                },
-                                child: BottomCard(
-                                  title: "Static Setup",
-                                  orange: true,
-                                  bgColor: const Color(0xffFFEDDA),
-                                  textColor: const Color(0xff5A5A5A),
-                                  image: 'assets/images/gridView4.png',
-                                  index: index,
-                                ),
-                              );
-                              break;
-                            case 5:
                               card = GestureDetector(
                                 onTap: () {
                                   context.push(Constant.hrFeedBackScreen);
