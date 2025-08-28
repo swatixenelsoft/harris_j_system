@@ -44,7 +44,7 @@ class _CustomAppBar2State extends State<CustomAppBar2> {
     String? storedImage = prefs.getString("consultancyLogo"); // key used when saving
     print('storedImage $storedImage');
     setState(() {
-      _imageUrl = storedImage ?? 'assets/icons/cons_logo.png'; // default if not found
+      _imageUrl = storedImage ?? 'assets/icons/harris_j.png'; // default if not found
     });
 
     print('_imageUrl $_imageUrl');
@@ -67,7 +67,7 @@ class _CustomAppBar2State extends State<CustomAppBar2> {
         child: _imageUrl != null
             ? (_imageUrl!.startsWith("http")
             ? Image.network(_imageUrl!, height: 39, fit: BoxFit.contain)
-            : Image.asset('assets/icons/cons_logo.png', height: 39, width: 130, fit: BoxFit.contain))
+            : Image.asset('assets/icons/harris_j.png', height: 39, width: 130, fit: BoxFit.contain))
             : const SizedBox(height: 39, width: 130),
       ),
       centerTitle: false,

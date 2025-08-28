@@ -57,7 +57,6 @@ class ConfirmLogoutDialog {
         );
       },
     );
-
     return result ?? false;
   }
 }

@@ -98,7 +98,7 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
     // ✅ Now data is guaranteed to be present
     final consultantState = ref.read(consultantProvider);
     final status =
-        getStatusForMonth(consultantState, selectedMonth, selectedYear);
+    getStatusForMonth(consultantState, selectedMonth, selectedYear);
     print('Status after fetching: $status');
 
     if (mounted) {
@@ -130,10 +130,9 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
   Map<DateTime, CalendarData> parseTimelineData(List<dynamic> apiResponse) {
     final Map<DateTime, CalendarData> calendarData = {};
 
-    if ((apiResponse).isNotEmpty) {
+    if (apiResponse.isNotEmpty) {
       final List dataList = apiResponse;
 
-      // Loop through all items in the data list
       for (var dataItem in dataList) {
         status = dataItem['status'];
 
@@ -154,30 +153,41 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
           if (day == null || month == null || year == null) continue;
 
           final dateKey = DateTime(year, month, day);
-          if (details.containsKey('leaveType') &&
-              details['leaveType'] != null) {
-            final leaveType = details['leaveType'].toString();
+
+          // Handle leave types
+          if (details.containsKey('leaveType') && details['leaveType'] != null) {
+            final leaveType = details['leaveType'].toString().toUpperCase();
             final leaveHour = details['leaveHour']?.toString();
 
-            bool isCustom = leaveType.startsWith('Custom ');
+            // Define known leave types
+            const knownLeaveTypes = {
+              'ML': 'ML', // Medical Leave
+              'AL': 'AL', // Annual Leave
+              'PH': 'PH', // Public Holiday
+              'COMP OFF': 'CO', // Compensatory Off
+              'PDO': 'PDO', // Paid Day Off
+            };
+
+            bool isCustom = leaveType.startsWith('CUSTOM ');
             String shortLeaveType = isCustom
-                ? leaveType.replaceFirst('Custom ', '').toUpperCase()
-                : leaveType.toUpperCase();
+                ? leaveType.replaceFirst('CUSTOM ', '')
+                : knownLeaveTypes[leaveType] ?? leaveType;
 
             String? suffix;
 
-            // Check for HD1/HD2 suffix
             if (leaveHour == 'First half workday (HD1)') {
               suffix = 'HD1';
             } else if (leaveHour == 'Second half workday (HD2)') {
               suffix = 'HD2';
             } else if (isCustom) {
-              suffix = 'cust';
+              suffix = 'CUST';
             }
 
-            // Show RichText for Custom or ML/AL with HD1/HD2
             if (isCustom ||
-                ((shortLeaveType == 'ML' || shortLeaveType == 'AL') &&
+                ((shortLeaveType == 'ML' ||
+                    shortLeaveType == 'AL' ||
+                    shortLeaveType == 'CO' ||
+                    shortLeaveType == 'PDO') &&
                     suffix != null)) {
               calendarData[dateKey] = CalendarData(
                 widget: RichText(
@@ -186,38 +196,38 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
                       TextSpan(
                         text: shortLeaveType,
                         style: GoogleFonts.montserrat(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
                           color: const Color(0xff007BFF),
                         ),
                       ),
-                      WidgetSpan(
-                        child: Transform.translate(
-                          offset: const Offset(-2, -6),
-                          child: Text(
-                            suffix!,
-                            textScaleFactor: 0.7,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xff007BFF),
+                      if (suffix != null)
+                        WidgetSpan(
+                          child: Transform.translate(
+                            offset: const Offset(-2, -6),
+                            child: Text(
+                              suffix,
+                              textScaleFactor: 0.7,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xff007BFF),
+                              ),
                             ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
                 type: 'leave',
               );
             } else {
-              // Regular leave text
               calendarData[dateKey] = CalendarData(
                 widget: Text(
                   shortLeaveType,
                   style: GoogleFonts.montserrat(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w700,
                     color: const Color(0xff007BFF),
                   ),
                 ),
@@ -225,8 +235,7 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
               );
             }
           }
-
-          // Work case
+          // Handle working hours
           else if (details.containsKey('workingHours') &&
               details['workingHours'] != null) {
             final workingHours = details['workingHours'].toString();
@@ -234,7 +243,7 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
               widget: Text(
                 workingHours,
                 style: GoogleFonts.montserrat(
-                  fontSize: 16,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: int.parse(workingHours) != 8
                       ? const Color(0xffFF1901)
@@ -254,21 +263,21 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
   void _refreshData() async {
     if (token != null) {
       await ref.read(consultantProvider.notifier).consultantTimeSheet(
-            token!,
-            selectedMonth.toString(),
-            selectedYear.toString(),
-          );
+        token!,
+        selectedMonth.toString(),
+        selectedYear.toString(),
+      );
       await ref.read(consultantProvider.notifier).consultantTimesheetRemarks(
-            ApiConstant.getTimesheetRemarks,
-            token!,
-            selectedMonth.toString(),
-            selectedYear.toString(),
-          );
+        ApiConstant.getTimesheetRemarks,
+        token!,
+        selectedMonth.toString(),
+        selectedYear.toString(),
+      );
       await ref.read(consultantProvider.notifier).consultantLeaveWorkLog(
-            token!,
-            selectedMonth.toString(),
-            selectedYear.toString(),
-          );
+        token!,
+        selectedMonth.toString(),
+        selectedYear.toString(),
+      );
     }
     setState(() {});
     print('refresh $selectedMonth');
@@ -276,16 +285,15 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
 
   Future<void> _saveTimesheet(GetConsultantState consultantState) async {
     try {
-      // ✅ Start loader
       ref.read(consultantProvider.notifier).setLoading(true);
 
       String monthName =
-          DateFormat.MMMM().format(DateTime(selectedYear, selectedMonth));
+      DateFormat.MMMM().format(DateTime(selectedYear, selectedMonth));
       String selectedMonthString = '$monthName $selectedYear';
       List data = consultantState.consultantTimeSheet!['data'];
 
       Map<String, dynamic>? selectedMonthData = data.firstWhere(
-        (monthData) => monthData['month'].toString() == selectedMonthString,
+            (monthData) => monthData['month'].toString() == selectedMonthString,
         orElse: () => null,
       );
 
@@ -295,15 +303,15 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
         final details = day['details'];
         return details != null &&
             (details.containsKey('workingHours') ||
-                details['leaveType'] == 'PH');
+                ['PH', 'COMP OFF', 'PDO'].contains(details['leaveType']));
       }).map((day) {
         final details = day['details'];
         return {
           'date': details['date'],
           details.containsKey('workingHours') ? 'workingHours' : 'leaveType':
-              details.containsKey('workingHours')
-                  ? details['workingHours']
-                  : details['leaveType'],
+          details.containsKey('workingHours')
+              ? details['workingHours']
+              : details['leaveType'],
           'applyOnCell': details['applyOnCell'] ?? details['date'],
         };
       }).toList();
@@ -326,23 +334,22 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
       print('Saving timesheet data...');
 
       final response =
-          await ref.read(consultantProvider.notifier).addTimesheetData(
-                token!,
-                userId.toString(),
-                type,
-                clientId,
-                clientName,
-                status,
-                record,
-                corporateEmail,
-                reportingManagerEmail,
-                "", // selectMonth is not required for save
-                "", // selectYear is not required for save
-                certificate,
-              );
+      await ref.read(consultantProvider.notifier).addTimesheetData(
+        token!,
+        userId.toString(),
+        type,
+        clientId,
+        clientName,
+        status,
+        record,
+        corporateEmail,
+        reportingManagerEmail,
+        "", // selectMonth is not required for save
+        "", // selectYear is not required for save
+        certificate,
+      );
 
       if (response['success']) {
-        // Optional success UI update
         ToastHelper.showSuccess(context, 'TimeSheet saved successfully!');
         setState(() {});
       }
@@ -350,7 +357,6 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
     } catch (e) {
       print('❌ Save error: $e');
     } finally {
-      // ✅ Stop loader
       ref.read(consultantProvider.notifier).setLoading(false);
     }
   }
@@ -363,16 +369,15 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
     }
 
     try {
-      // Start loader
       ref.read(consultantProvider.notifier).setLoading(true);
 
       String monthName =
-          DateFormat.MMMM().format(DateTime(selectedYear, selectedMonth));
+      DateFormat.MMMM().format(DateTime(selectedYear, selectedMonth));
       String selectedMonthString = '$monthName $selectedYear';
       List data = consultantState.consultantTimeSheet!['data'];
 
       Map<String, dynamic>? selectedMonthData = data.firstWhere(
-        (monthData) => monthData['month'].toString() == selectedMonthString,
+            (monthData) => monthData['month'].toString() == selectedMonthString,
         orElse: () => null,
       );
 
@@ -382,15 +387,15 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
         final details = day['details'];
         return details != null &&
             (details.containsKey('workingHours') ||
-                details['leaveType'] == 'PH');
+                ['PH', 'COMP OFF', 'PDO'].contains(details['leaveType']));
       }).map((day) {
         final details = day['details'];
         return {
           'date': details['date'],
           details.containsKey('workingHours') ? 'workingHours' : 'leaveType':
-              details.containsKey('workingHours')
-                  ? details['workingHours']
-                  : details['leaveType'],
+          details.containsKey('workingHours')
+              ? details['workingHours']
+              : details['leaveType'],
           'applyOnCell': details['applyOnCell'] ?? details['date'],
         };
       }).toList();
@@ -412,25 +417,24 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
 
       print('Submitting timesheet...');
       final response =
-          await ref.read(consultantProvider.notifier).addTimesheetData(
-                token!,
-                userId.toString(),
-                type,
-                clientId,
-                clientName,
-                status,
-                record,
-                corporateEmail,
-                reportingManagerEmail,
-                selectedMonth.toString(),
-                selectedYear.toString(),
-                certificate,
-              );
+      await ref.read(consultantProvider.notifier).addTimesheetData(
+        token!,
+        userId.toString(),
+        type,
+        clientId,
+        clientName,
+        status,
+        record,
+        corporateEmail,
+        reportingManagerEmail,
+        selectedMonth.toString(),
+        selectedYear.toString(),
+        certificate,
+      );
 
       if (response['success']) {
         ToastHelper.showSuccess(context, 'TimeSheet submitted successfully!');
 
-        // ✅ ADDITIONAL LOGIC AFTER SUCCESS
         final consultantState = ref.read(consultantProvider);
         final status = getStatusForMonth(
           consultantState,
@@ -464,24 +468,20 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
     final dataList = consultantState.consultantTimeSheet?['data'];
     if (dataList is List) {
       final matchingEntry = dataList.firstWhere(
-        (entry) => entry['month'] == targetMonth,
+            (entry) => entry['month'] == targetMonth,
         orElse: () => null,
       );
 
       return matchingEntry?['status'];
     }
 
-    return null; // or "Unknown"
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-
-// Use a percentage of screen height, e.g., 20%
     final headerBaseHeight = screenHeight * 0.11;
-
-// Add calendarHeight
     final headerHeight = headerBaseHeight + calendarHeight;
     final consultantState = ref.watch(consultantProvider);
 
@@ -495,8 +495,8 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
       );
     }
     final customData =
-        parseTimelineData(consultantState.consultantTimeSheet?['data']);
-    print('selecte monhth and year $selectedMonth,$selectedYear');
+    parseTimelineData(consultantState.consultantTimeSheet?['data']);
+    print('selected month and year $selectedMonth,$selectedYear');
     return Scaffold(
       body: SafeArea(
         child: NestedScrollView(
@@ -522,7 +522,7 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
                 pinned: true,
                 floating: true,
                 delegate: FixedHeaderDelegate(
-                  height:headerHeight,
+                  height: headerHeight,
                   activeIndex: activeIndex,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -564,7 +564,7 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
                             _refreshData();
 
                             final consultantState =
-                                ref.read(consultantProvider);
+                            ref.read(consultantProvider);
                             final status = getStatusForMonth(
                                 consultantState, selectedMonth, selectedYear);
                             print('Status after month change: $status');
@@ -589,7 +589,7 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
                                     activeIndex = 5;
                                     break;
                                   default:
-                                    activeIndex = 1; // Fallback
+                                    activeIndex = 1;
                                 }
                               });
                             }
@@ -655,28 +655,26 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
             },
             child: SvgPicture.asset('assets/icons/back.svg', height: 15)),
         const Spacer(),
-
-// --- Buttons Row ---
         GestureDetector(
           onTap: activeIndex != 0
-              ? null // 👈 disables tap
+              ? null
               : () {
-                  setState(() {
-                    consultantState.isEditable =
-                        !(consultantState.isEditable ?? false);
-                  });
+            setState(() {
+              consultantState.isEditable =
+              !(consultantState.isEditable ?? false);
+            });
 
-                  ToastHelper.showInfo(
-                    context,
-                    consultantState.isEditable
-                        ? "Edit Enabled"
-                        : "Edit Disabled",
-                  );
+            ToastHelper.showInfo(
+              context,
+              consultantState.isEditable
+                  ? "Edit Enabled"
+                  : "Edit Disabled",
+            );
 
-                  print('isEdit ${consultantState.isEditable}');
-                },
+            print('isEdit ${consultantState.isEditable}');
+          },
           child: Opacity(
-            opacity: activeIndex != 0 ? 0.5 : 1.0, // 👈 visual feedback
+            opacity: activeIndex != 0 ? 0.5 : 1.0,
             child: SvgPicture.asset('assets/icons/edit_icon.svg'),
           ),
         ),
@@ -817,7 +815,7 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
   BoxDecoration containerBoxDecoration(
       [Color? color, Offset shadowOffset = const Offset(0, 2)]) {
     return BoxDecoration(
-      color: color, // If color is null, it will be transparent (default)
+      color: color,
       borderRadius: BorderRadius.circular(3),
       boxShadow: [
         BoxShadow(
@@ -843,31 +841,24 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
           Color iconColor = Colors.black;
 
           if (index < activeIndex) {
-            // ✅ Completed step
-            backgroundColor = const Color(0xFF007BFF); // Blue
+            backgroundColor = const Color(0xFF007BFF);
             borderColor = const Color(0xFF007BFF);
             iconColor = Colors.white;
           } else if (index == activeIndex) {
-            // ✅ Active step
             switch (index) {
               case 1:
               case 4:
-                backgroundColor = const Color(0xFFFFC107); // Yellow
+                backgroundColor = const Color(0xFFFFC107);
                 borderColor = const Color(0xFFFFC107);
                 iconColor = Colors.white;
                 break;
               case 5:
-                backgroundColor = const Color(0xFF28A745); // Green
+                backgroundColor = const Color(0xFF28A745);
                 borderColor = const Color(0xFF28A745);
                 iconColor = Colors.white;
                 break;
-              case 6:
-                backgroundColor = const Color(0xFFDA6536); // Orange
-                borderColor = const Color(0xFFDA6536);
-                iconColor = Colors.white;
-                break;
               case 3:
-                backgroundColor = Colors.red.shade400; // Red
+                backgroundColor = Colors.red.shade400;
                 borderColor = Colors.red.shade400;
                 iconColor = Colors.white;
                 break;
@@ -882,7 +873,6 @@ class _TimeSheetScreenState extends ConsumerState<TimeSheetScreen> {
                 iconColor = Colors.white;
             }
           }
-          // else => upcoming step: remains white
 
           return Row(
             children: [
@@ -960,7 +950,7 @@ class FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
 
 class CalendarData {
   final Widget widget;
-  final String type; // e.g., 'leave', 'work', etc.
+  final String type;
 
   CalendarData({required this.widget, required this.type});
 }

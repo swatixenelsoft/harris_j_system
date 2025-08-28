@@ -418,7 +418,6 @@ class _ConsultantDashboardScreenState
                         ),
                       )
                     ],
-
                     const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -465,27 +464,7 @@ class _ConsultantDashboardScreenState
                                   ),
                                 );
                                 break;
-                              case 2:
-                                card = BottomCard(
-                                  title: "Leave Log",
-                                  white: true,
-                                  bgColor: const Color.fromRGBO(0, 0, 0, 0.1),
-                                  textColor: const Color(0xff5A5A5A),
-                                  image: 'assets/images/gridView3.png',
-                                  index: index,
-                                );
-                                break;
-                              case 3:
-                                card = BottomCard(
-                                  title: "Work Log",
-                                  orange: true,
-                                  bgColor: const Color(0xffFFEDDA),
-                                  textColor: const Color(0xff5A5A5A),
-                                  image: 'assets/images/gridView4.png',
-                                  index: index,
-                                );
-                                break;
-                              case 5:
+                                case 5:
                                 card = GestureDetector(
                                   onTap: () {
                                     context.push(Constant.hrFeedBackScreen);

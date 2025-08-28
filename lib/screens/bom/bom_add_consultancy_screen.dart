@@ -7,6 +7,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:harris_j_system/screens/bom/widget/dialog_subscription.dart';
+import 'package:harris_j_system/widgets/custom_currency_picker.dart';
+import 'package:harris_j_system/widgets/custom_red_button_textfield.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:harris_j_system/providers/bom_provider.dart';
@@ -35,7 +38,6 @@ class BomAddConsultancyScreen extends ConsumerStatefulWidget {
   ConsumerState<BomAddConsultancyScreen> createState() =>
       _BomAddConsultancyScreenState();
 }
-
 class _BomAddConsultancyScreenState
     extends ConsumerState<BomAddConsultancyScreen> {
   String _primaryCountryCode = '+65'; // Default country code
@@ -53,6 +55,7 @@ class _BomAddConsultancyScreenState
   final TextEditingController _endDateController = TextEditingController();
   final TextEditingController _licenseNumber = TextEditingController();
   final TextEditingController _adminCredential = TextEditingController();
+  final TextEditingController _subscriptionController = TextEditingController();
   String? _selectedConsultancyType = 'Not Selected';
   String? _selectedConsultancyStatus = 'Not Selected';
   String? _selectedFeeStructure = 'Not Selected';
@@ -89,7 +92,6 @@ class _BomAddConsultancyScreenState
     if (isEdit) {
       _consultancyName.text = widget.consultancy!['consultancy_name'] ?? '';
       _consultancyId.text = widget.consultancy!['consultancy_id'] ?? '';
-
       _confirmedAddress = widget.consultancy!['show_address_input'] ?? '';
       _uenNumber.text = widget.consultancy!['uen_number'] ?? '';
       _primaryContactPerson.text = widget.consultancy!['primary_contact'] ?? '';
@@ -109,11 +111,9 @@ class _BomAddConsultancyScreenState
           widget.consultancy!['consultancy_status'] ?? '';
       _selectedConsultancyType = widget.consultancy!['consultancy_type'] ?? '';
       _startDateController.text = DateFormat('dd/MM/yyyy').format(
-              DateTime.parse(widget.consultancy!['license_start_date'])) ??
-          '';
+              DateTime.parse(widget.consultancy!['license_start_date'])) ?? '';
       _endDateController.text = DateFormat('dd/MM/yyyy').format(
-              DateTime.parse(widget.consultancy!['license_end_date'])) ??
-          '';
+              DateTime.parse(widget.consultancy!['license_end_date'])) ?? '';
       _licenseNumber.text = widget.consultancy!['license_number'] ?? '';
       _selectedLastPaidStatus = widget.consultancy!['last_paid_status'] ?? '';
       _selectedFeeStructure = widget.consultancy!['fees_structure'] ?? '';
@@ -125,7 +125,6 @@ class _BomAddConsultancyScreenState
     urlToFile();
     super.initState();
   }
-
   urlToFile() async {
     // Get temporary directory
     final imageUrl = ApiConstant.imageBaseUrl +
@@ -160,7 +159,7 @@ class _BomAddConsultancyScreenState
         style: GoogleFonts.montserrat(
           fontWeight: fontWeight,
           color: color,
-          fontSize: 14,
+          fontSize: 12,
         ),
       ),
     );
@@ -489,6 +488,7 @@ class _BomAddConsultancyScreenState
     print('_selectedImage $_selectedFeeStructure');
     final isLoading = ref.watch(bomProvider).isLoading;
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: const CustomAppBar(
         showBackButton: false,
         image: 'assets/images/bom/bom_logo.png',
@@ -498,6 +498,7 @@ class _BomAddConsultancyScreenState
           SafeArea(
             child: SingleChildScrollView(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   _buildHeaderContent(),
                   Padding(
@@ -757,25 +758,25 @@ class _BomAddConsultancyScreenState
                           const SizedBox(height: 15),
                           const Divider(color: Color(0xffA6A9B5)),
                           const SizedBox(height: 15),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Consultancy Type",
-                            items: _consultancyType.map((e) => e['label']!).toList(),
-                            value: _consultancyType.firstWhere(
-                                  (element) => element['value'] == _selectedConsultancyType,
-                              orElse: () => _consultancyType[0],
-                            )['label'],
-                            onChanged: (label) {
-                              final selectedMap = _consultancyType.firstWhere(
-                                    (element) => element['label'] == label,
-                                orElse: () => _consultancyType[0],
-                              );
-
-                              setState(() {
-                                _selectedConsultancyType = selectedMap['value'];
-                              });
-                            },
-                          ),
+                          // CustomDropdownField(
+                          //   borderRadius: 8,
+                          //   label: "Consultancy Type",
+                          //   items: _consultancyType.map((e) => e['label']!).toList(),
+                          //   value: _consultancyType.firstWhere(
+                          //         (element) => element['value'] == _selectedConsultancyType,
+                          //     orElse: () => _consultancyType[0],
+                          //   )['label'],
+                          //   onChanged: (label) {
+                          //     final selectedMap = _consultancyType.firstWhere(
+                          //           (element) => element['label'] == label,
+                          //       orElse: () => _consultancyType[0],
+                          //     );
+                          //
+                          //     setState(() {
+                          //       _selectedConsultancyType = selectedMap['value'];
+                          //     });
+                          //   },
+                          // ),
 
                           const SizedBox(height: 12),
                           CustomDropdownField(
@@ -790,7 +791,23 @@ class _BomAddConsultancyScreenState
                             },
                           ),
                           const SizedBox(height: 12),
+                          CurrencyPickerField(
+                            controller: TextEditingController(),
+                            initialCurrencyCode: "GBP",
+                            onCurrencyChanged: (currencyCode) {
+                              print('Selected currency: $currencyCode');
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter amount';
+                              }
+                              return null;
+                            },
+                          ),
+
+                          const SizedBox(height: 12),
                           Row(
+
                             children: [
                               Expanded(
                                 flex: _selectedImage != null ? 8 : 10,
@@ -806,8 +823,7 @@ class _BomAddConsultancyScreenState
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         SvgPicture.asset(
                                           'assets/icons/upload_icons.svg',
@@ -866,41 +882,94 @@ class _BomAddConsultancyScreenState
                             validator: validateLicenseNumber,
                           ),
                           const SizedBox(height: 12),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Fees Structure",
-                            items: _feeStructure,
-                            value: _selectedFeeStructure,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedFeeStructure = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          CustomDropdownField(
-                            borderRadius: 8,
-                            label: "Last Paid Status",
-                            items: _lastPaidStatus,
-                            value: _selectedLastPaidStatus,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedLastPaidStatus = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            // mainAxisSize: MainAxisSize.min,
+                          Column(
+                            crossAxisAlignment:CrossAxisAlignment.start,
                             children: [
-                              _buildSectionTitle(
-                                'Last Paid Date / Payment mode :   --',
-                                const Color(0xff828282),
-                                FontWeight.w500,
+                              CustomRedButtonTextField(
+                                label: "",
+                                hintText: "Choose Subscription",
+                                controller: TextEditingController(),
+                                prefixIcon: SvgPicture.asset(
+                                  'assets/icons/subscription.svg',
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                onTap: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (context) => ChooseSubscriptionDialog(
+                                      controller: _subscriptionController, // ✅ Dotted box controller
+                                    ),
+                                  ).whenComplete(() {
+                                    setState(() {}); // Update dotted box
+                                  });
+                                },
                               ),
-                              SvgPicture.asset('assets/icons/info_icon.svg'),
+
+
+                              const SizedBox(height: 12),
+
+                              // 🟦 Dotted Box showing selected plan
+                              DottedBorder(
+                                borderType: BorderType.RRect,
+                                radius: const Radius.circular(8),
+                                dashPattern: const [6, 4],
+                                color: const Color(0xffA8B9CA),
+                                strokeWidth: 1.5,
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(12),
+                                  child: Text(
+                                    _subscriptionController.text.isNotEmpty
+                                        ? _subscriptionController.text
+                                        : 'Selected Plan will appear here',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
+
+                          // CustomDropdownField(
+                          //   borderRadius: 8,
+                          //   label: "Fees Structure",
+                          //   items: _feeStructure,
+                          //   value: _selectedFeeStructure,
+                          //   onChanged: (value) {
+                          //     setState(() {
+                          //       _selectedFeeStructure = value;
+                          //     });
+                          //   },
+                          // ),
+                          const SizedBox(height: 12),
+                          // CustomDropdownField(
+                          //   borderRadius: 8,
+                          //   label: "Last Paid Status",
+                          //   items: _lastPaidStatus,
+                          //   value: _selectedLastPaidStatus,
+                          //   onChanged: (value) {
+                          //     setState(() {
+                          //       _selectedLastPaidStatus = value;
+                          //     });
+                          //   },
+                          // ),
+                          const SizedBox(height: 12),
+                          // Row(
+                          //   // mainAxisSize: MainAxisSize.min,
+                          //   children: [
+                          //     _buildSectionTitle(
+                          //       'Last Paid Date / Payment mode :   --',
+                          //       const Color(0xff828282),
+                          //       FontWeight.w500,
+                          //     ),
+                          //     SvgPicture.asset('assets/icons/info_icon.svg'),
+                          //   ],
+                          // ),
                           const SizedBox(height: 25),
                           _buildSectionTitle('Admin Credentials',
                               const Color(0xffFF1901), FontWeight.w700),
@@ -963,7 +1032,7 @@ class _BomAddConsultancyScreenState
         Text(
           '$label :',
           style: GoogleFonts.montserrat(
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: FontWeight.w500,
             color: const Color(0xff828282),
           ),
@@ -1106,4 +1175,4 @@ class _BomAddConsultancyScreenState
       ),
     );
   }
-}
+  }
