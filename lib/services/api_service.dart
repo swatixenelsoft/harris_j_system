@@ -913,10 +913,7 @@ class ApiService {
       String clientCountry,
       String clientAddress,
       String annualLeaveCount,
-      String medicalLeaveCount,
-      String paidDayOffCount,
-      String compOffCount,
-      String unpaidCount,
+      String medicalLeaveCount
       ) async {
     try {
       FormData formData = FormData.fromMap({
@@ -2418,6 +2415,36 @@ class ApiService {
         ),
       );
       print('response-createGroupFinance $response');
+      return response.data;
+    } on DioException catch (e) {
+      print('error ${e.toString()}');
+      if (e.response != null) {
+        return e.response?.data ?? {'success': false, 'message': 'Unknown error'};
+      } else {
+        return {'success': false, 'message': 'No response from server'};
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> clientAddressList({
+    required String id,
+    required String token,
+  }) async {
+    try {
+      FormData formData = FormData.fromMap({});
+      print('formData $token, ${formData.fields}');
+
+      final response = await _dio.post(
+        ApiConstant.financeAddressList, // Ensure this constant is correctly defined
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+      print('response-clientAddressList $response');
       return response.data;
     } on DioException catch (e) {
       print('error ${e.toString()}');

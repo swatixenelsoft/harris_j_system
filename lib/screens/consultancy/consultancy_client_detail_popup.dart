@@ -23,7 +23,7 @@ class ConsultancyClientDetailPopup extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16.0),
           width: 356,
-          constraints: const BoxConstraints(maxHeight: 420),
+          constraints: const BoxConstraints(maxHeight: 350),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -121,66 +121,6 @@ class ConsultancyClientDetailPopup extends StatelessWidget {
                 rightValue: "",
               ),
               const SizedBox(height: 16),
-
-              // License Expiry & Status
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Agreement Expiry & Status Details',
-                    style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: Colors.black),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '12 / 08 / 2024  10 : 12 : 34 AM',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xff1D212D)),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: client['client_status'] == "Active"
-                              ? const Color(0xFFEBF9F1)
-                              : const Color(0xFFFBE7E8),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.circle,
-                              size: 8,
-                              color: client['client_status'] == 'Active'
-                                  ? const Color(0xFF1F9254)
-                                  : const Color(0xFFF5230C),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              client['client_status'],
-                              style: GoogleFonts.spaceGrotesk(
-                                color: client['client_status'] == 'Active'
-                                    ? const Color(0xFF1F9254)
-                                    : const Color(0xFFF5230C),
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
             ],
           ),
         ),

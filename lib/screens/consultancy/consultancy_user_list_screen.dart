@@ -142,31 +142,7 @@ class _ConsultancyUserListScreenState
                   context.push(Constant.consultancyAddUserScreen,
                       extra:user );
                 },
-                onDelete: () {
-                  DeleteConfirmationDialog.show(
-                      context: context,
-                      itemName: 'client',
-                      onConfirm: () async {
-                        final deleteResponse = await ref
-                            .read(consultancyProvider.notifier)
-                            .deleteUser(user['id'].toString(), user['user_id'].toString(),token!);
 
-                        if (deleteResponse['success'] == true) {
-                          Navigator.of(context).pop();
-                          ToastHelper.showSuccess(
-                            context,
-                            deleteResponse['message'] ??
-                                'User deleted successfully',
-                          );
-                        } else {
-                          ToastHelper.showError(
-                            context,
-                            deleteResponse['message'] ??
-                                'Failed to delete user',
-                          );
-                        }
-                      });
-                },
               ),
             ),
           ],
@@ -238,7 +214,7 @@ class _ConsultancyUserListScreenState
                               child: SfDataGrid(
                                 source: GenericDataSource(
                                   data: userList,
-                                  columns: ['email', 'designation', 'actions'],
+                                  columns: ['email', 'designation','status', 'actions'],
                                   onZoomTap: (user) {
                                     print('Zoom on user: $user');
                                     _showConsultancyPopup(context, user);
@@ -270,7 +246,7 @@ class _ConsultancyUserListScreenState
                                   ),
                                   GridColumn(
                                     columnName: 'designation',
-                                    width: 120, // 👈 Increase this width
+                                    width: 100, // 👈 Increase this width
                                     label: Container(
                                       alignment: Alignment.centerLeft,
                                       padding: const EdgeInsets.symmetric(
@@ -278,6 +254,24 @@ class _ConsultancyUserListScreenState
                                       color: const Color(0xFFF2F2F2),
                                       child: Text(
                                         'Designation',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  GridColumn(
+                                    columnName: 'status',
+                                    width: 50, // 👈 Increase this width
+                                    label: Container(
+                                      alignment: Alignment.center,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8),
+                                      color: const Color(0xFFF2F2F2),
+                                      child: Text(
+                                        'Status',
                                         style: GoogleFonts.montserrat(
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,

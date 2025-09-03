@@ -90,6 +90,7 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
   List<Map<String, dynamic>> _rawClientList = [];
 
   String? token;
+  String? userName;
 
   bool showInfoSections = true;
   Timer? _hideDashboardTimer;
@@ -102,6 +103,7 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
   getClientList() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
+    userName = prefs.getString('name');
 
     final client = await ref.read(hrProvider.notifier).clientList(token!);
     print('client $client');
@@ -143,7 +145,6 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
     await getClientList();
 
     await getDashBoardByClient();
-
     ref.read(hrProvider.notifier).setLoading(false);
 
   }
@@ -216,7 +217,7 @@ class _HrDashboardScreenState extends ConsumerState<HrDashboardScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Hi HR",
+                      Text("Hi $userName",
                           style: GoogleFonts.montserrat(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,

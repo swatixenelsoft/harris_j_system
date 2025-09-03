@@ -23,14 +23,17 @@ class FinanceClaimsInvoiceScreen extends ConsumerStatefulWidget {
   const FinanceClaimsInvoiceScreen({super.key});
 
   @override
-  ConsumerState<FinanceClaimsInvoiceScreen> createState() => _FinanceClaimsInvoiceScreenState();
+  ConsumerState<FinanceClaimsInvoiceScreen> createState() =>
+      _FinanceClaimsInvoiceScreenState();
 }
 
-class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoiceScreen> {
+class _FinanceClaimsInvoiceScreenState
+    extends ConsumerState<FinanceClaimsInvoiceScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool isLoading = false;
   bool areContactsVisible = true;
   String? token;
+  bool _isBillingSelected = true;
 
   final List<Map<String, String>> consultancyData = [
     {
@@ -99,7 +102,7 @@ class _FinanceClaimsInvoiceScreenState extends ConsumerState<FinanceClaimsInvoic
   ];
   int selectedMonth = DateTime.now().month;
   int selectedYear = DateTime.now().year;
-DateTime selectedMonthYear=DateTime.now();
+  DateTime selectedMonthYear = DateTime.now();
   OverlayEntry? _overlayEntry;
 
   List<String> _clientList = [];
@@ -131,13 +134,13 @@ DateTime selectedMonthYear=DateTime.now();
     ref.read(financeProvider.notifier).setLoading(true);
     await getClientList();
     await financeClaimClientConsultants();
+    await clientAddress();
     ref.read(financeProvider.notifier).setLoading(false);
   }
 
-
   getClientList() async {
-
-    final client = await ref.read(financeProvider.notifier).clientListClaimInvoice(token!);
+    final client =
+        await ref.read(financeProvider.notifier).clientListClaimInvoice(token!);
 
     print('client list $client');
 
@@ -152,34 +155,38 @@ DateTime selectedMonthYear=DateTime.now();
       _selectedClientId = _rawClientList[0]['id'].toString();
       _selectedClient = _rawClientList[0]['serving_client'].toString();
     }
-    print('data in clientr $_rawClientList,$_selectedClientId,$_selectedClient');
+    print(
+        'data in clientr $_rawClientList,$_selectedClientId,$_selectedClient');
 
     setState(() {});
   }
 
-
-
   Future<void> financeClaimClientConsultants() async {
     if (_selectedClientId != null && token != null) {
       await ref.read(financeProvider.notifier).financeClaimClientConsultants(
-        _selectedClientId!,
-        selectedMonth,
-        selectedYear,
-        token!,
-      );
+            _selectedClientId!,
+            selectedMonth,
+            selectedYear,
+            token!,
+          );
+    }
+  }
 
+  Future<void> clientAddress() async{
+    if (_selectedClientId != null && token != null) {
+      await ref.read(financeProvider.notifier).clientAddress(
+        token: token!, id:  _selectedClientId!,
+      );
     }
   }
 
   Future<void> financeClaimConsultantDetails(selectedConsultantId) async {
     if (_selectedClientId != null && token != null) {
-       ref.read(financeProvider.notifier).selectConsultantById(
-      selectedConsultantId
-      );
-
+      ref
+          .read(financeProvider.notifier)
+          .selectConsultantById(selectedConsultantId);
     }
   }
-
 
   Widget _buildHeaderContent() {
     return Container(
@@ -253,7 +260,7 @@ DateTime selectedMonthYear=DateTime.now();
               onChanged: (selectedClientName, selectedClientId) async {
                 FocusScope.of(context).unfocus();
                 final selectedClient = _rawClientList.firstWhere(
-                      (client) => client['id'].toString() == selectedClientId,
+                  (client) => client['id'].toString() == selectedClientId,
                   orElse: () => {},
                 );
 
@@ -271,7 +278,8 @@ DateTime selectedMonthYear=DateTime.now();
                   await financeClaimClientConsultants();
                 }
               },
-              onConsultantChanged: (selectedConsultantName, selectedConsultantId) async {
+              onConsultantChanged:
+                  (selectedConsultantName, selectedConsultantId) async {
                 setState(() {
                   _selectedConsultant = selectedConsultantName;
                   _selectedConsultantId = selectedConsultantId;
@@ -282,7 +290,6 @@ DateTime selectedMonthYear=DateTime.now();
                 await financeClaimConsultantDetails(_selectedConsultantId);
               },
             ),
-
         ],
       ),
     );
@@ -341,128 +348,137 @@ DateTime selectedMonthYear=DateTime.now();
       ),
     );
   }
-
   Widget _contactCard({
-    required String label,
-    required String name,
-    required String address,
-    required String location,
+    required Function(bool) onTabChanged,
+    required String billingName,
+    required String billingAddress,
+    required String shippingName,
+    required String shippingAddress,
+    required bool isBillingSelected,
   }) {
     return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(6),
+        color: const Color(0xFFFAFAFA), // Updated background color
+        borderRadius: BorderRadius.circular(8),
         boxShadow: const [
           BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.25),
-            blurRadius: 7,
-            spreadRadius: 1,
-            offset: Offset(0, 0),
+            color: Color.fromRGBO(0, 0, 0, 0.1),
+            blurRadius: 10,
+            offset: Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Label
-          // Top Red Label - now full width
-          Container(
-            width: 250, // make it stretch full width
-            height: 25,
-            padding:
-            const EdgeInsets.only(left: 20), // label text padding from left
-            alignment: Alignment.centerLeft, // align text to the left
-            decoration: const BoxDecoration(
-              color: Color(0xffFF1901),
-              borderRadius: BorderRadius.only(
-                bottomRight: Radius.circular(13),
-                topLeft: Radius.circular(6),
-              ),
-            ),
-            child: Text(
-              label,
-              style: GoogleFonts.montserrat(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-          ),
 
-          // Gray background for name, address and location
-          Container(
-            width: double.infinity,
-            color: const Color(0xFFFAFAFA),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Column(
+        crossAxisAlignment:CrossAxisAlignment.start,
+        children: [
+          // Top Tabs Header
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onTabChanged(true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isBillingSelected
+                          ? const Color(0xFFFF1901)
+                          : const Color(0xffDADADA),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Billing To',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isBillingSelected
+                              ? Colors.white
+                              : const Color(0xff000000),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onTabChanged(false),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: !isBillingSelected
+                          ? const Color(0xFFFF1901)
+                          : const Color(0xffDADADA),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Shipping To',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: !isBillingSelected
+                              ? Colors.white
+                              : const Color(0xff000000),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Content Section
+          Padding(
+            padding: const EdgeInsets.all(12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Name
                 Text(
-                  name,
+                  isBillingSelected ? billingName : shippingName,
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
                     color: Colors.black,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-
-                const SizedBox(height: 12),
-
-                // Address Row
-                Row(
+                const SizedBox(height: 20),
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only( right: 6),
-                      child: SvgPicture.asset(
-                        'assets/icons/address_invoice.svg',
-                        width: 27,
-                        height: 27,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        address,
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
+                    // First Row → Location icon + First address line
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/icons/address_invoice.svg',
+                          height: 35,
+                          width: 35,
                         ),
-                        softWrap: true,
-                        maxLines: 3,
-                      ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            isBillingSelected ? billingAddress : shippingAddress,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 12,
+                              color: const Color(0xff181818),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // Location Row
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: SvgPicture.asset(
-                        'assets/icons/location_invoice.svg',
-                        width: 27,
-                        height: 27,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        location,
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        softWrap: true,
-                        maxLines: 3,
-                      ),
-                    ),
-                  ],
-                ),
+                )
               ],
             ),
           ),
@@ -486,134 +502,136 @@ DateTime selectedMonthYear=DateTime.now();
           ),
         ],
       ),
-      child:  RemarksSection(selectedClientRemarks:selectedClientRemarks),
+      child: RemarksSection(selectedClientRemarks: selectedClientRemarks),
     );
   }
 
   Widget _buildClaimsTable(List<dynamic> consultants) {
-    print('consultants $consultants');
-    return  SizedBox(
-      height: consultants.isEmpty ? 50 : 200,
+    return SizedBox(
+      height: consultants.isEmpty ? 50 : 150,
       child: consultants.isEmpty
           ? const Center(
-        child: Text(
-          "No Consultant Found",
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      )
-          : SfDataGrid(
-        source: GenericDataSource(
-          data: consultants.expand<Map<String, dynamic>>((consultant) {
-            final empName = consultant['emp_name'] ?? 'N/A';
-            final claims = consultant['claimsData'] ?? [];
-
-            // If no claims, return one row with basic info
-            if (claims.isEmpty) {
-              return [
-                {
-                  'emp_name': empName,
-                  'status': 'No Claims',
-                  'claim_no': '-',
-                  'total_amount': '\$0',
-                  'invoice_amount': '\$0',
-                  'invoice_no': '-',
-                  'invoice_status':'-',
-                }
-              ];
-            }
-
-            // For each claim, make a row
-            return claims.map<Map<String, dynamic>>((claim) {
-              final record = claim['record'] ?? {};
-              return {
-                'emp_name': empName,
-                'status': claim['status'] ?? 'Pending',
-                'claim_no': claim['form_count'] ?? '-',
-                'total_amount': '\$${record['amount'] ?? '0'}',
-                'invoice_amount': '\$${record['amount'] ?? '0'}', // replace with actual if available
-                'invoice_no': record['claim_no'] ?? '-',
-                'invoice_status': claim['status'] ?? 'Pending',
-              };
-            });
-          }).toList(),
-
-          columns: [
-            'emp_name',
-            'status',
-            'claim_no',
-            'total_amount',
-            'invoice_amount',
-            'invoice_no',
-            'invoice_status'
-          ],
-          onZoomTap: (rowData) {
-            // _showConsultancyPopup(context, rowData['full_data']);
-          },
-
-        ),
-        columnWidthMode: ColumnWidthMode.auto,
-        headerRowHeight: 40,
-        rowHeight: 52,
-        selectionMode: SelectionMode.single,
-        onCellTap: (details) async {
-          final index = details.rowColumnIndex.rowIndex - 1;
-          if (index < 0 || index >= consultants.length) return;
-
-          final selectedData = consultants[index];
-          ref
-              .read(financeProvider.notifier)
-              .getSelectedConsultantDetails(selectedData);
-
-        },
-        columns: [
-          GridColumn(
-            columnName: 'emp_name',
-            width: 110,
-            label: _buildHeaderCell('Name',
-                iconPath: 'assets/icons/search_o.svg'),
-          ),
-          GridColumn(
-            columnName: 'status',
-            width: 80,
-            label: _buildHeaderCell('Queue',
-                iconPath: 'assets/icons/queue.svg',),
-          ),
-          GridColumn(
-            columnName: 'claim_no',
-            width: 80,
-            label: _buildHeaderCell('#Claims'),
-          ),
-          GridColumn(
-            columnName: 'total_amount',
-            width: 80,
-            label: _buildHeaderCell('Total Amt',
-                 ),
-          ),
-          GridColumn(
-            columnName: 'invoice_amount',
-            width: 80,
-            label: _buildHeaderCell('Invoice Amt',),
-          ),
-          GridColumn(
-            columnName: 'invoice_no',
-            width: 100,
-            label: _buildHeaderCell('Invoice No',
-            ),
-          ),
-            GridColumn(
-              columnName: 'invoice_status',
-              width: 100,
-              label: _buildHeaderCell('Invoice Status',
+              child: Text(
+                "No Consultant Found",
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-          ),
+            )
+          : SfDataGrid(
+              source: GenericDataSource(
+                data: consultants.expand<Map<String, dynamic>>((consultant) {
+                  final empName = consultant['emp_name'] ?? 'N/A';
+                  final claims = consultant['claimsData'] ?? [];
 
+                  // If no claims, return one row with basic info
+                  if (claims.isEmpty) {
+                    return [
+                      {
+                        'emp_name': empName,
+                        'status': 'No Claims',
+                        'claim_no': '-',
+                        'total_amount': '\$0',
+                        'invoice_amount': '\$0',
+                        'invoice_no': '-',
+                        'invoice_status': '-',
+                      }
+                    ];
+                  }
 
-        ],
-      ),
+                  // For each claim, make a row
+                  return claims.map<Map<String, dynamic>>((claim) {
+                    final record = claim['record'] ?? {};
+                    return {
+                      'emp_name': empName,
+                      'status': claim['status'] ?? 'Pending',
+                      'claim_no': claim['form_count'] ?? '-',
+                      'total_amount': '\$${record['amount'] ?? '0'}',
+                      'invoice_amount':
+                          '\$${record['amount'] ?? '0'}', // replace with actual if available
+                      'invoice_no': record['claim_no'] ?? '-',
+                      'invoice_status': claim['status'] ?? 'Pending',
+                    };
+                  });
+                }).toList(),
+                columns: [
+                  'emp_name',
+                  'status',
+                  'claim_no',
+                  'total_amount',
+                  'invoice_amount',
+                  'invoice_no',
+                  'invoice_status'
+                ],
+                onZoomTap: (rowData) {
+                  // _showConsultancyPopup(context, rowData['full_data']);
+                },
+              ),
+              columnWidthMode: ColumnWidthMode.auto,
+              headerRowHeight: 40,
+              rowHeight: 52,
+              selectionMode: SelectionMode.single,
+              onCellTap: (details) async {
+                final index = details.rowColumnIndex.rowIndex - 1;
+                if (index < 0 || index >= consultants.length) return;
+
+                final selectedData = consultants[index];
+                ref
+                    .read(financeProvider.notifier)
+                    .getSelectedConsultantDetails(selectedData);
+              },
+              columns: [
+                GridColumn(
+                  columnName: 'emp_name',
+                  width: 110,
+                  label: _buildHeaderCell('Name',
+                      iconPath: 'assets/icons/search_o.svg'),
+                ),
+                GridColumn(
+                  columnName: 'status',
+                  width: 80,
+                  label: _buildHeaderCell(
+                    'Queue',
+                    iconPath: 'assets/icons/queue.svg',
+                  ),
+                ),
+                GridColumn(
+                  columnName: 'claim_no',
+                  width: 80,
+                  label: _buildHeaderCell('#Claims'),
+                ),
+                GridColumn(
+                  columnName: 'total_amount',
+                  width: 80,
+                  label: _buildHeaderCell(
+                    'Total Amt',
+                  ),
+                ),
+                GridColumn(
+                  columnName: 'invoice_amount',
+                  width: 80,
+                  label: _buildHeaderCell(
+                    'Invoice Amt',
+                  ),
+                ),
+                GridColumn(
+                  columnName: 'invoice_no',
+                  width: 100,
+                  label: _buildHeaderCell(
+                    'Invoice No',
+                  ),
+                ),
+                GridColumn(
+                  columnName: 'invoice_status',
+                  width: 100,
+                  label: _buildHeaderCell(
+                    'Invoice Status',
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -645,18 +663,18 @@ DateTime selectedMonthYear=DateTime.now();
 
   @override
   Widget build(BuildContext context) {
-
     final financeState = ref.watch(financeProvider);
 
-    final List<dynamic> fullConsultantData = financeState.claimInvoiceConsultantList ?? [];
-    final List<Map<String, dynamic>> selectedClientInvoiceSummary=financeState.selectedClientInvoiceSummary??[];
-    final List<dynamic> selectedClientRemarks=financeState.selectedClientRemarks??[];
+    final List<dynamic> fullConsultantData =
+        financeState.claimInvoiceConsultantList ?? [];
+    final List<Map<String, dynamic>> selectedClientInvoiceSummary =
+        financeState.selectedClientInvoiceSummary ?? [];
+    final List<dynamic> selectedClientRemarks =
+        financeState.selectedClientRemarks ?? [];
 
     final isConsultantSelected = _selectedConsultantId != null;
     final isLoading = financeState.isLoading;
     print('selectedClientRemarks $selectedClientRemarks');
-
-
 
     return Scaffold(
       floatingActionButton: CustomButton(
@@ -691,214 +709,210 @@ DateTime selectedMonthYear=DateTime.now();
         },
       ),
       body: Stack(
-        children:[ SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildHeaderContent(),
-                Padding(
-                  padding: const EdgeInsets.only(right: 10.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      GestureDetector(
-                        onTap: () => _showMonthYearPicker(context),
-                        child: Row(
-                          children: [
-                            SvgPicture.asset(
-                              'assets/icons/month_calendar_icon.svg',
-                              height: 20,
-                              width: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              DateFormat("MMMM - y").format(selectedMonthYear),
-                              style: GoogleFonts.montserrat(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xff5A5A5A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: _buildClaimsTable(isConsultantSelected?[financeState.selectedConsultantDetail]:fullConsultantData),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(12),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.25),
-                          blurRadius: 1,
-                          offset: Offset(0, 0),
-                        ),
-                      ],
-                    ),
-                    child: Column(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildHeaderContent(),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Padding(
-                          padding:
-                          const EdgeInsets.only(left: 20, right: 15, top: 12),
+                        GestureDetector(
+                          onTap: () => _showMonthYearPicker(context),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _selectedClient??"",
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Invoice Number: EM098789',
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ],
+                              SvgPicture.asset(
+                                'assets/icons/month_calendar_icon.svg',
+                                height: 20,
+                                width: 20,
                               ),
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      showModalBottomSheet(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        backgroundColor: Colors.white,
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.vertical(
-                                              top: Radius.circular(20)),
-                                        ),
-                                        builder: (context) {
-                                          return Padding(
-                                            padding: EdgeInsets.only(
-                                              bottom: MediaQuery.of(context)
-                                                  .viewInsets
-                                                  .bottom,
-                                            ),
-                                            child:
-                                            const EditInvoiceDetailDialog(),
-                                          );
-                                        },
-                                      );
-                                    },
-                                    child: SvgPicture.asset(
-                                      'assets/icons/editor.svg',
-                                      height: 25,
-                                      width: 25,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        areContactsVisible = !areContactsVisible;
-                                      });
-                                    },
-                                    child: SvgPicture.asset(
-                                      areContactsVisible
-                                          ? 'assets/icons/upside.svg'
-                                          : 'assets/icons/downside.svg',
-                                      height: 20,
-                                      width: 20,
-                                    ),
-                                  ),
-                                ],
+                              const SizedBox(width: 8),
+                              Text(
+                                DateFormat("MMMM - y")
+                                    .format(selectedMonthYear),
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xff5A5A5A),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Divider(
-                          color: Color(0xffE1E1E1),
-                          thickness: 1,
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: _buildClaimsTable(isConsultantSelected
+                        ? [financeState.selectedConsultantDetail]
+                        : fullConsultantData),
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          topRight: Radius.circular(12),
                         ),
-                        const SizedBox(height: 10),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              left: 10, right: 10, bottom: 15),
-                          child: GridView.builder(
-                            gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                              childAspectRatio: 2.0,
-                            ),
-                            itemCount: selectedClientInvoiceSummary.length,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              final item = selectedClientInvoiceSummary[index];
-                              print('selectedClientInvoiceSummary $item');
-                              return consultancyCard(
-                                count: item['count'] ?? '0',
-                                label: item['label'] ?? 'Unknown',
-                                iconPath: item['iconPath'] ??
-                                    'assets/icons/default.svg',
-                              );
-                            },
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color.fromRGBO(0, 0, 0, 0.25),
+                            blurRadius: 1,
+                            offset: Offset(0, 0),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 15, top: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _selectedClient ?? "",
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Invoice Number: EM098789',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.white,
+                                          shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.vertical(
+                                                top: Radius.circular(20)),
+                                          ),
+                                          builder: (context) {
+                                            return Padding(
+                                              padding: EdgeInsets.only(
+                                                bottom: MediaQuery.of(context)
+                                                    .viewInsets
+                                                    .bottom,
+                                              ),
+                                              child:
+                                                  const EditInvoiceDetailDialog(),
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: SvgPicture.asset(
+                                        'assets/icons/editor.svg',
+                                        height: 25,
+                                        width: 25,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          areContactsVisible =
+                                              !areContactsVisible;
+                                        });
+                                      },
+                                      child: SvgPicture.asset(
+                                        areContactsVisible
+                                            ? 'assets/icons/upside.svg'
+                                            : 'assets/icons/downside.svg',
+                                        height: 20,
+                                        width: 20,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Divider(
+                            color: Color(0xffE1E1E1),
+                            thickness: 1,
+                          ),
+                          const SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 10, right: 10, bottom: 15),
+                            child: GridView.builder(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 2.0,
+                              ),
+                              itemCount: selectedClientInvoiceSummary.length,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                final item =
+                                    selectedClientInvoiceSummary[index];
+                                print('selectedClientInvoiceSummary $item');
+                                return consultancyCard(
+                                  count: item['count'] ?? '0',
+                                  label: item['label'] ?? 'Unknown',
+                                  iconPath: item['iconPath'] ??
+                                      'assets/icons/default.svg',
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 30),
-                if (areContactsVisible) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        _contactCard(
-                          label: 'Billing To',
-                          name: 'Alfonso Mango',
-                          address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
-                              'Tamil Nadu, India',
-                          location: 'X5JX+HX Chennai, Tamil Nadu',
-                        ),
-                      ],
+                  const SizedBox(height: 30),
+                  if (areContactsVisible) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: _contactCard(
+                        onTabChanged: (value) {
+                          setState(() {
+                            _isBillingSelected = value;
+                          });
+                        },
+                        billingName: 'Alfonso Mango',
+                        billingAddress:
+                        'No.22, Abcd Street, RR Nagar, Chennai-600016, Tamil Nadu, India',
+                        shippingName: 'Jane Doe',
+                        shippingAddress:
+                        'No.10, XYZ Street, Bangalore-560001, Karnataka, India',
+                        isBillingSelected: _isBillingSelected,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                    child: _contactCard(
-                      label: 'Shipping To',
-                      name: 'Abram Culhane',
-                      address: 'No.22,Abcd Street, RR Nager, Chennai-600016,'
-                          'Tamil Nadu, India',
-                      location: 'X5JX+HX Chennai, Tamil Nadu',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+                  ],
+                  const SizedBox(height: 16),
+                  _buildRemarksSection(selectedClientRemarks),
+                  const SizedBox(height: 16),
                 ],
-                const SizedBox(height: 16),
-                _buildRemarksSection(selectedClientRemarks),
-                const SizedBox(height: 16),
-              ],
+              ),
             ),
           ),
-        ),
           if (isLoading)
             Positioned.fill(
               child: BackdropFilter(
@@ -928,13 +942,12 @@ DateTime selectedMonthYear=DateTime.now();
 
     if (selectedDate != null) {
       setState(() {
-         selectedMonth = selectedDate.month;
-         selectedYear = selectedDate.year;
-         selectedMonthYear=selectedDate;
+        selectedMonth = selectedDate.month;
+        selectedYear = selectedDate.year;
+        selectedMonthYear = selectedDate;
       });
 
       await financeClaimClientConsultants();
-
     }
   }
 }

@@ -52,10 +52,9 @@ class _ConsultancyAddClientScreenState
   final TextEditingController _secondaryEmail = TextEditingController();
   final TextEditingController _description = TextEditingController();
 
-  String? _selectedClientStatus = 'Not Selected';
+  String? _selectedClientStatus = 'Active';
 
   final List<String> _clientStatus = [
-    'Not Selected',
     'Active',
     'Disable',
   ];
@@ -84,7 +83,7 @@ class _ConsultancyAddClientScreenState
       _primaryCountryCode = widget.client?['primary_mobile_country_code'] ?? '';
       _secondaryCountryCode =
           widget.client?['secondary_mobile_country_code'] ?? '';
-      _selectedClientStatus = widget.client?['client_status'] ?? 'Not Selected';
+      _selectedClientStatus = widget.client?['client_status'] ?? 'Active';
     }
   }
 

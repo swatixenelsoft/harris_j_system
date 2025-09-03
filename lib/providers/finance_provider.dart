@@ -499,7 +499,8 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
 
   Future<Map<String, dynamic>> groupListFinanceProvider({
     required String token,
-  }) async {
+  }) async
+  {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -522,6 +523,44 @@ class GetFinanceNotifier extends StateNotifier<GetFinanceState> {
       }
 
       return response;
+    } catch (e) {
+      final errorMsg = e.toString();
+      state = state.copyWith(isLoading: false, error: errorMsg);
+      return {
+        'success': false,
+        'message': errorMsg,
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> clientAddress({
+    required String token,
+    required String id,
+  }) async
+  {
+
+    print('dhd $token,$id');
+    state = state.copyWith(error: null);
+
+    try {
+      final response = await apiService.clientAddressList(token: token,id:id);
+      final bool status = response['success'] ?? false;
+
+      if (status) {
+        final List<Map<String, dynamic>> groupData =
+        (response['data'] as List<dynamic>).cast<Map<String, dynamic>>();
+        debugPrint("here is - $groupData");
+        state = state.copyWith(
+          groupList: groupData,
+        );
+      } else {
+        state = state.copyWith(
+          error: response['message'] ?? 'Failed to fetch group list',
+        );
+      }
+
+      return response;
+
     } catch (e) {
       final errorMsg = e.toString();
       state = state.copyWith(isLoading: false, error: errorMsg);

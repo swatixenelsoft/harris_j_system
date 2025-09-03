@@ -74,7 +74,10 @@ class ApiConstant {
   static const String financeClaimClientConsultants= "finance/claimClientConsultants-api";
   static const String financeGroupList= "finance/InvoiceGroupListing-api";
   static const String financeConsultantList= "finance/getClientConsultants-api";
+  static const String financeAddressList= "finance/getClientAddress";
+
 
   static const String bomDashboard= "bom/dashboard-api";
+
 
 }

@@ -8,10 +8,9 @@ import 'package:intl/intl.dart';
 class HrConsultantDetailPopup extends StatelessWidget {
   final Map<String, dynamic> consultant;
   final VoidCallback onEdit;
-  final VoidCallback onDelete; // Callback to notify parent of deletion
 
   const HrConsultantDetailPopup(
-      {super.key, required this.consultant,required this.onEdit, required this.onDelete});
+      {super.key, required this.consultant,required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
@@ -55,18 +54,11 @@ class HrConsultantDetailPopup extends StatelessWidget {
                         onTap: (){
                           onEdit();
                         },
-                        child: CustomIconContainer(
+                        child: const CustomIconContainer(
                             path: 'assets/icons/edit_pen.svg',
                             bgColor: Color(0xffF5230C)),
                       ),
-                      SizedBox(width: 7),
-                      GestureDetector(
-                        onTap: () {
-                          onDelete();
-                        },
-                        child: CustomIconContainer(
-                            path: 'assets/icons/red_delete_icon.svg'),
-                      ),
+
                     ],
                   ),
                 ],
@@ -121,15 +113,6 @@ class HrConsultantDetailPopup extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Country and Primary Email
-              _buildFieldPair(
-                leftLabel: 'Date Of Birth',
-                leftValue: CommonFunction().formatDate(consultant['dob']),
-                rightLabel: 'Age',
-                rightValue: '27',
-              ),
-              const SizedBox(height: 16),
-
               // Primary Contact No and Fee Structure
               _buildFieldPair(
                 leftLabel: 'Mobile Number',
@@ -140,26 +123,7 @@ class HrConsultantDetailPopup extends StatelessWidget {
                     "${consultant['mobile_number_code']} ${consultant['mobile_number']}",
               ),
 
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Address',
-                    style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: Colors.black),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    consultant['show_address_input'],
-                    style: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xff1D212D)),
-                  ),
-                ],
-              ),
+
 
               const SizedBox(height: 16),
               _buildFieldPair(
@@ -196,115 +160,24 @@ class HrConsultantDetailPopup extends StatelessWidget {
               const SizedBox(height: 16),
               _buildFieldPair(
                 leftLabel: 'Status',
-                leftWidget: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: consultant['status'] == 'Active'
-                        ? const Color(0xFFEBF9F1)
-                        : const Color(0xFFFBE7E8),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.circle,
-                        size: 8,
-                        color: consultant['status'] == 'Active'
-                            ? const Color(0xFF1F9254)
-                            : consultant['status'] == 'Notice Period'
-                                ? const Color(0xff8D91A0)
-                                : const Color(0xFFF5230C),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        consultant['status'],
-                        style: GoogleFonts.spaceGrotesk(
-                          color: consultant['status'] == 'Active'
-                              ? const Color(0xFF1F9254)
-                              : consultant['status'] == 'Notice Period'
-                                  ? const Color(0xff8D91A0)
-                                  : const Color(0xFFF5230C),
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
+                leftWidget: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.circle,
+                      size: 10,
+                      color: consultant['status'] == 'Active'
+                          ? const Color(0xFF1F9254)
+                          : consultant['status'] == 'Notice Period'
+                              ? const Color(0xff8D91A0)
+                              : const Color(0xFFF5230C),
+                    ),
+
+                  ],
                 ),
                 rightLabel: '',
                 rightValue: "",
-              ),
-
-              const SizedBox(height: 16),
-              // License Expiry & Status
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Last Activity',
-                    style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: Colors.black),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '12 / 08 / 2024  10 : 12 : 34 AM',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xff1D212D)),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color:
-                              // 'Active'
-                              // ?
-                              const Color(0xFFE5F1FF),
-                          // : const Color(0xFFFBE7E8),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.circle,
-                                size: 8,
-                                color:
-                                    // consultancy['consultancy_status'] ==
-                                    //     'Active'
-                                    //     ?
-                                    Color(0xFF037EFF)
-                                // : const Color(
-                                // 0xFFF5230C),
-                                ),
-                            const SizedBox(width: 4),
-                            Text(
-                              "Online",
-                              style: GoogleFonts.spaceGrotesk(
-                                color:
-                                    // consultancy['consultancy_status']==
-                                    //     'Active'
-                                    //     ?
-                                    const Color(0xFF037EFF),
-                                // : const Color(
-                                // 0xFFF5230C),
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
               ),
             ],
           ),

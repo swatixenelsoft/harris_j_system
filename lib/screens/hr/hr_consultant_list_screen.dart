@@ -171,33 +171,6 @@ class _HrConsultantListScreenState
                 onEdit: (){
 
                 },
-                onDelete: () {
-                  print('fhgfd');
-                  DeleteConfirmationDialog.show(
-                      context: context,
-                      itemName: 'consultant',
-                      onConfirm: () async {
-                        final deleteResponse = await ref
-                            .read(hrProvider.notifier)
-                            .deleteConsultant(
-                                consultancy['id'], token!, _selectedClientId!);
-
-                        if (deleteResponse['status'] == true) {
-                          Navigator.of(context).pop();
-                          ToastHelper.showSuccess(
-                            context,
-                            deleteResponse['message'] ??
-                                'Consultant deleted successfully',
-                          );
-                        } else {
-                          ToastHelper.showError(
-                            context,
-                            deleteResponse['message'] ??
-                                'Failed to delete consultant',
-                          );
-                        }
-                      });
-                },
               ),
             ),
           ],

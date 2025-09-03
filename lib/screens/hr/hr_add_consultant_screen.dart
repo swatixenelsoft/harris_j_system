@@ -76,9 +76,6 @@ class _HrAddConsultantScreenState extends ConsumerState<HrAddConsultantScreen> {
   final TextEditingController _contractPeriod = TextEditingController();
   final TextEditingController _annualLeaveController = TextEditingController();
   final TextEditingController _medicalLeaveController = TextEditingController();
-  final TextEditingController _paidDayOffController = TextEditingController();
-  final TextEditingController _compOffController = TextEditingController();
-  final TextEditingController _unpaidController = TextEditingController();
   String? _selectedClient = 'Not Selected';
   String? _selectedClientId;
   String? _selectedEmployeeStatus = 'Not Selected';
@@ -504,9 +501,6 @@ class _HrAddConsultantScreenState extends ConsumerState<HrAddConsultantScreen> {
     final clientName = _selectedClient;
     final annualLeaveCount = _annualLeaveController.text.trim();
     final medicalLeaveCount = _medicalLeaveController.text.trim();
-    final paidDayOffCount = _paidDayOffController.text.trim();
-    final compOffCount = _compOffController.text.trim();
-    final unpaidCount = _unpaidController.text.trim();
     final operatorEmailId=_operatorEmailAddress.text.trim();
     final salary = _salaryController.text.trim();
     final bonus  = _bonusController.text.trim();
@@ -564,9 +558,7 @@ Reset Password         : $resetPassword
 📆 Leaves
 Annual Leave Count     : $annualLeaveCount
 Medical Leave Count    : $medicalLeaveCount
-Paid Day Off Count     : $paidDayOffCount
-Comp Off Count         : $compOffCount
-Unpaid Count           : $unpaidCount
+
 
 ============= Null/Empty Check =============
 ${employeeName.isEmpty ? '⚠️ employeeName is EMPTY' : ''}
@@ -664,9 +656,6 @@ ${resetPassword == null ? '⚠️ resetPassword is NULL' : ''}
         clientAddress,
         annualLeaveCount,
         medicalLeaveCount,
-        paidDayOffCount,
-        compOffCount,
-        unpaidCount,
       );
 
       if (!mounted) return;
@@ -1085,7 +1074,6 @@ ${resetPassword == null ? '⚠️ resetPassword is NULL' : ''}
                                     ),
                                   ),
                                 ),
-
                           const SizedBox(height: 12),
                           CustomDropdownField(
                             borderRadius: 8,
@@ -1440,39 +1428,6 @@ ${resetPassword == null ? '⚠️ resetPassword is NULL' : ''}
                             label: 'Enter Medical Leave Count',
                             hintText: 'Enter Medical Leave Count',
                             controller: _medicalLeaveController,
-                            keyboardType: TextInputType.number,
-                            // validator: validateEmail,
-                            // validator: validateUserIdOrEmail,
-                          ),
-                          const SizedBox(height: 12),
-                          CustomTextField(
-                            padding: 0,
-                            borderRadius: 8,
-                            label: 'Enter Paid day off Count',
-                            hintText: 'Enter Paid day off Count',
-                            controller: _paidDayOffController,
-                            keyboardType: TextInputType.number,
-                            // validator: validateEmail,
-                            // validator: validateUserIdOrEmail,
-                          ),
-                          const SizedBox(height: 12),
-                          CustomTextField(
-                            padding: 0,
-                            borderRadius: 8,
-                            label: 'Enter Comp off Count',
-                            hintText: 'Enter Comp off Count',
-                            controller: _compOffController,
-                            keyboardType: TextInputType.number,
-                            // validator: validateEmail,
-                            // validator: validateUserIdOrEmail,
-                          ),
-                          const SizedBox(height: 12),
-                          CustomTextField(
-                            padding: 0,
-                            borderRadius: 8,
-                            label: 'Enter unpaid Count',
-                            hintText: 'Enter unpaid Count',
-                            controller: _unpaidController,
                             keyboardType: TextInputType.number,
                             // validator: validateEmail,
                             // validator: validateUserIdOrEmail,

@@ -1,14 +1,15 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:harris_j_system/providers/bom_provider.dart';
 import 'package:harris_j_system/providers/consultant_provider.dart';
 import 'package:harris_j_system/ulits/toast_helper.dart';
 import 'package:harris_j_system/widgets/custom_app_bar.dart';
 import 'package:harris_j_system/widgets/custom_button.dart';
-import 'package:harris_j_system/widgets/custom_dropdown.dart';
 import 'package:harris_j_system/widgets/custom_text_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,6 +30,7 @@ class _HrFeedBackScreenState extends ConsumerState<HrFeedBackScreen> {
     "Offboarded Consultancy Data Summary",
     "Per Consultancy Data Summary",
   ];
+  List<File> selectedFile=[];
 
   final TextEditingController _feedBackController = TextEditingController();
 
@@ -99,6 +101,26 @@ class _HrFeedBackScreenState extends ConsumerState<HrFeedBackScreen> {
                       maxLines: 6,
                     ),
                   ),
+                  const SizedBox(height: 5),
+                if(selectedFile.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child:
+                    Column(
+                      children: selectedFile.map((e) {
+                        return Text(
+                          e.path.split('/').last,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: const Color.fromRGBO(90, 90, 90, 0.8),
+                          ),
+                        );
+                      }).toList(),
+                    )
+
+
+                  ),
                   const SizedBox(height: 35),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -111,13 +133,42 @@ class _HrFeedBackScreenState extends ConsumerState<HrFeedBackScreen> {
                     ),
                   ),
                   const SizedBox(height: 35),
-                  Center(
-                    child: CustomButton(
-                        width: 124,
-                        text: 'Submit',
-                        onPressed: () async {
-                          await _addFeedback();
-                        }),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Center(
+                          child: CustomButton(
+                              width: 124,
+                              text: 'Submit',
+                              onPressed: () async {
+                                await _addFeedback();
+                              }),
+                        ),
+                        Center(
+                          child: CustomButton(
+                              width: 124,
+                              text: 'Upload file',
+                              onPressed: () async {
+                                FilePickerResult? result =
+                                    await FilePicker.platform.pickFiles(
+                                  type: FileType.custom,
+                                  allowedExtensions: ['jpg', 'pdf', 'doc'],
+                                );
+
+                                if (result != null &&
+                                    result.files.single.path != null) {
+                                  setState(() {
+                                    selectedFile.add( File(result.files.single
+                                        .path!)); // Create File object
+                                  });
+                                }
+
+                              }),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

@@ -54,12 +54,12 @@ class _ConsultancyAddUserScreen
   final TextEditingController _joiningDateController = TextEditingController();
   final TextEditingController _lastWorkingDateController =
   TextEditingController();
-  String? _selectedUser = 'Not Selected';
+  String? _selectedUser = 'Active';
   String? _selectedDesignation = 'Not Selected';
   String? selectedGender = 'Male';
   bool reset_password_value = true;
   dynamic _selectedImage;
-  final List<String> _userList = ['Not Selected', 'Active', 'Disabled'];
+  final List<String> _userList = ['Active', 'Disabled'];
   final List<String> _designation = [
     'Not Selected',
     'Finance',
@@ -96,7 +96,8 @@ class _ConsultancyAddUserScreen
       _userCredential.text = user['login_email'] ?? '';
       reset_password_value = user['reset_password'] == false;
 
-      _selectedUser = user['status'] ?? 'Not Selected';
+      _selectedUser = user['status'] ?? 'Active';
+      _selectedUser = user['status'] ?? 'Active';
       _selectedDesignation = user['designation'] ?? 'Not Selected';
       selectedGender = user['sex'] ?? 'Male';
       _primaryCountryCode = user['mobile_number_code'] ?? '+65';
@@ -1140,20 +1141,20 @@ ${resetPassword == null ? 'resetPassword is NULL' : ''}
                       color: const Color(0xffFF1901)),
                 ),
                 const SizedBox(width: 85),
-                CustomButton(
-                  leftPadding: 2,
-                  text: 'Add Address',
-                  width: 100,
-                  height: 36,
-                  borderRadius: 6,
-                  onPressed: () {
-                    showAddAddressBottomSheet(
-                      context,
-                      widget.userList?['full_address'] ?? null,
-                    );
-                  },
-                  svgAsset: 'assets/icons/home_icon.svg',
-                ),
+                // CustomButton(
+                //   leftPadding: 2,
+                //   text: 'Add Address',
+                //   width: 100,
+                //   height: 36,
+                //   borderRadius: 6,
+                //   onPressed: () {
+                //     showAddAddressBottomSheet(
+                //       context,
+                //       widget.userList?['full_address'] ?? null,
+                //     );
+                //   },
+                //   svgAsset: 'assets/icons/home_icon.svg',
+                // ),
               ],
             ),
           ),

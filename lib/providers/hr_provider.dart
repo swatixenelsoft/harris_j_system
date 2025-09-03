@@ -137,9 +137,6 @@ class GetHrNotifier extends StateNotifier<GetHrState> {
       String clientAddress,
       String annualLeaveCount,
       String medicalLeaveCount,
-      String paidDayOffCount,
-      String compOffCount,
-      String unpaidCount,
       ) async
   {
     state = state.copyWith(isLoading: true, error: null);
@@ -180,10 +177,7 @@ class GetHrNotifier extends StateNotifier<GetHrState> {
         clientCountry,
         clientAddress,
         annualLeaveCount,
-        medicalLeaveCount,
-        paidDayOffCount,
-        compOffCount,
-        unpaidCount,
+        medicalLeaveCount
       );
 
       getConsultantByClient(client,token);

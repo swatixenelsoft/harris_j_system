@@ -112,7 +112,7 @@ class GenericDataSource extends DataGridSource {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           alignment:
-              columnName == 'actions' ? Alignment.center : Alignment.centerLeft,
+              columnName == 'actions' ? Alignment.center : Alignment.center,
           child: child,
         );
       }).toList(),

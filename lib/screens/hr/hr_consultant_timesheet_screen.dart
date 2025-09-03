@@ -495,11 +495,7 @@ class _HrConsultantTimeSheetScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: _buildHeaderActions(),
-          ),
-          const SizedBox(height: 10),
+
           if (_rawClientList.isNotEmpty && _selectedClient != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -520,6 +516,11 @@ class _HrConsultantTimeSheetScreenState
                 },
               ),
             ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 8),
+            child: _buildHeaderActions(),
+          ),
           const SizedBox(height: 10),
           SizedBox(
             height: fullConsultantList.isEmpty ? 50 : 200,
@@ -666,7 +667,7 @@ class _HrConsultantTimeSheetScreenState
             child: SvgPicture.asset('assets/icons/back.svg', height: 15)),
         const Spacer(),
         Text(
-          'Total Timesheet:\n90/100',
+          'Total Timesheet:90/100',
           style: GoogleFonts.montserrat(
               fontSize: 10,
               fontWeight: FontWeight.w500,
